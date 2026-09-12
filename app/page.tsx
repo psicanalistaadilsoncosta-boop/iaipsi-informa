@@ -49,7 +49,7 @@ const FEEDS = [
   },
 ];
 
-function truncateText(text: string | undefined, maxLength: number = 110): string {
+function truncateText(text: string | undefined, maxLength: number = 220): string {
   if (!text) return '';
   const cleanText = text.replace(/<[^>]*>?/gm, '').trim();
   if (cleanText.length <= maxLength) return cleanText;
@@ -122,7 +122,7 @@ export default async function Home() {
       </div>
 
       {/* Lista de Cards */}
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px', alignItems: 'start' }}>
         {posts.length === 0 ? (
           <p style={{ color: '#6b7280' }}>Carregando notícias...</p>
         ) : (
@@ -146,7 +146,7 @@ export default async function Home() {
                 </div>
 
                 {/* Título */}
-                <h2 style={{ fontSize: '1.05rem', margin: '0 0 8px 0', lineHeight: '1.4', fontWeight: 700, height: '2.8em', overflow: 'hidden' }}>
+                <h2 style={{ fontSize: '1.05rem', margin: '0 0 8px 0', lineHeight: '1.4', fontWeight: 700 }}>
                   <a href={item.link} target="_blank" rel="noopener noreferrer" style={{ color: '#1f2937', textDecoration: 'none' }}>
                     {item.title}
                   </a>
@@ -161,7 +161,7 @@ export default async function Home() {
 
                 {/* Resumo formatado com limite */}
                 {item.contentSnippet && (
-                  <p style={{ color: '#4b5563', margin: '0 0 16px 0', fontSize: '0.875rem', lineHeight: '1.5', height: '3.9em', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <p style={{ color: '#4b5563', margin: '0 0 16px 0', fontSize: '0.875rem', lineHeight: '1.5' }}>
                     {item.contentSnippet}
                   </p>
                 )}
