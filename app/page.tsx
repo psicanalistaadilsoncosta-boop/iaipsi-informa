@@ -1,3 +1,4 @@
+'client-side'; // Indicador de componente interativo para filtros
 import Parser from 'rss-parser';
 
 interface FeedItem {
@@ -19,8 +20,13 @@ const parser = new Parser({
   },
 });
 
-// Canais organizados com temas e cores
+// Canais organizados com temas, cores e o feed de esportes do UOL
 const FEEDS = [
+  {
+    url: 'https://noticias.uol.com.br/ultimas/index.xml', // Feed geral / esporte uol
+    category: 'Esportes & UOL',
+    color: '#ea580c', // Laranja
+  },
   {
     url: 'https://g1.globo.com/rss/g1/politica/',
     category: 'Política',
@@ -43,12 +49,17 @@ const FEEDS = [
   },
 ];
 
-// Função para tentar encontrar a URL de imagem no RSS
+function truncateText(text: string | undefined, maxLength: number = 110): string {
+  if (!text) return '';
+  const cleanText = text.replace(/<[^>]*>?/gm, '').trim();
+  if (cleanText.length <= maxLength) return cleanText;
+  return cleanText.slice(0, maxLength) + '...';
+}
+
 function extractImageUrl(item: any): string | undefined {
   if (item.enclosure?.url) return item.enclosure.url;
   if (item.mediaContent?.$.url) return item.mediaContent.$.url;
 
-  // Busca por tag <img> no conteúdo HTML
   const content = item.content || item['content:encoded'] || '';
   const imgMatch = content.match(/<img[^>]+src=["']([^"']+)["']/i);
   if (imgMatch && imgMatch[1]) return imgMatch[1];
@@ -65,7 +76,7 @@ async function getNews(): Promise<FeedItem[]> {
           title: item.title,
           link: item.link,
           pubDate: item.pubDate,
-          contentSnippet: item.contentSnippet || item.content?.replace(/<[^>]*>?/gm, '').slice(0, 160) + '...',
+          contentSnippet: truncateText(item.contentSnippet || item.content),
           category: feed.category,
           categoryColor: feed.color,
           imageUrl: extractImageUrl(item),
@@ -78,7 +89,6 @@ async function getNews(): Promise<FeedItem[]> {
     const results = await Promise.all(promises);
     const allItems = results.flat();
 
-    // Ordenar por data mais recente
     return allItems.sort((a, b) => {
       const dateA = a.pubDate ? new Date(a.pubDate).getTime() : 0;
       const dateB = b.pubDate ? new Date(b.pubDate).getTime() : 0;
@@ -92,34 +102,43 @@ async function getNews(): Promise<FeedItem[]> {
 
 export default async function Home() {
   const posts = await getNews();
+  const categories = ['Todas', ...Array.from(new Set(posts.map(p => p.category).filter(Boolean)))];
 
   return (
     <main style={{ maxWidth: '1000px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, -apple-system, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
       
-      {/* Cabeçalho com linha colorida em degradê */}
-      <header style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', marginBottom: '30px', borderTop: '6px solid #2563eb' }}>
+      {/* Cabeçalho */}
+      <header style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', marginBottom: '20px', borderTop: '6px solid #2563eb' }}>
         <h1 style={{ fontSize: '2.2rem', color: '#111827', margin: 0, fontWeight: 800 }}>IAIPSI Informa</h1>
-        <p style={{ color: '#6b7280', marginTop: '6px', fontSize: '1rem' }}>Atualizações e notícias em tempo real sobre Política, Economia e Saúde Mental</p>
+        <p style={{ color: '#6b7280', marginTop: '6px', fontSize: '1rem' }}>Central de Notícias, Esportes, Política, Economia e Saúde Mental</p>
       </header>
 
-      {/* Lista de notícias em Cards */}
+      {/* Barra de Links UOL Central de Jogos */}
+      <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', padding: '12px 20px', borderRadius: '8px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+        <span style={{ fontSize: '0.9rem', color: '#1e40af', fontWeight: 600 }}>⚽ Acompanhe os jogos de hoje:</span>
+        <a href="https://www.uol.com.br/esporte/futebol/central-de-jogos/#/2026-09-12" target="_blank" rel="noopener noreferrer" style={{ backgroundColor: '#2563eb', color: '#fff', padding: '6px 14px', borderRadius: '6px', fontSize: '0.85rem', textDecoration: 'none', fontWeight: 600 }}>
+          Abrir Central de Jogos UOL ↗
+        </a>
+      </div>
+
+      {/* Lista de Cards */}
       <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
         {posts.length === 0 ? (
-          <p style={{ color: '#6b7280' }}>Carregando notícias ou nenhuma notícia encontrada...</p>
+          <p style={{ color: '#6b7280' }}>Carregando notícias...</p>
         ) : (
           posts.map((item, index) => (
             <article key={index} style={{ backgroundColor: '#ffffff', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
               
-              {/* Imagem da Notícia (se disponível no RSS) */}
+              {/* Imagem */}
               {item.imageUrl && (
                 <div style={{ height: '180px', overflow: 'hidden', backgroundColor: '#f3f4f6' }}>
-                  <img src={item.imageUrl} alt={item.title || 'Imagem da notícia'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img src={item.imageUrl} alt={item.title || 'Imagem'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
               )}
 
               <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
                 
-                {/* Tag de Categoria com Cor */}
+                {/* Tag de Categoria */}
                 <div style={{ marginBottom: '10px' }}>
                   <span style={{ backgroundColor: item.categoryColor || '#2563eb', color: '#ffffff', fontSize: '0.75rem', fontWeight: 700, padding: '4px 10px', borderRadius: '20px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     {item.category}
@@ -127,7 +146,7 @@ export default async function Home() {
                 </div>
 
                 {/* Título */}
-                <h2 style={{ fontSize: '1.1rem', margin: '0 0 10px 0', lineHeight: '1.4', fontWeight: 700 }}>
+                <h2 style={{ fontSize: '1.05rem', margin: '0 0 8px 0', lineHeight: '1.4', fontWeight: 700, height: '2.8em', overflow: 'hidden' }}>
                   <a href={item.link} target="_blank" rel="noopener noreferrer" style={{ color: '#1f2937', textDecoration: 'none' }}>
                     {item.title}
                   </a>
@@ -135,19 +154,19 @@ export default async function Home() {
 
                 {/* Data */}
                 {item.pubDate && (
-                  <small style={{ color: '#9ca3af', display: 'block', marginBottom: '12px', fontSize: '0.8rem' }}>
+                  <small style={{ color: '#9ca3af', display: 'block', marginBottom: '10px', fontSize: '0.8rem' }}>
                     📅 {new Date(item.pubDate).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   </small>
                 )}
 
-                {/* Resumo */}
+                {/* Resumo formatado com limite */}
                 {item.contentSnippet && (
-                  <p style={{ color: '#4b5563', margin: '0 0 16px 0', fontSize: '0.875rem', lineHeight: '1.5', flexGrow: 1 }}>
+                  <p style={{ color: '#4b5563', margin: '0 0 16px 0', fontSize: '0.875rem', lineHeight: '1.5', height: '3.9em', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {item.contentSnippet}
                   </p>
                 )}
 
-                {/* Botão Ler Mais */}
+                {/* Link final */}
                 <div style={{ marginTop: 'auto', paddingTop: '10px', borderTop: '1px solid #f3f4f6' }}>
                   <a href={item.link} target="_blank" rel="noopener noreferrer" style={{ color: item.categoryColor || '#2563eb', fontWeight: 600, fontSize: '0.85rem', textDecoration: 'none' }}>
                     Ler matéria completa →
