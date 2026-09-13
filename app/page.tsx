@@ -1,7 +1,7 @@
-'client-side'; // Indicador de componente interativo para filtros
+import NewsClient from './NewsClient';
 import Parser from 'rss-parser';
 
-interface FeedItem {
+export interface FeedItem {
   title?: string;
   link?: string;
   pubDate?: string;
@@ -11,173 +11,171 @@ interface FeedItem {
   imageUrl?: string;
 }
 
+interface FeedConfig {
+  url: string;
+  category: string;
+  color: string;
+  hasRssImage: boolean;
+}
+
+// ─── CACHE: revalida a cada 15 minutos ────────────────────────────────────
+export const revalidate = 900;
+
 const parser = new Parser({
   customFields: {
     item: [
       ['media:content', 'mediaContent', { keepArray: false }],
+      ['media:thumbnail', 'mediaThumbnail', { keepArray: false }],
       ['enclosure', 'enclosure', { keepArray: false }],
     ],
   },
 });
 
-// Canais organizados com temas, cores e o feed de esportes do UOL
-const FEEDS = [
-  {
-    url: 'https://noticias.uol.com.br/ultimas/index.xml', // Feed geral / esporte uol
-    category: 'Esportes & UOL',
-    color: '#ea580c', // Laranja
-  },
-  {
-    url: 'https://g1.globo.com/rss/g1/politica/',
-    category: 'Política',
-    color: '#1e3a8a', // Azul escuro
-  },
-  {
-    url: 'https://g1.globo.com/rss/g1/economia/',
-    category: 'Economia',
-    color: '#047857', // Verde
-  },
-  {
-    url: 'https://news.google.com/rss/search?q=saude+mental&hl=pt-BR&gl=BR&ceid=BR:pt-419',
-    category: 'Saúde Mental',
-    color: '#7c3aed', // Roxo
-  },
-  {
-    url: 'https://g1.globo.com/rss/g1/ciencia-e-saude/',
-    category: 'Saúde & Ciência',
-    color: '#0284c7', // Azul claro
-  },
+// ─── FEEDS ────────────────────────────────────────────────────────────────
+const FEEDS: FeedConfig[] = [
+
+  // ── POLÍTICA ──────────────────────────────────────────────────────────────
+  { url: 'https://g1.globo.com/rss/g1/politica/',                                                     category: 'Política',        color: '#1e3a8a', hasRssImage: true  },
+  { url: 'https://www.cnnbrasil.com.br/feed/',                                                         category: 'Política',        color: '#1e3a8a', hasRssImage: true  },
+  { url: 'https://news.google.com/rss/search?q=politica+brasil&hl=pt-BR&gl=BR&ceid=BR:pt-419',        category: 'Política',        color: '#1e3a8a', hasRssImage: false },
+
+  // ── ECONOMIA ──────────────────────────────────────────────────────────────
+  { url: 'https://g1.globo.com/rss/g1/economia/',                                                     category: 'Economia',        color: '#047857', hasRssImage: true  },
+  { url: 'https://news.google.com/rss/search?q=economia+brasil&hl=pt-BR&gl=BR&ceid=BR:pt-419',       category: 'Economia',        color: '#047857', hasRssImage: false },
+
+  // ── ESPORTES ──────────────────────────────────────────────────────────────
+  { url: 'https://noticias.uol.com.br/ultimas/index.xml',                                              category: 'Esportes',        color: '#ea580c', hasRssImage: true  },
+  { url: 'https://news.google.com/rss/search?q=futebol+brasileiro&hl=pt-BR&gl=BR&ceid=BR:pt-419',    category: 'Esportes',        color: '#ea580c', hasRssImage: false },
+
+  // ── SAÚDE MENTAL ──────────────────────────────────────────────────────────
+  { url: 'https://news.google.com/rss/search?q=saude+mental&hl=pt-BR&gl=BR&ceid=BR:pt-419',          category: 'Saúde Mental',    color: '#7c3aed', hasRssImage: false },
+
+  // ── SAÚDE & CIÊNCIA ───────────────────────────────────────────────────────
+  { url: 'https://g1.globo.com/rss/g1/ciencia-e-saude/',                                              category: 'Saúde & Ciência', color: '#0284c7', hasRssImage: true  },
+  { url: 'https://feeds.bbci.co.uk/portuguese/rss.xml',                                               category: 'Saúde & Ciência', color: '#0284c7', hasRssImage: true  },
+  { url: 'https://news.google.com/rss/search?q=ciencia+saude+brasil&hl=pt-BR&gl=BR&ceid=BR:pt-419', category: 'Saúde & Ciência', color: '#0284c7', hasRssImage: false },
+
+  // ── PSICANÁLISE ───────────────────────────────────────────────────────────
+  { url: 'https://news.google.com/rss/search?q=psicanalise&hl=pt-BR&gl=BR&ceid=BR:pt-419',           category: 'Psicanálise',     color: '#be185d', hasRssImage: false },
+  { url: 'https://news.google.com/rss/search?q=psicanalise+terapia&hl=pt-BR&gl=BR&ceid=BR:pt-419',  category: 'Psicanálise',     color: '#be185d', hasRssImage: false },
+
+  // ── TECNOLOGIA & IA ───────────────────────────────────────────────────────
+  { url: 'https://news.google.com/rss/search?q=inteligencia+artificial+brasil&hl=pt-BR&gl=BR&ceid=BR:pt-419', category: 'Tecnologia & IA', color: '#0f766e', hasRssImage: false },
+  { url: 'https://news.google.com/rss/search?q=tecnologia+inovacao+brasil&hl=pt-BR&gl=BR&ceid=BR:pt-419',    category: 'Tecnologia & IA', color: '#0f766e', hasRssImage: false },
+
+  // ── EDUCAÇÃO & CARREIRA ───────────────────────────────────────────────────
+  { url: 'https://news.google.com/rss/search?q=educacao+carreira+brasil&hl=pt-BR&gl=BR&ceid=BR:pt-419',      category: 'Educação & Carreira', color: '#b45309', hasRssImage: false },
+  { url: 'https://news.google.com/rss/search?q=mercado+trabalho+emprego+brasil&hl=pt-BR&gl=BR&ceid=BR:pt-419', category: 'Educação & Carreira', color: '#b45309', hasRssImage: false },
+
+  // ── LIDERANÇA & GESTÃO ────────────────────────────────────────────────────
+  { url: 'https://news.google.com/rss/search?q=lideranca+gestao+empresas&hl=pt-BR&gl=BR&ceid=BR:pt-419',     category: 'Liderança & Gestão', color: '#7c2d12', hasRssImage: false },
+  { url: 'https://news.google.com/rss/search?q=cultura+organizacional+rh&hl=pt-BR&gl=BR&ceid=BR:pt-419',     category: 'Liderança & Gestão', color: '#7c2d12', hasRssImage: false },
+
+  // ── MUNDO & INTERNACIONAL ─────────────────────────────────────────────────
+  { url: 'https://feeds.bbci.co.uk/portuguese/rss.xml',                                                        category: 'Mundo',           color: '#374151', hasRssImage: true  },
+  { url: 'https://news.google.com/rss/search?q=mundo+internacional+noticias&hl=pt-BR&gl=BR&ceid=BR:pt-419',  category: 'Mundo',           color: '#374151', hasRssImage: false },
 ];
 
-function truncateText(text: string | undefined, maxLength: number = 220): string {
+const ITEMS_PER_FEED = 4;
+const MAX_PER_CATEGORY = 6;
+
+// ─── UTILITÁRIOS ──────────────────────────────────────────────────────────
+function truncateText(text: string | undefined, maxLength = 110): string {
   if (!text) return '';
-  const cleanText = text.replace(/<[^>]*>?/gm, '').trim();
-  if (cleanText.length <= maxLength) return cleanText;
-  return cleanText.slice(0, maxLength) + '...';
+  const clean = text.replace(/<[^>]*>?/gm, '').trim();
+  return clean.length <= maxLength ? clean : clean.slice(0, maxLength) + '...';
 }
 
-function extractImageUrl(item: any): string | undefined {
-  if (item.enclosure?.url) return item.enclosure.url;
+function extractImageFromRss(item: any): string | undefined {
+  if (item.enclosure?.url && /\.(jpg|jpeg|png|webp|gif)/i.test(item.enclosure.url))
+    return item.enclosure.url;
   if (item.mediaContent?.$.url) return item.mediaContent.$.url;
-
-  const content = item.content || item['content:encoded'] || '';
-  const imgMatch = content.match(/<img[^>]+src=["']([^"']+)["']/i);
-  if (imgMatch && imgMatch[1]) return imgMatch[1];
-
-  return undefined;
+  if (item.mediaThumbnail?.$.url) return item.mediaThumbnail.$.url;
+  const content = item.content || item['content:encoded'] || item.summary || '';
+  const m = content.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return m?.[1];
 }
 
-async function getNews(): Promise<FeedItem[]> {
+function deduplicateByLink(items: FeedItem[]): FeedItem[] {
+  const seen = new Set<string>();
+  return items.filter(item => {
+    if (!item.link) return true;
+    if (seen.has(item.link)) return false;
+    seen.add(item.link);
+    return true;
+  });
+}
+
+async function resolveGoogleNewsUrl(url: string): Promise<string> {
+  if (!url.includes('news.google.com')) return url;
   try {
-    const promises = FEEDS.map(async (feed) => {
-      try {
-        const res = await parser.parseURL(feed.url);
-        return res.items.map((item) => ({
-          title: item.title,
-          link: item.link,
-          pubDate: item.pubDate,
-          contentSnippet: truncateText(item.contentSnippet || item.content),
-          category: feed.category,
-          categoryColor: feed.color,
-          imageUrl: extractImageUrl(item),
-        }));
-      } catch {
-        return [];
-      }
+    const res = await fetch(url, {
+      method: 'GET',
+      redirect: 'follow',
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0)' },
+      signal: AbortSignal.timeout(4000),
     });
-
-    const results = await Promise.all(promises);
-    const allItems = results.flat();
-
-    return allItems.sort((a, b) => {
-      const dateA = a.pubDate ? new Date(a.pubDate).getTime() : 0;
-      const dateB = b.pubDate ? new Date(b.pubDate).getTime() : 0;
-      return dateB - dateA;
-    });
-  } catch (error) {
-    console.error('Erro ao buscar notícias:', error);
-    return [];
+    return res.url || url;
+  } catch {
+    return url;
   }
+}
+
+// ─── FETCH PRINCIPAL ──────────────────────────────────────────────────────
+async function getNews(): Promise<FeedItem[]> {
+  const byCategory: Record<string, FeedConfig[]> = {};
+  for (const feed of FEEDS) {
+    if (!byCategory[feed.category]) byCategory[feed.category] = [];
+    byCategory[feed.category].push(feed);
+  }
+
+  const categoryPromises = Object.entries(byCategory).map(async ([_category, feeds]) => {
+    const feedResults = await Promise.all(
+      feeds.map(async (feed) => {
+        try {
+          const res = await parser.parseURL(feed.url);
+          const items = res.items.slice(0, ITEMS_PER_FEED);
+
+          return await Promise.all(items.map(async (item) => {
+            const resolvedLink = item.link && !feed.hasRssImage
+              ? await resolveGoogleNewsUrl(item.link)
+              : item.link;
+
+            return {
+              title: item.title,
+              link: resolvedLink,
+              pubDate: item.pubDate,
+              contentSnippet: truncateText(item.contentSnippet || item.content),
+              category: feed.category,
+              categoryColor: feed.color,
+              imageUrl: feed.hasRssImage ? extractImageFromRss(item) : undefined,
+            };
+          }));
+        } catch (e) {
+          console.error(`Erro no feed ${feed.category} (${feed.url}):`, e);
+          return [];
+        }
+      })
+    );
+
+    const merged = deduplicateByLink(feedResults.flat());
+    merged.sort((a, b) => {
+      const tA = a.pubDate ? new Date(a.pubDate).getTime() : 0;
+      const tB = b.pubDate ? new Date(b.pubDate).getTime() : 0;
+      return tB - tA;
+    });
+    return merged.slice(0, MAX_PER_CATEGORY);
+  });
+
+  const categoryResults = await Promise.all(categoryPromises);
+  return categoryResults.flat().sort((a, b) => {
+    const tA = a.pubDate ? new Date(a.pubDate).getTime() : 0;
+    const tB = b.pubDate ? new Date(b.pubDate).getTime() : 0;
+    return tB - tA;
+  });
 }
 
 export default async function Home() {
   const posts = await getNews();
-  const categories = ['Todas', ...Array.from(new Set(posts.map(p => p.category).filter(Boolean)))];
-
-  return (
-    <main style={{ maxWidth: '1000px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, -apple-system, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
-      
-      {/* Cabeçalho */}
-      <header style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', marginBottom: '20px', borderTop: '6px solid #2563eb' }}>
-        <h1 style={{ fontSize: '2.2rem', color: '#111827', margin: 0, fontWeight: 800 }}>IAIPSI Informa</h1>
-        <p style={{ color: '#6b7280', marginTop: '6px', fontSize: '1rem' }}>Central de Notícias, Esportes, Política, Economia e Saúde Mental</p>
-      </header>
-
-      {/* Barra de Links UOL Central de Jogos */}
-      <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', padding: '12px 20px', borderRadius: '8px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-        <span style={{ fontSize: '0.9rem', color: '#1e40af', fontWeight: 600 }}>⚽ Acompanhe os jogos de hoje:</span>
-        <a href="https://www.uol.com.br/esporte/futebol/central-de-jogos/#/2026-09-12" target="_blank" rel="noopener noreferrer" style={{ backgroundColor: '#2563eb', color: '#fff', padding: '6px 14px', borderRadius: '6px', fontSize: '0.85rem', textDecoration: 'none', fontWeight: 600 }}>
-          Abrir Central de Jogos UOL ↗
-        </a>
-      </div>
-
-      {/* Lista de Cards */}
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px', alignItems: 'start' }}>
-        {posts.length === 0 ? (
-          <p style={{ color: '#6b7280' }}>Carregando notícias...</p>
-        ) : (
-          posts.map((item, index) => (
-            <article key={index} style={{ backgroundColor: '#ffffff', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-              
-              {/* Imagem */}
-              {item.imageUrl && (
-                <div style={{ height: '180px', overflow: 'hidden', backgroundColor: '#f3f4f6' }}>
-                  <img src={item.imageUrl} alt={item.title || 'Imagem'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </div>
-              )}
-
-              <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-                
-                {/* Tag de Categoria */}
-                <div style={{ marginBottom: '10px' }}>
-                  <span style={{ backgroundColor: item.categoryColor || '#2563eb', color: '#ffffff', fontSize: '0.75rem', fontWeight: 700, padding: '4px 10px', borderRadius: '20px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    {item.category}
-                  </span>
-                </div>
-
-                {/* Título */}
-                <h2 style={{ fontSize: '1.05rem', margin: '0 0 8px 0', lineHeight: '1.4', fontWeight: 700 }}>
-                  <a href={item.link} target="_blank" rel="noopener noreferrer" style={{ color: '#1f2937', textDecoration: 'none' }}>
-                    {item.title}
-                  </a>
-                </h2>
-
-                {/* Data */}
-                {item.pubDate && (
-                  <small style={{ color: '#9ca3af', display: 'block', marginBottom: '10px', fontSize: '0.8rem' }}>
-                    📅 {new Date(item.pubDate).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                  </small>
-                )}
-
-                {/* Resumo formatado com limite */}
-                {item.contentSnippet && (
-                  <p style={{ color: '#4b5563', margin: '0 0 16px 0', fontSize: '0.875rem', lineHeight: '1.5' }}>
-                    {item.contentSnippet}
-                  </p>
-                )}
-
-                {/* Link final */}
-                <div style={{ marginTop: 'auto', paddingTop: '10px', borderTop: '1px solid #f3f4f6' }}>
-                  <a href={item.link} target="_blank" rel="noopener noreferrer" style={{ color: item.categoryColor || '#2563eb', fontWeight: 600, fontSize: '0.85rem', textDecoration: 'none' }}>
-                    Ler matéria completa →
-                  </a>
-                </div>
-
-              </div>
-            </article>
-          ))
-        )}
-      </section>
-    </main>
-  );
+  return <NewsClient posts={posts} />;
 }
