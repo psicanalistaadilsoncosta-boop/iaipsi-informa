@@ -1,52 +1,45 @@
 'use client';
 
 import { useState, Fragment } from 'react';
-import { FeedItem, AdItem } from './page';
+import { FeedItem, AdItem, EditorialItem } from './page';
+
+const CATEGORY_COLORS: Record<string, string> = {
+  'Política': '#1e3a8a',
+  'Economia': '#047857',
+  'Esportes': '#ea580c',
+  'Saúde Mental': '#7c3aed',
+  'Saúde & Ciência': '#0284c7',
+  'Psicanálise': '#be185d',
+  'Tecnologia & IA': '#0f766e',
+  'Educação & Carreira': '#b45309',
+  'Liderança & Gestão': '#7c2d12',
+  'Mundo': '#374151',
+};
+
+// ─── RENDERIZA MARKDOWN SIMPLES ───────────────────────────────────────────
+function renderAnalysis(text: string) {
+  return text.split('\n').map((line, i) => {
+    const parsed = line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    if (!parsed.trim()) return <br key={i} />;
+    return <p key={i} style={{ margin: '0 0 8px', lineHeight: 1.7 }} dangerouslySetInnerHTML={{ __html: parsed }} />;
+  });
+}
 
 // ─── BANNER DE ANÚNCIO ────────────────────────────────────────────────────
 function AdBanner({ ad }: { ad?: AdItem }) {
   if (!ad) return null;
   return (
     <a href={ad.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', display: 'block' }}>
-      <div style={{
-        borderRadius: '12px',
-        overflow: 'hidden',
-        border: '1px solid #e5e7eb',
-        backgroundColor: '#fff',
-        boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
-        display: 'flex',
-        flexDirection: 'column',
-      }}>
-        {/* Imagem */}
+      <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', backgroundColor: '#fff', boxShadow: '0 2px 6px rgba(0,0,0,0.06)' }}>
         <div style={{ width: '100%', maxHeight: '120px', overflow: 'hidden' }}>
           <img src={ad.image} alt={ad.text} style={{ width: '100%', height: '120px', objectFit: 'cover' }} />
         </div>
-        {/* Texto + CTA */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '12px 20px',
-          gap: '16px',
-          flexWrap: 'wrap',
-        }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', gap: '16px', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '0.7rem', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Publicidade
-            </span>
-            <span style={{ color: '#374151', fontSize: '0.9rem', fontWeight: 500 }}>
-              {ad.text}
-            </span>
+            <span style={{ fontSize: '0.7rem', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Publicidade</span>
+            <span style={{ color: '#374151', fontSize: '0.9rem', fontWeight: 500 }}>{ad.text}</span>
           </div>
-          <span style={{
-            backgroundColor: '#2563eb',
-            color: '#fff',
-            padding: '6px 16px',
-            borderRadius: '6px',
-            fontSize: '0.85rem',
-            fontWeight: 600,
-            whiteSpace: 'nowrap',
-          }}>
+          <span style={{ backgroundColor: '#2563eb', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 600, whiteSpace: 'nowrap' }}>
             {ad.cta} →
           </span>
         </div>
@@ -55,13 +48,119 @@ function AdBanner({ ad }: { ad?: AdItem }) {
   );
 }
 
-// ─── SLOT DE ANÚNCIO NO GRID ──────────────────────────────────────────────
 function AdSlotGrid({ ad }: { ad?: AdItem }) {
   if (!ad) return null;
+  return <div style={{ gridColumn: '1 / -1' }}><AdBanner ad={ad} /></div>;
+}
+
+// ─── SEÇÃO EDITORIAL ──────────────────────────────────────────────────────
+function EditorialSection({ items }: { items: EditorialItem[] }) {
+  const [expanded, setExpanded] = useState<string | null>(null);
+  if (!items || items.length === 0) return null;
+
+  const [featured, ...rest] = items;
+  const color = (cat?: string) => CATEGORY_COLORS[cat || ''] || '#be185d';
+
   return (
-    <div style={{ gridColumn: '1 / -1' }}>
-      <AdBanner ad={ad} />
-    </div>
+    <section style={{ marginBottom: '32px' }}>
+
+      {/* Título da seção */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+        <div style={{ width: '4px', height: '28px', backgroundColor: '#be185d', borderRadius: '2px' }} />
+        <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#111827', margin: 0 }}>
+          Análises Editoriais
+        </h2>
+        <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 500, marginLeft: '4px' }}>
+          por Adilson Costa - Psicanalista
+        </span>
+      </div>
+
+      {/* Card destaque */}
+      <div style={{ backgroundColor: '#fff', borderRadius: '14px', border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', marginBottom: '16px', borderLeft: `5px solid ${color(featured.category)}` }}>
+        <div style={{ padding: '28px' }}>
+
+          {/* Meta */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', flexWrap: 'wrap' }}>
+            {featured.category && (
+              <span style={{ backgroundColor: color(featured.category), color: '#fff', fontSize: '0.72rem', fontWeight: 700, padding: '3px 10px', borderRadius: '20px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                {featured.category}
+              </span>
+            )}
+            <small style={{ color: '#9ca3af', fontSize: '0.78rem' }}>
+              {new Date(featured.publishedAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+            </small>
+          </div>
+
+          {/* Título */}
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827', margin: '0 0 16px', lineHeight: 1.35 }}>
+            {featured.title}
+          </h3>
+
+          {/* Análise — mostra tudo ou truncada */}
+          <div style={{ fontSize: '0.9rem', color: '#374151', overflow: expanded === featured.id ? 'visible' : 'hidden', maxHeight: expanded === featured.id ? 'none' : '120px', maskImage: expanded === featured.id ? 'none' : 'linear-gradient(to bottom, black 60%, transparent 100%)', WebkitMaskImage: expanded === featured.id ? 'none' : 'linear-gradient(to bottom, black 60%, transparent 100%)' }}>
+            {renderAnalysis(featured.analysis)}
+          </div>
+
+          {/* Ações */}
+          <div style={{ marginTop: '16px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button onClick={() => setExpanded(expanded === featured.id ? null : featured.id)} style={{ backgroundColor: 'transparent', border: `1px solid ${color(featured.category)}`, color: color(featured.category), padding: '6px 14px', borderRadius: '6px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}>
+              {expanded === featured.id ? 'Recolher ↑' : 'Ler análise completa ↓'}
+            </button>
+            <a href={featured.link} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.82rem', color: '#9ca3af', textDecoration: 'none', fontWeight: 500 }}>
+              Ver notícia original ↗
+            </a>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Cards menores */}
+      {rest.length > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
+          {rest.map((item) => (
+            <div key={item.id} style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '20px', boxShadow: '0 2px 6px rgba(0,0,0,0.04)', borderLeft: `4px solid ${color(item.category)}` }}>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                {item.category && (
+                  <span style={{ backgroundColor: color(item.category), color: '#fff', fontSize: '0.68rem', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    {item.category}
+                  </span>
+                )}
+                <small style={{ color: '#9ca3af', fontSize: '0.75rem' }}>
+                  {new Date(item.publishedAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                </small>
+              </div>
+
+              <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111827', margin: '0 0 10px', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                {item.title}
+              </h3>
+
+              <div style={{ fontSize: '0.82rem', color: '#6b7280', overflow: 'hidden', maxHeight: '60px', maskImage: 'linear-gradient(to bottom, black 40%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, black 40%, transparent 100%)' }}>
+                {renderAnalysis(item.analysis)}
+              </div>
+
+              <div style={{ marginTop: '12px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <button onClick={() => setExpanded(expanded === item.id ? null : item.id)} style={{ backgroundColor: 'transparent', border: `1px solid ${color(item.category)}`, color: color(item.category), padding: '5px 12px', borderRadius: '6px', fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer' }}>
+                  {expanded === item.id ? 'Recolher ↑' : 'Ler completo ↓'}
+                </button>
+                <a href={item.link} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.78rem', color: '#9ca3af', textDecoration: 'none' }}>
+                  Notícia ↗
+                </a>
+              </div>
+
+              {/* Expansão inline */}
+              {expanded === item.id && (
+                <div style={{ marginTop: '14px', paddingTop: '14px', borderTop: '1px solid #f3f4f6', fontSize: '0.85rem', color: '#374151' }}>
+                  {renderAnalysis(item.analysis)}
+                </div>
+              )}
+
+            </div>
+          ))}
+        </div>
+      )}
+
+    </section>
   );
 }
 
@@ -71,15 +170,7 @@ function NewsCard({ item }: { item: FeedItem }) {
   const showImage = !!item.imageUrl && !imgError;
 
   return (
-    <article style={{
-      backgroundColor: '#fff',
-      borderRadius: '12px',
-      overflow: 'hidden',
-      border: '1px solid #e5e7eb',
-      display: 'flex',
-      flexDirection: 'column',
-      boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
-    }}>
+    <article style={{ backgroundColor: '#fff', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }}>
       {showImage && (
         <div style={{ height: '180px', overflow: 'hidden', backgroundColor: '#f3f4f6' }}>
           <img src={item.imageUrl!} alt={item.title || ''} onError={() => setImgError(true)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -91,7 +182,7 @@ function NewsCard({ item }: { item: FeedItem }) {
             {item.category}
           </span>
         </div>
-        <h2 style={{ fontSize: '1.02rem', margin: '0 0 8px', lineHeight: '1.4', fontWeight: 700, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+        <h2 style={{ fontSize: '1.02rem', margin: '0 0 8px', lineHeight: 1.4, fontWeight: 700, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
           <a href={item.link ?? '#'} target="_blank" rel="noopener noreferrer" style={{ color: '#1f2937', textDecoration: 'none' }}>
             {item.title}
           </a>
@@ -117,12 +208,12 @@ function NewsCard({ item }: { item: FeedItem }) {
 }
 
 // ─── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────
-export default function NewsClient({ posts, ads }: { posts: FeedItem[]; ads: AdItem[] }) {
+export default function NewsClient({ posts, ads, editorial }: { posts: FeedItem[]; ads: AdItem[]; editorial: EditorialItem[] }) {
   const safePosts = posts ?? [];
   const safeAds = ads ?? [];
+  const safeEditorial = editorial ?? [];
 
-  const adByPosition = (pos: 'topo' | 'meio' | 'rodape') =>
-    safeAds.find(a => a.position === pos);
+  const adByPosition = (pos: 'topo' | 'meio' | 'rodape') => safeAds.find(a => a.position === pos);
 
   const categories = [
     'Todas',
@@ -137,10 +228,14 @@ export default function NewsClient({ posts, ads }: { posts: FeedItem[]; ads: AdI
 
       {/* Cabeçalho */}
       <header style={{ backgroundColor: '#fff', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: '16px', borderTop: '6px solid #2563eb' }}>
-        <h1 style={{ fontSize: '2.1rem', color: '#111827', margin: 0, fontWeight: 800 }}>IAIPSI Informa</h1>
-        <p style={{ color: '#6b7280', fontSize: '1rem', margin: '6px 0 0' }}>
-          Política · Economia · Esportes · Saúde Mental · Ciência · Psicanálise · Tecnologia · Liderança · Mundo
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <h1 style={{ fontSize: '2.1rem', color: '#111827', margin: 0, fontWeight: 800 }}>IAIPSI Informa</h1>
+            <p style={{ color: '#6b7280', fontSize: '1rem', margin: '6px 0 0' }}>
+              Política · Economia · Esportes · Saúde Mental · Ciência · Psicanálise · Tecnologia · Liderança · Mundo
+            </p>
+          </div>
+                  </div>
       </header>
 
       {/* Anúncio topo */}
@@ -149,12 +244,15 @@ export default function NewsClient({ posts, ads }: { posts: FeedItem[]; ads: AdI
       </div>
 
       {/* Barra de Jogos */}
-      <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', padding: '12px 20px', borderRadius: '8px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+      <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', padding: '12px 20px', borderRadius: '8px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
         <span style={{ fontSize: '0.9rem', color: '#1e40af', fontWeight: 600 }}>⚽ Acompanhe os jogos de hoje:</span>
         <a href="https://www.uol.com.br/esporte/futebol/central-de-jogos/" target="_blank" rel="noopener noreferrer" style={{ backgroundColor: '#2563eb', color: '#fff', padding: '6px 14px', borderRadius: '6px', fontSize: '0.85rem', textDecoration: 'none', fontWeight: 600 }}>
           Abrir Central de Jogos UOL ↗
         </a>
       </div>
+
+      {/* Seção Editorial */}
+      <EditorialSection items={safeEditorial} />
 
       {/* Filtros */}
       <nav style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '24px' }}>
@@ -169,26 +267,31 @@ export default function NewsClient({ posts, ads }: { posts: FeedItem[]; ads: AdI
         })}
       </nav>
 
-      {/* Grid */}
+      {/* Grid de notícias */}
       <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
         {filtered.length === 0 ? (
           <p style={{ color: '#6b7280' }}>Nenhuma notícia encontrada.</p>
         ) : (
           filtered.map((item, index) => (
             <Fragment key={`item-${index}`}>
-              {index > 0 && index % 12 === 0 && (
-                <AdSlotGrid ad={adByPosition('meio')} />
-              )}
+              {index > 0 && index % 12 === 0 && <AdSlotGrid ad={adByPosition('meio')} />}
               <NewsCard item={item} />
             </Fragment>
           ))
         )}
       </section>
 
-      {/* Anúncio rodapé */}
+            {/* Anúncio rodapé */}
       <div style={{ marginTop: '32px' }}>
         <AdBanner ad={adByPosition('rodape')} />
       </div>
+
+      {/* Rodapé */}
+      <footer style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #e5e7eb', textAlign: 'center' }}>
+        <p style={{ fontSize: '0.78rem', color: '#9ca3af', margin: 0, lineHeight: 1.6 }}>
+          © {new Date().getFullYear()} IAIPSI Informa · As análises editoriais são elaboradas com auxílio de inteligência artificial e revisadas e assinadas por Adilson Costa.
+        </p>
+      </footer>
 
     </main>
   );

@@ -198,6 +198,28 @@ export interface AdItem {
 import fs from 'fs/promises';
 import path from 'path';
 
+export interface EditorialItem {
+  id: string;
+  title: string;
+  analysis: string;
+  link: string;
+  category?: string;
+  publishedAt: string;
+  author: string;
+}
+
+async function getEditorial(): Promise<EditorialItem[]> {
+  try {
+    const filePath = path.join(process.cwd(), 'public', 'editorial.json');
+    const raw = await fs.readFile(filePath, 'utf-8');
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
+
+
 async function getAds(): Promise<AdItem[]> {
   try {
     const filePath = path.join(process.cwd(), 'public', 'ads.json');
@@ -209,6 +231,6 @@ async function getAds(): Promise<AdItem[]> {
   }
 }
 export default async function Home() {
-  const [posts, ads] = await Promise.all([getNews(), getAds()]);
-  return <NewsClient posts={posts} ads={ads} />;
+  const [posts, ads, editorial] = await Promise.all([getNews(), getAds(), getEditorial()]);
+  return <NewsClient posts={posts} ads={ads} editorial={editorial} />;
 }
