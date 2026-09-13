@@ -20,16 +20,10 @@ interface EditorialItem {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  'Política': '#1e3a8a',
-  'Economia': '#047857',
-  'Esportes': '#ea580c',
-  'Saúde Mental': '#7c3aed',
-  'Saúde & Ciência': '#0284c7',
-  'Psicanálise': '#be185d',
-  'Tecnologia & IA': '#0f766e',
-  'Educação & Carreira': '#b45309',
-  'Liderança & Gestão': '#7c2d12',
-  'Mundo': '#374151',
+  'Política': '#1e3a8a', 'Economia': '#047857', 'Esportes': '#ea580c',
+  'Saúde Mental': '#7c3aed', 'Saúde & Ciência': '#0284c7', 'Psicanálise': '#be185d',
+  'Tecnologia & IA': '#0f766e', 'Educação & Carreira': '#b45309',
+  'Liderança & Gestão': '#7c2d12', 'Mundo': '#374151',
 };
 
 function renderAnalysis(text: string) {
@@ -40,7 +34,6 @@ function renderAnalysis(text: string) {
   });
 }
 
-// ─── TELA DE LOGIN ────────────────────────────────────────────────────────
 function LoginScreen({ onLogin }: { onLogin: () => void }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -56,11 +49,8 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
       });
-      if (res.ok) {
-        onLogin();
-      } else {
-        setError('Senha incorreta.');
-      }
+      if (res.ok) onLogin();
+      else setError('Senha incorreta.');
     } catch {
       setError('Erro ao verificar senha.');
     } finally {
@@ -74,18 +64,10 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
         <h1 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#111827', margin: '0 0 4px' }}>Painel Editorial</h1>
         <p style={{ color: '#6b7280', fontSize: '0.9rem', margin: '0 0 28px' }}>Acesso restrito — Adilson Costa</p>
         <form onSubmit={handleSubmit}>
-          <input
-            type="password"
-            placeholder="Senha"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.95rem', marginBottom: '12px', boxSizing: 'border-box', outline: 'none' }}
-            autoFocus
-          />
-          {error && (
-            <p style={{ color: '#dc2626', fontSize: '0.82rem', margin: '0 0 10px' }}>{error}</p>
-          )}
-          <button type="submit" disabled={loading} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: '#be185d', color: '#fff', fontWeight: 700, fontSize: '0.95rem', cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.7 : 1 }}>
+          <input type="password" placeholder="Senha" value={password} onChange={e => setPassword(e.target.value)}
+            style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.95rem', marginBottom: '12px', boxSizing: 'border-box' }} autoFocus />
+          {error && <p style={{ color: '#dc2626', fontSize: '0.82rem', margin: '0 0 10px' }}>{error}</p>}
+          <button type="submit" disabled={loading} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: '#be185d', color: '#fff', fontWeight: 700, fontSize: '0.95rem', cursor: loading ? 'wait' : 'pointer' }}>
             {loading ? 'Verificando...' : 'Entrar'}
           </button>
         </form>
@@ -94,9 +76,8 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
   );
 }
 
-// ─── PAINEL PRINCIPAL ─────────────────────────────────────────────────────
 export default function EditorialPage() {
-  const [auth, setAuth] = useState<boolean | null>(null); // null = verificando
+  const [auth, setAuth] = useState<boolean | null>(null);
   const [news, setNews] = useState<NewsItem[]>([]);
   const [published, setPublished] = useState<EditorialItem[]>([]);
   const [loadingNews, setLoadingNews] = useState(true);
@@ -106,19 +87,12 @@ export default function EditorialPage() {
   const [activeTab, setActiveTab] = useState<'rascunhos' | 'publicados'>('rascunhos');
   const [activeCategory, setActiveCategory] = useState<string>('Todas');
 
-  // Verifica se já tem cookie de auth
   useEffect(() => {
-    fetch('/api/editorial/auth/check')
-      .then(r => r.json())
-      .then(d => setAuth(d.ok))
-      .catch(() => setAuth(false));
+    fetch('/api/editorial/auth/check').then(r => r.json()).then(d => setAuth(d.ok)).catch(() => setAuth(false));
   }, []);
 
   useEffect(() => {
-    if (auth) {
-      loadNews();
-      loadPublished();
-    }
+    if (auth) { loadNews(); loadPublished(); }
   }, [auth]);
 
   async function loadNews() {
@@ -192,19 +166,14 @@ export default function EditorialPage() {
   const filteredNews = activeCategory === 'Todas' ? news : news.filter(n => n.category === activeCategory);
   const newsCategories = ['Todas', ...Array.from(new Set(news.map(n => n.category)))];
 
-  // Verificando auth
-  if (auth === null) {
-    return (
-      <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f9fafb' }}>
-        <p style={{ color: '#9ca3af', fontFamily: 'system-ui, sans-serif' }}>Verificando acesso...</p>
-      </main>
-    );
-  }
+  if (auth === null) return (
+    <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f9fafb' }}>
+      <p style={{ color: '#9ca3af', fontFamily: 'system-ui' }}>Verificando acesso...</p>
+    </main>
+  );
 
-  // Não autenticado — mostra login
   if (!auth) return <LoginScreen onLogin={() => setAuth(true)} />;
 
-  // Autenticado — mostra painel
   return (
     <main style={{ maxWidth: '900px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
 
@@ -220,7 +189,6 @@ export default function EditorialPage() {
         </div>
       </header>
 
-      {/* Tabs */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
         {(['rascunhos', 'publicados'] as const).map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', backgroundColor: activeTab === tab ? '#be185d' : '#fff', color: activeTab === tab ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
@@ -232,7 +200,6 @@ export default function EditorialPage() {
         </button>
       </div>
 
-      {/* Tab: Rascunhos */}
       {activeTab === 'rascunhos' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {!loadingNews && news.length > 0 && (
@@ -306,7 +273,6 @@ export default function EditorialPage() {
         </div>
       )}
 
-      {/* Tab: Publicados */}
       {activeTab === 'publicados' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {published.length === 0 ? (

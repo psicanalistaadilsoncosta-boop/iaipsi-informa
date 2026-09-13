@@ -104,8 +104,9 @@ function EditorialSection({ items }: { items: EditorialItem[] }) {
     <section style={{ marginBottom: '32px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
         <div style={{ width: '4px', height: '28px', backgroundColor: '#be185d', borderRadius: '2px' }} />
-        <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#111827', margin: 0 }}>Análises Editoriais</h2>
+               <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#111827', margin: 0 }}>Análises Editoriais</h2>
         <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 500, marginLeft: '4px' }}>por Adilson Costa - Psicanalista</span>
+        <a href="/arquivo-editorial" style={{ marginLeft: 'auto', fontSize: '0.8rem', color: '#be185d', fontWeight: 600, textDecoration: 'none' }}>Ver todas →</a>
       </div>
 
       <div style={{ backgroundColor: '#fff', borderRadius: '14px', border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', marginBottom: '16px', borderLeft: `5px solid ${color(featured.category)}` }}>
@@ -178,7 +179,7 @@ function NewsCard({ item }: { item: FeedItem }) {
   const showImage = !!item.imageUrl && !imgError;
 
   return (
-    <article style={{ backgroundColor: '#fff', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }}>
+       <article style={{ backgroundColor: '#fff', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', boxShadow: '0 2px 6px rgba(0,0,0,0.05)', breakInside: 'avoid', marginBottom: '20px' }}>
       {showImage && (
         <div style={{ height: '180px', overflow: 'hidden', backgroundColor: '#f3f4f6' }}>
           <img src={item.imageUrl!} alt={item.title || ''} onError={() => setImgError(true)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -255,18 +256,19 @@ export default function NewsClient({ posts, ads, editorial, sabores }: { posts: 
         </a>
       </div>
 
-      <EditorialSection items={safeEditorial} />
+           <EditorialSection items={safeEditorial.slice(0, 3)} />
 
-      {safeSabores.length > 0 && (
+        {safeSabores.slice(0, 3).length > 0 && (
         <section style={{ marginBottom: '32px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
             <div style={{ width: '4px', height: '28px', backgroundColor: '#b45309', borderRadius: '2px' }} />
-            <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#111827', margin: 0 }}>Sabores & Destinos</h2>
-            <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 500, marginLeft: '4px' }}>por Adilson Costa</span>
+         <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#111827', margin: 0 }}>Sabores & Destinos</h2>
+        <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 500, marginLeft: '4px' }}>por Adilson Costa</span>
+        <a href="/arquivo-sabores" style={{ marginLeft: 'auto', fontSize: '0.8rem', color: '#b45309', fontWeight: 600, textDecoration: 'none' }}>Ver todos →</a>
           </div>
 
           {(() => {
-            const item = safeSabores[0];
+            const item = safeSabores.slice(0, 3)[0];
             return (
               <div style={{ borderRadius: '14px', overflow: 'hidden', border: '1px solid #e5e7eb', boxShadow: '0 4px 16px rgba(0,0,0,0.08)', marginBottom: '16px', position: 'relative' }}>
                 <div style={{ height: '380px', overflow: 'hidden', backgroundColor: '#f3f4f6', position: 'relative' }}>
@@ -291,9 +293,9 @@ export default function NewsClient({ posts, ads, editorial, sabores }: { posts: 
             );
           })()}
 
-          {safeSabores.length > 1 && (
+             {safeSabores.slice(0, 3).length > 1 && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
-              {safeSabores.slice(1).map(item => (
+              {safeSabores.slice(1, 3).map(item => (
                 <div key={item.id} style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }}>
                   <div style={{ height: '160px', overflow: 'hidden', backgroundColor: '#f3f4f6', position: 'relative' }}>
                     {item.imageUrl ? (
@@ -332,7 +334,7 @@ export default function NewsClient({ posts, ads, editorial, sabores }: { posts: 
         })}
       </nav>
 
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+            <section style={{ columns: '3 300px', columnGap: '20px' }}>
         {filtered.length === 0 ? (
           <p style={{ color: '#6b7280' }}>Nenhuma notícia encontrada.</p>
         ) : (
