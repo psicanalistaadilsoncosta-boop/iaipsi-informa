@@ -208,6 +208,27 @@ export interface EditorialItem {
   author: string;
 }
 
+export interface SaboresItem {
+  id: string;
+  prato: string;
+  destino: string;
+  intro: string;
+  cta: string;
+  content: string;
+  imageUrl: string | null;
+  publishedAt: string;
+}
+
+async function getSabores(): Promise<SaboresItem[]> {
+  try {
+    const filePath = path.join(process.cwd(), 'public', 'sabores.json');
+    const raw = await fs.readFile(filePath, 'utf-8');
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
 async function getEditorial(): Promise<EditorialItem[]> {
   try {
     const filePath = path.join(process.cwd(), 'public', 'editorial.json');
@@ -231,6 +252,6 @@ async function getAds(): Promise<AdItem[]> {
   }
 }
 export default async function Home() {
-  const [posts, ads, editorial] = await Promise.all([getNews(), getAds(), getEditorial()]);
-  return <NewsClient posts={posts} ads={ads} editorial={editorial} />;
+  const [posts, ads, editorial, sabores] = await Promise.all([getNews(), getAds(), getEditorial(), getSabores()]);
+  return <NewsClient posts={posts} ads={ads} editorial={editorial} sabores={sabores} />;
 }
