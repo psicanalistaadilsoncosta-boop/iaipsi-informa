@@ -167,8 +167,18 @@ async function getNews(): Promise<FeedItem[]> {
     return merged.slice(0, MAX_PER_CATEGORY);
   });
 
-  const categoryResults = await Promise.all(categoryPromises);
-  return categoryResults.flat().sort((a, b) => {
+   const categoryResults = await Promise.all(categoryPromises);
+
+  // Deduplicação global — remove a mesma URL que apareceu em categorias diferentes
+  const globalSeen = new Set<string>();
+  const deduplicated = categoryResults.flat().filter(item => {
+    if (!item.link) return true;
+    if (globalSeen.has(item.link)) return false;
+    globalSeen.add(item.link);
+    return true;
+  });
+
+  return deduplicated.sort((a, b) => {
     const tA = a.pubDate ? new Date(a.pubDate).getTime() : 0;
     const tB = b.pubDate ? new Date(b.pubDate).getTime() : 0;
     return tB - tA;
