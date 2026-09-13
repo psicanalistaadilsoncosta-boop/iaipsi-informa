@@ -175,7 +175,30 @@ async function getNews(): Promise<FeedItem[]> {
   });
 }
 
+export interface AdItem {
+  id: string;
+  position: 'topo' | 'meio' | 'rodape';
+  image: string;
+  text: string;
+  cta: string;
+  link: string;
+  active: boolean;
+}
+
+import fs from 'fs/promises';
+import path from 'path';
+
+async function getAds(): Promise<AdItem[]> {
+  try {
+    const filePath = path.join(process.cwd(), 'public', 'ads.json');
+    const raw = await fs.readFile(filePath, 'utf-8');
+    const all: AdItem[] = JSON.parse(raw);
+    return all.filter(ad => ad.active);
+  } catch {
+    return [];
+  }
+}
 export default async function Home() {
-  const posts = await getNews();
-  return <NewsClient posts={posts} />;
+  const [posts, ads] = await Promise.all([getNews(), getAds()]);
+  return <NewsClient posts={posts} ads={ads} />;
 }

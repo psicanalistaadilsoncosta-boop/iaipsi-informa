@@ -1,0 +1,29 @@
+[
+  {
+    "id": "ad1",
+    "position": "topo",
+    "image": "https://placehold.co/1000x120/2563eb/ffffff?text=Seu+Banner+Aqui",
+    "text": "Liderança Consciente — Desenvolvimento humano e organizacional",
+    "cta": "Saiba mais",
+    "link": "https://sistemaconsciente.com.br",
+    "active": true
+  },
+  {
+    "id": "ad2",
+    "position": "meio",
+    "image": "https://placehold.co/1000x120/7c3aed/ffffff?text=ArquivoPsi",
+    "text": "ArquivoPsi — Plataforma para psicanalistas",
+    "cta": "Conheça",
+    "link": "https://arquivopsi.com",
+    "active": true
+  },
+  {
+    "id": "ad3",
+    "position": "rodape",
+    "image": "https://placehold.co/1000x120/047857/ffffff?text=Anuncie+Aqui",
+    "text": "Anuncie para líderes, executivos e profissionais de saúde mental",
+    "cta": "Fale conosco",
+    "link": "mailto:contato@iaipsi.com",
+    "active": true
+  }
+]
