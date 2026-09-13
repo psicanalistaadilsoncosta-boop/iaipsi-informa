@@ -288,8 +288,10 @@ export default function NewsClient({ posts, ads, editorial }: { posts: FeedItem[
 
       {/* Rodapé */}
       <footer style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #e5e7eb', textAlign: 'center' }}>
-        <p style={{ fontSize: '0.78rem', color: '#9ca3af', margin: 0, lineHeight: 1.6 }}>
-          © {new Date().getFullYear()} IAIPSI Informa · As análises editoriais são elaboradas com auxílio de inteligência artificial e revisadas e assinadas por Adilson Costa.
+                <p style={{ fontSize: '0.78rem', color: '#9ca3af', margin: 0, lineHeight: 1.8 }}>
+          © {new Date().getFullYear()} IAIPSI Informa · Notícias coletadas automaticamente dos principais portais de comunicação do Brasil e do mundo.
+          <br />
+          As análises editoriais são elaboradas com auxílio de inteligência artificial e revisadas e assinadas por Adilson Costa.
         </p>
       </footer>
 
