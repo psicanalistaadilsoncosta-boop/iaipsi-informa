@@ -253,6 +253,9 @@ export default function NewsClient({ posts, ads, editorial }: { posts: FeedItem[
 
       {/* Seção Editorial */}
       <EditorialSection items={safeEditorial} />
+      
+
+
 
       {/* Filtros */}
       <nav style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '24px' }}>
