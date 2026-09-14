@@ -16,6 +16,7 @@ interface FeedConfig {
   category: string;
   color: string;
   hasRssImage: boolean;
+  dynamicCategory?: boolean; // usa a categoria do próprio XML
 }
 
 // ─── CACHE: revalida a cada 15 minutos ────────────────────────────────────
@@ -57,7 +58,7 @@ const FEEDS: FeedConfig[] = [
 
   // ── POLÍTICA ──────────────────────────────────────────────────────────────
   { url: 'https://g1.globo.com/rss/g1/politica/',                                                     category: 'Política',        color: '#1e3a8a', hasRssImage: true  },
-  { url: 'https://www.cnnbrasil.com.br/feed/',                                                         category: 'Política',        color: '#1e3a8a', hasRssImage: true  },
+  { url: 'https://www.cnnbrasil.com.br/feed/', category: 'Geral', color: '#cc0000', hasRssImage: true, dynamicCategory: true },
   { url: 'https://news.google.com/rss/search?q=politica+brasil&hl=pt-BR&gl=BR&ceid=BR:pt-419',        category: 'Política',        color: '#1e3a8a', hasRssImage: false },
 
   // ── ECONOMIA ──────────────────────────────────────────────────────────────
@@ -160,18 +161,52 @@ async function getNews(): Promise<FeedItem[]> {
           const res = await fetchAndParseFeed(feed.url);
           const items = res.items.slice(0, ITEMS_PER_FEED);
 
-          return await Promise.all(items.map(async (item) => {
+                    return await Promise.all(items.map(async (item) => {
             const resolvedLink = item.link && !feed.hasRssImage
               ? await resolveGoogleNewsUrl(item.link)
               : item.link;
+
+            // Categoria dinâmica: pega do XML se disponível
+            let category = feed.category;
+            let categoryColor = feed.color;
+            if (feed.dynamicCategory && Array.isArray(item.categories) && item.categories.length > 0) {
+              const raw = item.categories[0].trim();
+              // Mapeia categoria do XML para as categorias do site
+              const categoryMap: Record<string, { label: string; color: string }> = {
+                'política': { label: 'Política', color: '#1e3a8a' },
+                'politica': { label: 'Política', color: '#1e3a8a' },
+                'economia': { label: 'Economia', color: '#047857' },
+                'negócios': { label: 'Economia', color: '#047857' },
+                'negocios': { label: 'Economia', color: '#047857' },
+                'esporte': { label: 'Esportes', color: '#ea580c' },
+                'esportes': { label: 'Esportes', color: '#ea580c' },
+                'saúde': { label: 'Saúde & Ciência', color: '#0284c7' },
+                'saude': { label: 'Saúde & Ciência', color: '#0284c7' },
+                'ciência': { label: 'Saúde & Ciência', color: '#0284c7' },
+                'ciencia': { label: 'Saúde & Ciência', color: '#0284c7' },
+                'tecnologia': { label: 'Tecnologia & IA', color: '#0f766e' },
+                'tech': { label: 'Tecnologia & IA', color: '#0f766e' },
+                'mundo': { label: 'Mundo', color: '#374151' },
+                'internacional': { label: 'Mundo', color: '#374151' },
+              };
+              const key = raw.toLowerCase();
+              const mapped = categoryMap[key];
+              if (mapped) {
+                category = mapped.label;
+                categoryColor = mapped.color;
+              } else {
+                category = raw; // usa o nome original se não mapeado
+                categoryColor = feed.color;
+              }
+            }
 
             return {
               title: item.title,
               link: resolvedLink,
               pubDate: item.pubDate,
               contentSnippet: truncateText(item.contentSnippet || item.content),
-              category: feed.category,
-              categoryColor: feed.color,
+              category,
+              categoryColor,
               imageUrl: feed.hasRssImage ? extractImageFromRss(item) : undefined,
             };
           }));
