@@ -21,8 +21,6 @@ interface FeedConfig {
 // ─── CACHE: revalida a cada 15 minutos ────────────────────────────────────
 export const revalidate = 900;
 
-import iconv from 'iconv-lite';
-
 const parser = new Parser({
   customFields: {
     item: [
@@ -31,26 +29,12 @@ const parser = new Parser({
       ['enclosure', 'enclosure', { keepArray: false }],
     ],
   },
+  defaultRSS: 2.0,
+  headers: {
+    'Accept-Charset': 'utf-8',
+  },
 });
 
-async function fetchAndParseFeed(url: string) {
-  const response = await fetch(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/153.0.0.0 Safari/537.36',
-      'Accept': 'application/rss+xml, application/xml, text/xml, */*;q=0.8',
-      'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
-    },
-  });
-
-  if (!response.ok) throw new Error(`Status code ${response.status}`);
-
-  const buffer = Buffer.from(await response.arrayBuffer());
-  const header = buffer.subarray(0, 500).toString('ascii');
-  const encoding = /encoding=["']?iso-8859-1/i.test(header) ? 'win1252' : 'utf8';
-  const xml = iconv.decode(buffer, encoding);
-
-  return parser.parseString(xml);
-}
 
 // ─── FEEDS ────────────────────────────────────────────────────────────────
 const FEEDS: FeedConfig[] = [
@@ -65,6 +49,7 @@ const FEEDS: FeedConfig[] = [
   { url: 'https://news.google.com/rss/search?q=economia+brasil&hl=pt-BR&gl=BR&ceid=BR:pt-419',       category: 'Economia',        color: '#047857', hasRssImage: false },
 
   // ── ESPORTES ──────────────────────────────────────────────────────────────
+  { url: 'https://noticias.uol.com.br/ultimas/index.xml',                                              category: 'Esportes',        color: '#ea580c', hasRssImage: true  },
   { url: 'https://ge.globo.com/ESP/Noticia/Rss/0,,AS0-4271,00.xml',                                    category: 'Esportes',        color: '#ea580c', hasRssImage: true  },
   { url: 'https://news.google.com/rss/search?q=futebol+brasileiro&hl=pt-BR&gl=BR&ceid=BR:pt-419',    category: 'Esportes',        color: '#ea580c', hasRssImage: false },
 
@@ -157,7 +142,7 @@ async function getNews(): Promise<FeedItem[]> {
     const feedResults = await Promise.all(
       feeds.map(async (feed) => {
         try {
-          const res = await fetchAndParseFeed(feed.url);
+          const res = await parser.parseURL(feed.url);
           const items = res.items.slice(0, ITEMS_PER_FEED);
 
           return await Promise.all(items.map(async (item) => {
