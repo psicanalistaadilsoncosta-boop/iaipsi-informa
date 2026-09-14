@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Fragment } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { FeedItem, AdItem, EditorialItem, SaboresItem } from './page';
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -60,6 +60,52 @@ function SaboresCardExpanded({ item, small = false }: { item: SaboresItem; small
         
       </div>
 
+    </div>
+  );
+}
+
+
+// ─── BANNER ROTATIVO ─────────────────────────────────────────────────────
+function AdBannerRotating({ ads }: { ads: AdItem[] }) {
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    if (ads.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrent(prev => (prev + 1) % ads.length);
+    }, 6000); // troca a cada 6 segundos
+    return () => clearInterval(interval);
+  }, [ads.length]);
+
+  if (!ads.length) return null;
+  const ad = ads[current];
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <a href={ad.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', display: 'block' }}>
+        <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', backgroundColor: '#fff', boxShadow: '0 2px 6px rgba(0,0,0,0.06)' }}>
+          <div style={{ width: '100%', maxHeight: '120px', overflow: 'hidden' }}>
+            <img src={ad.image} alt={ad.text} style={{ width: '100%', height: '120px', objectFit: 'cover' }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', gap: '16px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '0.7rem', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Publicidade</span>
+              <span style={{ color: '#374151', fontSize: '0.9rem', fontWeight: 500 }}>{ad.text}</span>
+            </div>
+            <span style={{ backgroundColor: '#2563eb', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 600, whiteSpace: 'nowrap' }}>
+              {ad.cta} →
+            </span>
+          </div>
+        </div>
+      </a>
+      {/* Indicadores */}
+      {ads.length > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginTop: '8px' }}>
+          {ads.map((_, i) => (
+            <button key={i} onClick={() => setCurrent(i)} style={{ width: '8px', height: '8px', borderRadius: '50%', border: 'none', backgroundColor: i === current ? '#2563eb' : '#d1d5db', cursor: 'pointer', padding: 0 }} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -221,7 +267,9 @@ export default function NewsClient({ posts, ads, editorial, sabores }: { posts: 
   const safeEditorial = editorial ?? [];
   const safeSabores = sabores ?? [];
 
-  const adByPosition = (pos: 'topo' | 'meio' | 'rodape') => safeAds.find(a => a.position === pos);
+  const adByPosition = (pos: 'topo' | 'rodape') => safeAds.find(a => a.position === pos);
+  const adsMeio = safeAds.filter(a => a.position === 'meio');
+  const adMeioByIndex = (index: number) => adsMeio.length > 0 ? adsMeio[index % adsMeio.length] : undefined;
 
   const categories = [
     'Todas',
@@ -340,7 +388,11 @@ export default function NewsClient({ posts, ads, editorial, sabores }: { posts: 
         ) : (
           filtered.map((item, index) => (
             <Fragment key={`item-${index}`}>
-              {index > 0 && index % 12 === 0 && <AdSlotGrid ad={adByPosition('meio')} />}
+               {index > 0 && index % 12 === 0 && adsMeio.length > 0 && (
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <AdBanner ad={adMeioByIndex(Math.floor(index / 12) - 1)} />
+                </div>
+              )}
               <NewsCard item={item} />
             </Fragment>
           ))

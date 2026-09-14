@@ -1,7 +1,7 @@
 [
   {
     "id": "ad1",
-    "position": "topo",
+    "position": "meio",
     "image": "https://placehold.co/1000x120/2563eb/ffffff?text=Seu+Banner+Aqui",
     "text": "Liderança Consciente — Desenvolvimento humano e organizacional",
     "cta": "Saiba mais",
@@ -19,11 +19,21 @@
   },
   {
     "id": "ad3",
-    "position": "rodape",
-    "image": "https://placehold.co/1000x120/047857/ffffff?text=Anuncie+Aqui",
-    "text": "Anuncie para líderes, executivos e profissionais de saúde mental",
-    "cta": "Fale conosco",
-    "link": "mailto:contato@iaipsi.com",
+    "position": "meio",
+    "image": "https://placehold.co/1000x120/7c3aed/ffffff?text=Olhar",
+    "text": "Autodesenvolvimento psicanalítico guiado. No seu tempo, com um profissional presente.",
+    "cta": "Conheça",
+    "link": "https://olhar.iaipsi.com",
     "active": true
-  }
+  },
+ {
+    "id": "ad4",
+    "position": "meio",
+    "image": "https://placehold.co/1000x120/7c3aed/ffffff?text=IAIPSI · SUPERVISÃO CLÍNICA",
+    "text": "Supervisão psicanalítica assíncrona — material clínico, análise aprofundada e retorno semanal, com sessão mensal de vínculo.",
+    "cta": "Conheça",
+    "link": "https://supervisao.iaipsi.com",
+    "active": true
+  },
+
 ]
