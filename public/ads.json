@@ -2,7 +2,7 @@
   {
     "id": "ad1",
     "position": "meio",
-    "image": "https://placehold.co/1000x120/2563eb/ffffff?text=Seu+Banner+Aqui",
+    "image": "https://placehold.co/1000x120/2563eb/ffffff?text=Sistema+4D",
     "text": "Liderança Consciente — Desenvolvimento humano e organizacional",
     "cta": "Saiba mais",
     "link": "https://sistemaconsciente.com.br",
@@ -11,29 +11,29 @@
   {
     "id": "ad2",
     "position": "meio",
-    "image": "https://placehold.co/1000x120/7c3aed/ffffff?text=ArquivoPsi",
-    "text": "ArquivoPsi — Plataforma para psicanalistas",
-    "cta": "Conheça",
-    "link": "https://arquivopsi.com",
-    "active": true
-  },
-  {
-    "id": "ad3",
-    "position": "meio",
     "image": "https://placehold.co/1000x120/7c3aed/ffffff?text=Olhar",
     "text": "Autodesenvolvimento psicanalítico guiado. No seu tempo, com um profissional presente.",
     "cta": "Conheça",
     "link": "https://olhar.iaipsi.com",
     "active": true
   },
- {
-    "id": "ad4",
+  {
+    "id": "ad3",
     "position": "meio",
-    "image": "https://placehold.co/1000x120/7c3aed/ffffff?text=IAIPSI · SUPERVISÃO CLÍNICA",
+    "image": "https://placehold.co/1000x120/7c3aed/ffffff?text=ArquivoPsi",
+    "text": "ArquivoPsi — Plataforma para psicanalistas",
+    "cta": "Conheça",
+    "link": "https://arquivopsi.com",
+    "active": true
+  },
+{
+    "id": "ad4",
+    "position": "rodape",
+    "image": "https://placehold.co/1000x120/7c3aed/ffffff?text=Supervisão",
     "text": "Supervisão psicanalítica assíncrona — material clínico, análise aprofundada e retorno semanal, com sessão mensal de vínculo.",
     "cta": "Conheça",
     "link": "https://supervisao.iaipsi.com",
     "active": true
-  },
+  }
 
 ]

@@ -40,7 +40,6 @@ function SaboresCardExpanded({ item, small = false }: { item: SaboresItem; small
   return (
     <div>
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-        {/* Botão principal — abre página completa */}
         <button
           onClick={() => window.open(`/sabores/${item.id}`, '_blank')}
           style={{
@@ -56,14 +55,10 @@ function SaboresCardExpanded({ item, small = false }: { item: SaboresItem; small
           }}>
           {item.cta}
         </button>
-
-        
       </div>
-
     </div>
   );
 }
-
 
 // ─── BANNER ROTATIVO ─────────────────────────────────────────────────────
 function AdBannerRotating({ ads }: { ads: AdItem[] }) {
@@ -73,7 +68,7 @@ function AdBannerRotating({ ads }: { ads: AdItem[] }) {
     if (ads.length <= 1) return;
     const interval = setInterval(() => {
       setCurrent(prev => (prev + 1) % ads.length);
-    }, 6000); // troca a cada 6 segundos
+    }, 6000);
     return () => clearInterval(interval);
   }, [ads.length]);
 
@@ -98,7 +93,6 @@ function AdBannerRotating({ ads }: { ads: AdItem[] }) {
           </div>
         </div>
       </a>
-      {/* Indicadores */}
       {ads.length > 1 && (
         <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginTop: '8px' }}>
           {ads.map((_, i) => (
@@ -108,34 +102,6 @@ function AdBannerRotating({ ads }: { ads: AdItem[] }) {
       )}
     </div>
   );
-}
-
-// ─── BANNER DE ANÚNCIO ────────────────────────────────────────────────────
-function AdBanner({ ad }: { ad?: AdItem }) {
-  if (!ad) return null;
-  return (
-    <a href={ad.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', display: 'block' }}>
-      <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', backgroundColor: '#fff', boxShadow: '0 2px 6px rgba(0,0,0,0.06)' }}>
-        <div style={{ width: '100%', maxHeight: '120px', overflow: 'hidden' }}>
-          <img src={ad.image} alt={ad.text} style={{ width: '100%', height: '120px', objectFit: 'cover' }} />
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', gap: '16px', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '0.7rem', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Publicidade</span>
-            <span style={{ color: '#374151', fontSize: '0.9rem', fontWeight: 500 }}>{ad.text}</span>
-          </div>
-          <span style={{ backgroundColor: '#2563eb', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 600, whiteSpace: 'nowrap' }}>
-            {ad.cta} →
-          </span>
-        </div>
-      </div>
-    </a>
-  );
-}
-
-function AdSlotGrid({ ad }: { ad?: AdItem }) {
-  if (!ad) return null;
-  return <div style={{ gridColumn: '1 / -1' }}><AdBanner ad={ad} /></div>;
 }
 
 // ─── SEÇÃO EDITORIAL ──────────────────────────────────────────────────────
@@ -150,7 +116,7 @@ function EditorialSection({ items }: { items: EditorialItem[] }) {
     <section style={{ marginBottom: '32px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
         <div style={{ width: '4px', height: '28px', backgroundColor: '#be185d', borderRadius: '2px' }} />
-               <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#111827', margin: 0 }}>Análises Editoriais</h2>
+        <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#111827', margin: 0 }}>Análises Editoriais</h2>
         <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 500, marginLeft: '4px' }}>por Adilson Costa - Psicanalista</span>
         <a href="/arquivo-editorial" style={{ marginLeft: 'auto', fontSize: '0.8rem', color: '#be185d', fontWeight: 600, textDecoration: 'none' }}>Ver todas →</a>
       </div>
@@ -225,7 +191,7 @@ function NewsCard({ item }: { item: FeedItem }) {
   const showImage = !!item.imageUrl && !imgError;
 
   return (
-       <article style={{ backgroundColor: '#fff', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', boxShadow: '0 2px 6px rgba(0,0,0,0.05)', breakInside: 'avoid', marginBottom: '20px' }}>
+    <article style={{ backgroundColor: '#fff', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', boxShadow: '0 2px 6px rgba(0,0,0,0.05)', breakInside: 'avoid', marginBottom: '20px' }}>
       {showImage && (
         <div style={{ height: '180px', overflow: 'hidden', backgroundColor: '#f3f4f6' }}>
           <img src={item.imageUrl!} alt={item.title || ''} onError={() => setImgError(true)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -245,7 +211,7 @@ function NewsCard({ item }: { item: FeedItem }) {
             📅 {new Date(item.pubDate).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
           </small>
         )}
-          {item.contentSnippet && (
+        {item.contentSnippet && (
           <p style={{ color: '#4b5563', margin: '0 0 16px', fontSize: '0.875rem', lineHeight: '1.55', display: '-webkit-box', WebkitLineClamp: showImage ? 3 : 6, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
             {item.contentSnippet}
           </p>
@@ -267,9 +233,8 @@ export default function NewsClient({ posts, ads, editorial, sabores }: { posts: 
   const safeEditorial = editorial ?? [];
   const safeSabores = sabores ?? [];
 
-  const adByPosition = (pos: 'topo' | 'rodape') => safeAds.find(a => a.position === pos);
-  const adsMeio = safeAds.filter(a => a.position === 'meio');
-  const adMeioByIndex = (index: number) => adsMeio.length > 0 ? adsMeio[index % adsMeio.length] : undefined;
+  // Todos os anúncios ativos — independente da posição
+  const allAds = safeAds.filter(a => a.active !== false);
 
   const categories = [
     'Todas',
@@ -293,9 +258,12 @@ export default function NewsClient({ posts, ads, editorial, sabores }: { posts: 
         </div>
       </header>
 
-      <div style={{ marginBottom: '16px' }}>
-        <AdBanner ad={adByPosition('topo')} />
-      </div>
+      {/* Anúncio topo — rotativo com todos os anúncios */}
+      {allAds.length > 0 && (
+        <div style={{ marginBottom: '16px' }}>
+          <AdBannerRotating ads={allAds} />
+        </div>
+      )}
 
       <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', padding: '12px 20px', borderRadius: '8px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
         <span style={{ fontSize: '0.9rem', color: '#1e40af', fontWeight: 600 }}>⚽ Acompanhe os jogos de hoje:</span>
@@ -304,15 +272,15 @@ export default function NewsClient({ posts, ads, editorial, sabores }: { posts: 
         </a>
       </div>
 
-           <EditorialSection items={safeEditorial.slice(0, 3)} />
+      <EditorialSection items={safeEditorial.slice(0, 3)} />
 
-        {safeSabores.slice(0, 3).length > 0 && (
+      {safeSabores.slice(0, 3).length > 0 && (
         <section style={{ marginBottom: '32px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
             <div style={{ width: '4px', height: '28px', backgroundColor: '#b45309', borderRadius: '2px' }} />
-         <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#111827', margin: 0 }}>Sabores & Destinos</h2>
-        <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 500, marginLeft: '4px' }}>por Adilson Costa</span>
-        <a href="/arquivo-sabores" style={{ marginLeft: 'auto', fontSize: '0.8rem', color: '#b45309', fontWeight: 600, textDecoration: 'none' }}>Ver todos →</a>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#111827', margin: 0 }}>Sabores & Destinos</h2>
+            <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 500, marginLeft: '4px' }}>por Adilson Costa</span>
+            <a href="/arquivo-sabores" style={{ marginLeft: 'auto', fontSize: '0.8rem', color: '#b45309', fontWeight: 600, textDecoration: 'none' }}>Ver todos →</a>
           </div>
 
           {(() => {
@@ -341,7 +309,7 @@ export default function NewsClient({ posts, ads, editorial, sabores }: { posts: 
             );
           })()}
 
-             {safeSabores.slice(0, 3).length > 1 && (
+          {safeSabores.slice(0, 3).length > 1 && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
               {safeSabores.slice(1, 3).map(item => (
                 <div key={item.id} style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }}>
@@ -382,15 +350,15 @@ export default function NewsClient({ posts, ads, editorial, sabores }: { posts: 
         })}
       </nav>
 
-            <section style={{ columns: '3 300px', columnGap: '20px' }}>
+      <section style={{ columns: '3 300px', columnGap: '20px' }}>
         {filtered.length === 0 ? (
           <p style={{ color: '#6b7280' }}>Nenhuma notícia encontrada.</p>
         ) : (
           filtered.map((item, index) => (
             <Fragment key={`item-${index}`}>
-               {index > 0 && index % 12 === 0 && adsMeio.length > 0 && (
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <AdBanner ad={adMeioByIndex(Math.floor(index / 12) - 1)} />
+              {index > 0 && index % 12 === 0 && allAds.length > 0 && (
+                <div style={{ breakInside: 'avoid', marginBottom: '20px', columnSpan: 'all' }}>
+                  <AdBannerRotating ads={allAds} />
                 </div>
               )}
               <NewsCard item={item} />
@@ -399,9 +367,12 @@ export default function NewsClient({ posts, ads, editorial, sabores }: { posts: 
         )}
       </section>
 
-      <div style={{ marginTop: '32px' }}>
-        <AdBanner ad={adByPosition('rodape')} />
-      </div>
+      {/* Anúncio rodapé */}
+      {allAds.length > 0 && (
+        <div style={{ marginTop: '32px' }}>
+          <AdBannerRotating ads={allAds} />
+        </div>
+      )}
 
       <footer style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #e5e7eb', textAlign: 'center' }}>
         <p style={{ fontSize: '0.78rem', color: '#9ca3af', margin: 0, lineHeight: 1.8 }}>
