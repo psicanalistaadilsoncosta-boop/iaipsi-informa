@@ -359,7 +359,7 @@ export default function NewsClient({ posts, ads, editorial, sabores }: { posts: 
           filtered.map((item, index) => (
             <Fragment key={`item-${index}`}>
                            {index > 0 && index % 12 === 0 && adsMeio.length > 0 && (
-                <div style={{ breakInside: 'avoid', marginBottom: '20px', columnSpan: 'all' }}>
+                <div style={{ breakInside: 'avoid', marginBottom: '20px' }}>
                   <AdBannerRotating ads={adsMeio} />
                 </div>
               )}
