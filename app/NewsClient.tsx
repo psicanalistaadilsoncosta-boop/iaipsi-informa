@@ -234,7 +234,10 @@ export default function NewsClient({ posts, ads, editorial, sabores }: { posts: 
   const safeSabores = sabores ?? [];
 
   // Todos os anúncios ativos — independente da posição
-  const allAds = safeAds.filter(a => a.active !== false);
+    const allAds = safeAds.filter(a => a.active !== false);
+  const adsTopo = safeAds.filter(a => a.position === 'topo' && a.active !== false);
+  const adsMeio = safeAds.filter(a => a.position === 'meio' && a.active !== false);
+  const adsRodape = safeAds.filter(a => a.position === 'rodape' && a.active !== false);
 
   const categories = [
     'Todas',
@@ -258,10 +261,9 @@ export default function NewsClient({ posts, ads, editorial, sabores }: { posts: 
         </div>
       </header>
 
-      {/* Anúncio topo — rotativo com todos os anúncios */}
-      {allAds.length > 0 && (
+        {adsTopo.length > 0 && (
         <div style={{ marginBottom: '16px' }}>
-          <AdBannerRotating ads={allAds} />
+          <AdBannerRotating ads={adsTopo} />
         </div>
       )}
 
@@ -356,9 +358,9 @@ export default function NewsClient({ posts, ads, editorial, sabores }: { posts: 
         ) : (
           filtered.map((item, index) => (
             <Fragment key={`item-${index}`}>
-              {index > 0 && index % 12 === 0 && allAds.length > 0 && (
+                           {index > 0 && index % 12 === 0 && adsMeio.length > 0 && (
                 <div style={{ breakInside: 'avoid', marginBottom: '20px', columnSpan: 'all' }}>
-                  <AdBannerRotating ads={allAds} />
+                  <AdBannerRotating ads={adsMeio} />
                 </div>
               )}
               <NewsCard item={item} />
@@ -367,10 +369,9 @@ export default function NewsClient({ posts, ads, editorial, sabores }: { posts: 
         )}
       </section>
 
-      {/* Anúncio rodapé */}
-      {allAds.length > 0 && (
+           {adsRodape.length > 0 && (
         <div style={{ marginTop: '32px' }}>
-          <AdBannerRotating ads={allAds} />
+          <AdBannerRotating ads={adsRodape} />
         </div>
       )}
 
