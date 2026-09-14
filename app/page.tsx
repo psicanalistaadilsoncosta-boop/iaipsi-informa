@@ -56,7 +56,11 @@ async function fetchAndParseFeed(url: string) {
 // ─── FEEDS ────────────────────────────────────────────────────────────────
 const FEEDS: FeedConfig[] = [
 
-  // ── POLÍTICA ──────────────────────────────────────────────────────────────
+// ── VINHOS ──────────────────────────────────────────────────────────────
+  { url: 'https://winenews.com.br/feed.xml',                                  category: 'Vinhos & Afins',        color: '#7B1B38', hasRssImage: true  },
+  { url: 'https://revistaadega.uol.com.br/feed/',                             category: 'Vinhos & Afins',        color: '#7B1B38', hasRssImage: true  },
+
+// ── POLÍTICA ──────────────────────────────────────────────────────────────
   { url: 'https://g1.globo.com/rss/g1/politica/',                                                     category: 'Política',        color: '#1e3a8a', hasRssImage: true  },
   { url: 'https://www.cnnbrasil.com.br/feed/', category: 'Geral', color: '#cc0000', hasRssImage: true, dynamicCategory: true },
   { url: 'https://news.google.com/rss/search?q=politica+brasil&hl=pt-BR&gl=BR&ceid=BR:pt-419',        category: 'Política',        color: '#1e3a8a', hasRssImage: false },
