@@ -30,10 +30,12 @@ export const metadata: Metadata = {
     follow: true,
     googleBot: { index: true, follow: true },
   },
-  verification: {
+   verification: {
     google: '1cHg7n-AwRyL02QBJbB24LjNz-GuZCMHsxsjYKC1U0Y',
+    other: {
+      'mitgo-verification': '184e98de-443a-47c6-8afa-e3317f0c1980',
+    },
   },
-};
 
 export default function RootLayout({
   children,
