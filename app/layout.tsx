@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     template: '%s | IAIPSI Informa',
   },
   description: 'Notícias de política, economia, saúde mental e psicanálise com análises editoriais de Adilson Costa — psicanalista e consultor organizacional.',
-  keywords: ['psicanálise', 'saúde mental', 'liderança', 'notícias', 'análise editorial', 'Adilson Costa', 'IAIPSI'],
+  keywords: ['psicanálise', 'saúde mental', 'liderança', 'notícias', 'análise editorial', 'vinhos', 'viagens', 'Adilson Costa', 'IAIPSI'],
   authors: [{ name: 'Adilson Costa', url: 'https://iaipsi.com' }],
   creator: 'Adilson Costa',
   openGraph: {
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     description: 'Notícias com análises editoriais de Adilson Costa.',
     images: ['/og-image.jpg'],
   },
-   robots: {
+  robots: {
     index: true,
     follow: true,
     googleBot: { index: true, follow: true },
@@ -34,14 +34,6 @@ export const metadata: Metadata = {
     google: '1cHg7n-AwRyL02QBJbB24LjNz-GuZCMHsxsjYKC1U0Y',
   },
 };
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="pt-BR">
-      <body>{children}</body>
-    </html>
-  );
-}
 
 export default function RootLayout({
   children,
