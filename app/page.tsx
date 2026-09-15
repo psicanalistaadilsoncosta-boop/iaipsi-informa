@@ -316,16 +316,51 @@ async function getAds(): Promise<AdItem[]> {
 }
 async function getOfertasMix(): Promise<any[]> {
   try {
-    const res = await fetch('http://localhost:3000/api/ofertas-mix', {
-      next: { revalidate: 900 },
-    });
-    const data = await res.json();
-    return data.items || [];
+    const API_KEY = process.env.LOMADEE_API_KEY || '';
+    const BASE_URL = 'https://api.lomadee.com.br';
+
+    const [campData, brandData] = await Promise.all([
+      fetch(`${BASE_URL}/affiliate/campaigns?limit=20`, {
+        headers: { 'x-api-key': API_KEY },
+        next: { revalidate: 900 },
+      }).then(r => r.json()),
+      fetch(`${BASE_URL}/affiliate/brands?limit=20`, {
+        headers: { 'x-api-key': API_KEY },
+        next: { revalidate: 900 },
+      }).then(r => r.json()),
+    ]);
+
+    const campanhas = (campData.data || [])
+      .filter((c: any) => c.status === 'onTime' && c.channels?.[0]?.shortUrls?.[0])
+      .slice(0, 4)
+      .map((c: any) => ({
+        tipo: 'campanha',
+        id: c.id,
+        titulo: c.name,
+        link: c.channels[0].shortUrls[0],
+        imagem: c.mediaKit?.banners?.[0] || null,
+        isCupom: c.type === 'GenericCoupon' || c.type === 'PersonalCoupon',
+        code: c.code || null,
+        expira: c.period?.endAt || null,
+      }));
+
+    const marcas = (brandData.data || [])
+      .filter((m: any) => m.network?.trait?.isHighlight && m.channels?.[0]?.shortUrls?.[0])
+      .slice(0, 3)
+      .map((m: any) => ({
+        tipo: 'marca',
+        id: m.id,
+        titulo: m.name,
+        link: m.channels[0].shortUrls[0],
+        logo: m.logo,
+        segment: m.segment,
+      }));
+
+    return [...campanhas, ...marcas];
   } catch {
     return [];
   }
 }
-
 export default async function Home() {
   const [posts, ads, editorial, sabores, ofertasMix] = await Promise.all([
     getNews(), getAds(), getEditorial(), getSabores(), getOfertasMix()
