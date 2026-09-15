@@ -337,7 +337,13 @@ const safePosts = posts ?? [];
   const adsTopo = safeAds.filter(a => a.position === 'topo' && a.active !== false);
   const adsMeio = safeAds.filter(a => a.position === 'meio' && a.active !== false);
   const adsRodape = safeAds.filter(a => a.position === 'rodape' && a.active !== false);
-  const safeOfertasMix = ofertasMix ?? [];
+  const [ofertasMixEmbaralhado, setOfertasMixEmbaralhado] = useState<any[]>(ofertasMix ?? []);
+  
+  useEffect(() => {
+    setOfertasMixEmbaralhado([...(ofertasMix ?? [])].sort(() => Math.random() - 0.5));
+  }, []);
+
+  const safeOfertasMix = ofertasMixEmbaralhado;
 
   const categories = [
     'Todas',
