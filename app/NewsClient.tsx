@@ -254,9 +254,12 @@ export default function NewsClient({ posts, ads, editorial, sabores }: { posts: 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <h1 style={{ fontSize: '2.1rem', color: '#111827', margin: 0, fontWeight: 800 }}>IAIPSI Informa</h1>
-            <p style={{ color: '#6b7280', fontSize: '1rem', margin: '6px 0 0' }}>
+                        <p style={{ color: '#6b7280', fontSize: '1rem', margin: '6px 0 0' }}>
               Política · Economia · Esportes · Saúde Mental · Ciência · Psicanálise · Tecnologia · Liderança · Mundo
             </p>
+            <a href="/ofertas" style={{ display: 'inline-block', marginTop: '10px', backgroundColor: '#dc2626', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>
+              🛍 Ofertas & Experiências
+            </a>
           </div>
         </div>
       </header>

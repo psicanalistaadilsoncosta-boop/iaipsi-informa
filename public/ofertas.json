@@ -1,0 +1,58 @@
+[
+  {
+    "id": "1",
+    "titulo": "Kit Degustação de Vinhos Tintos — 3 garrafas selecionadas",
+    "imagem": "https://placehold.co/600x400/7c2d12/ffffff?text=Vinhos+Selecionados",
+    "preco_original": 299.90,
+    "preco_oferta": 219.90,
+    "desconto": 27,
+    "cta": "Quero este kit →",
+    "link": "https://seulink-afiliado-aqui.com",
+    "categoria": "Vinhos",
+    "destaque": true,
+    "descricao": "Três rótulos cuidadosamente selecionados para quem quer explorar o universo dos tintos sem errar na escolha.",
+    "active": true
+  },
+  {
+    "id": "2",
+    "titulo": "Curso Online de Culinária Italiana — do básico ao avançado",
+    "imagem": "https://placehold.co/600x400/b45309/ffffff?text=Culinária+Italiana",
+    "preco_original": 497.00,
+    "preco_oferta": 197.00,
+    "desconto": 60,
+    "cta": "Acessar o curso →",
+    "link": "https://seulink-afiliado-aqui.com",
+    "categoria": "Cursos",
+    "destaque": false,
+    "descricao": "Do risoto ao tiramisù — aprenda as técnicas clássicas da cozinha italiana com chefs experientes.",
+    "active": true
+  },
+  {
+    "id": "3",
+    "titulo": "Pacote Experiência Gastronômica — São Paulo",
+    "imagem": "https://placehold.co/600x400/047857/ffffff?text=Experiência+SP",
+    "preco_original": 580.00,
+    "preco_oferta": 390.00,
+    "desconto": 33,
+    "cta": "Reservar experiência →",
+    "link": "https://seulink-afiliado-aqui.com",
+    "categoria": "Viagens",
+    "destaque": false,
+    "descricao": "Um jantar degustação com harmonização de vinhos num dos restaurantes mais premiados de São Paulo.",
+    "active": true
+  },
+  {
+    "id": "4",
+    "titulo": "Livro — A Psicologia do Dinheiro",
+    "imagem": "https://placehold.co/600x400/1e3a8a/ffffff?text=A+Psicologia+do+Dinheiro",
+    "preco_original": 59.90,
+    "preco_oferta": 39.90,
+    "desconto": 33,
+    "cta": "Comprar na Amazon →",
+    "link": "https://seulink-afiliado-aqui.com",
+    "categoria": "Livros",
+    "destaque": false,
+    "descricao": "Um dos livros de finanças mais lidos do mundo — sobre como pessoas pensam sobre dinheiro e tomam decisões.",
+    "active": true
+  }
+]
