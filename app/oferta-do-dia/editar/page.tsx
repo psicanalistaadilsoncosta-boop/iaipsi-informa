@@ -63,10 +63,11 @@ export default function EditarOfertaDia() {
   const [buscando, setBuscando] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [salvo, setSalvo] = useState(false);
-    const [oferta, setOferta] = useState<OfertaDia>({
+     const [oferta, setOferta] = useState<OfertaDia>({
     titulo: '', descricao: '', imagem: '', imagens: [],
     link: '', loja: '', logo: '', preco: '', precoOriginal: '',
     cupom: '', validade: '', categoria: '',
+    parcelas: '', valorParcela: '',
   });
   const [novaImagem, setNovaImagem] = useState('');
 
