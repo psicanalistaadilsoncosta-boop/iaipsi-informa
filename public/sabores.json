@@ -1,5 +1,49 @@
 [
   {
+    "id": "1789432288149",
+    "prato": "Carré de Cordeiro",
+    "destino": "Provence, França",
+    "intro": "Na Provence, o cordeiro não é apenas um prato — é uma forma de entender o tempo.",
+    "cta": "Sentar à mesa provençal →",
+    "content": "Há algo quase cerimonial na chegada do **carré de cordeiro** à mesa. As costeletas dispostas em arco, a crosta de ervas frescas — tomilho, alecrim, manjericão — formando uma casca perfumada sobre a carne rosada. Na **Provence**, esse prato não é uma escolha no cardápio: é uma declaração de pertencimento à terra. O cordeiro criado nas encostas calcáreas da região, conhecido como *agneau de Sisteron*, carrega no sabor a memória das ervas que ele mesmo pastou — e há algo de poético nisso, uma circularidade que a culinária raramente consegue com tanta elegância.\n\nA **Provence** existe num ritmo próprio, que desafia qualquer pressa. Aix-en-Provence, Arles, os campos de lavanda entre Valensole e Gordes — cada vilarejo funciona como uma câmera lenta imposta ao viajante. Mercados ao ar livre onde o tempo parece dobrar sobre si mesmo, ruelas de pedra que guardam séculos de história sem alarde. É o tipo de lugar que não precisa se vender: ele simplesmente existe, e espera que você se ajuste ao seu compasso.\n\nPara acompanhar o **carré de cordeiro**, um **Bandol Rouge** — produzido a menos de cem quilômetros dali, com uva Mourvèdre como espinha dorsal — oferece a parceria ideal. Taninos firmes mas não agressivos, uma terrosidade que dialoga com a carne, e um fundo de especiarias que parece ter sido pensado exatamente para essa combinação. O vinho não compete com o prato: ele o completa, como uma frase que encontra sua pontuação perfeita.\n\nExiste uma ideia em psicanálise — cara a Proust antes de ser cara a Freud — de que o alimento não alimenta apenas o corpo. Ele acessa camadas de memória que nem sabíamos que tínhamos. O aroma do tomilho aquecido pela manteiga, o crepitar da carne na frigideira de ferro, o primeiro corte que revela o rosa por dentro: tudo isso ativa algo mais antigo do que o apetite. Viajar para comer não é escapismo frívolo — é uma forma legítima de buscar experiências que nos devolvam ao sensorial, ao presente, ao que somos quando paramos de performar.\n\nA pergunta que o **carré de cordeiro** na Provence nos deixa não é gastronômica. É mais íntima: o que você seria capaz de desacelerar para saborear de verdade?",
+    "imageUrl": "https://cdn.awsli.com.br/2500x2500/646/646684/produto/54816648/carr--curto-assado-ffbyw8ajip.jpg",
+    "imageQuery": "rack of lamb Provence France",
+    "recipe": {
+      "porcoes": "4 porções",
+      "tempo": "1 hora e 20 minutos",
+      "dificuldade": "Elaborado",
+      "ingredientes": [
+        "2 carrés de cordeiro com 8 costeletas cada (aproximadamente 700g cada)",
+        "4 dentes de alho picados finamente",
+        "2 colheres de sopa de mostarda de Dijon",
+        "100g de farinha de rosca fina (chapelure)",
+        "1 maço de tomilho fresco",
+        "1 maço de alecrim fresco",
+        "1 maço de salsinha fresca picada",
+        "100ml de azeite de oliva extra virgem",
+        "Sal grosso a gosto",
+        "Pimenta-do-reino moída na hora a gosto",
+        "2 colheres de sopa de manteiga sem sal",
+        "100ml de vinho branco seco (estilo Provence)",
+        "200ml de caldo de cordeiro ou de frango"
+      ],
+      "passos": [
+        "Retire os carrés de cordeiro da geladeira 30 minutos antes do preparo para que cheguem à temperatura ambiente, garantindo um cozimento uniforme.",
+        "Preaqueça o forno a 220°C. Enquanto isso, misture em uma tigela a farinha de rosca, a salsinha picada, o alho, as folhas de tomilho e alecrim desfolhados, o azeite, sal e pimenta até formar uma crosta aromática (persillade provençal). Reserve.",
+        "Seque bem os carrés com papel toalha. Tempere generosamente com sal grosso e pimenta-do-reino em todos os lados.",
+        "Aqueça uma frigideira de fundo grosso em fogo alto com um fio de azeite e a manteiga. Sele os carrés pelo lado da gordura por 3 a 4 minutos, até dourar bem, depois sele rapidamente os outros lados por 1 minuto cada. Isso cria a crosta e retém os sucos internos.",
+        "Retire os carrés da frigideira e pincele generosamente a parte superior (lado da gordura) com a mostarda de Dijon. Em seguida, pressione a mistura de farinha de rosca com ervas sobre a camada de mostarda, formando uma crosta uniforme.",
+        "Transfira os carrés para uma assadeira com a crosta para cima. Leve ao forno preaquecido por 15 a 20 minutos para malpassado (temperatura interna de 55°C a 58°C) ou até 25 minutos para ao ponto (63°C a 65°C). Use um termômetro culinário para precisão.",
+        "Retire do forno, cubra frouxamente com papel alumínio e deixe a carne descansar por 10 minutos. Esse repouso redistribui os sucos internos e é fundamental para o resultado final.",
+        "Enquanto a carne descansa, deglace a frigideira usada para selar com o vinho branco em fogo médio, raspando o fundo. Acrescente o caldo e reduza até obter um molho encorpado. Ajuste o sal e a pimenta.",
+        "Fatie os carrés separando as costeletas individualmente e sirva com o molho ao lado. Acompanha tradicionalmente com tomates provençais assados, batatas ao murro com ervas de Provence ou ratatouille."
+      ],
+      "dica": "O segredo da crosta perfeita está na mostarda de Dijon: ela age como adesivo natural para a persillade e também adiciona profundidade de sabor sem sobressair. Certifique-se de aplicá-la ainda quente, logo após selar a carne, para que a mistura de ervas grude de forma uniforme e forme uma crosta dourada e crocante no forno.",
+      "fonte": "IA"
+    },
+    "publishedAt": "2026-09-15T00:31:28.149Z"
+  },
+  {
     "id": "1789321958770",
     "prato": "Pho Bo",
     "destino": "Hanói, Vietnã",
