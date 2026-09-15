@@ -7,26 +7,41 @@ const BASE_URL = 'https://api.lomadee.com.br';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const categoria = searchParams.get('categoria') || '';
+  const tipo = searchParams.get('tipo') || 'products';
   const busca = searchParams.get('q') || '';
   const pagina = parseInt(searchParams.get('pagina') || '1');
 
   try {
-    const params = new URLSearchParams({
-      limit: '24',
-      page: String(pagina),
-    });
-    if (busca) params.set('search', busca);
+    let url = '';
 
-    const res = await fetch(`${BASE_URL}/affiliate/products?${params}`, {
+    if (tipo === 'campaigns') {
+      url = `${BASE_URL}/affiliate/campaigns?limit=20&page=${pagina}`;
+    } else if (tipo === 'brands') {
+      url = `${BASE_URL}/affiliate/brands?limit=20&page=${pagina}`;
+    } else {
+      const params = new URLSearchParams({
+        limit: '24',
+        page: String(pagina),
+      });
+      if (busca) params.set('search', busca);
+      url = `${BASE_URL}/affiliate/products?${params}`;
+    }
+
+    const res = await fetch(url, {
       headers: { 'x-api-key': API_KEY },
       signal: AbortSignal.timeout(10000),
     });
 
     const data = await res.json();
+
+    // Retorna raw para campaigns e brands — para inspecionar estrutura
+    if (tipo === 'campaigns' || tipo === 'brands') {
+      return NextResponse.json(data);
+    }
+
+    // Processa produtos
     const produtos = (data.data || [])
       .filter((p: any) => {
-        // Remove produtos sem nome válido ou sem imagem
         if (!p.name || p.name === '#N/A') return false;
         if (!p.images?.length) return false;
         return true;
@@ -39,7 +54,6 @@ export async function GET(request: Request) {
         const desconto = preco_original > preco_oferta
           ? Math.round((1 - preco_oferta / preco_original) * 100)
           : 0;
-
         const rating = p.metadata?.find((m: any) => m.key === 'item_rating')?.value;
 
         return {

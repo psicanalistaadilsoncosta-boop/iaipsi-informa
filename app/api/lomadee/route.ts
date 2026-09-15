@@ -1,83 +1,210 @@
 import { NextResponse } from 'next/server';
 
-export const revalidate = 3600;
+export const revalidate = 900; // 15 min
 
 const API_KEY = process.env.LOMADEE_API_KEY || '';
 const BASE_URL = 'https://api.lomadee.com.br';
 
+// Mapa de segmentos para categorias do site
+const SEGMENTO_PARA_CATEGORIA: Record<string, string> = {
+  // Eletrodomésticos & Eletrônicos
+  'Eletrodomesticos': 'Eletro & Tech',
+  'Eletrodomésticos': 'Eletro & Tech',
+  'Eletrodom, Moda Casa, Smart TV, Eletroportáteis': 'Eletro & Tech',
+  'Eletrodomésticos, Eletroportáteis e Utilidade domésticas ': 'Eletro & Tech',
+  'Eletrônicos': 'Eletro & Tech',
+  'Celular': 'Eletro & Tech',
+  'Smartphone e acessórios ': 'Eletro & Tech',
+  'Hardware, Notebokk, Monitores PC Gamer': 'Eletro & Tech',
+  'Pc gamer, Acessórios gamer e Hardware': 'Eletro & Tech',
+  'Ar Condicionado, Eletrodomésticos': 'Eletro & Tech',
+  'Lavadoras de Alta Pressão, Aspiradores de Pó, Robôs Aspiradores, Limpadoras de Piso': 'Eletro & Tech',
+  'technology': 'Eletro & Tech',
+
+  // Gastronomia & Vinhos
+  'Bebidas ': 'Gastronomia & Vinhos',
+  'Bebidas alcoólicas e utensílios de bar': 'Gastronomia & Vinhos',
+  'Cervejas Artesanais, Cervejas Importadas, Cervejas de Trigo': 'Gastronomia & Vinhos',
+  'Yakisoba, Bowls e promoções': 'Gastronomia & Vinhos',
+  'food': 'Gastronomia & Vinhos',
+  'Lixeiras; Jogos de panelas, Faqueiros, Panelas, Panelas de pressão, Facas. ': 'Gastronomia & Vinhos',
+
+  // Viagens
+  'tourism': 'Viagens',
+  'malas e mochilas': 'Viagens',
+
+  // Casa & Móveis
+  'Casa e Construção': 'Casa & Móveis',
+  'casa e construção ': 'Casa & Móveis',
+  'casa e decoração': 'Casa & Móveis',
+  'Móveis, Eletrodomésticos': 'Casa & Móveis',
+  'Sofás, Móveis, Cadeiras': 'Casa & Móveis',
+  'Sala de jantar, cozinhas, guarda roupas, complementos ': 'Casa & Móveis',
+  'Colchões': 'Casa & Móveis',
+  'Quadros': 'Casa & Móveis',
+  'Vasos decorativos': 'Casa & Móveis',
+  'Lixeiras; Potes herméticos; Organização de geladeira; Organização de pia; Caixas e cestas organizadoras. ': 'Casa & Móveis',
+  'móveis e casa ': 'Casa & Móveis',
+  'Bombas de água, Pressurizadores de água, Construção civil, Piscinas': 'Casa & Móveis',
+  'fogão ': 'Casa & Móveis',
+
+  // Moda
+  'Moda': 'Moda',
+  'Moda geral ': 'Moda',
+  'Moda Infantil': 'Moda',
+  'Moda Praia, Moda Fitness': 'Moda',
+  'Calças': 'Moda',
+  'Camisas (sociais, polo, camisetas), ternos, blazers,  paletós, calças sociais, bermudas, jaquetas, malhas, sobretudos e pijamas': 'Moda',
+  'Roupas femininas, masculinas e infantis': 'Moda',
+  'roupas femininas': 'Moda',
+  'roupas infantis': 'Moda',
+  'bolsas, acessórios': 'Moda',
+  'calçados': 'Moda',
+  'corta vento': 'Moda',
+  'fashion': 'Moda',
+
+  // Saúde & Beleza
+  'Perfumaria': 'Saúde & Beleza',
+  'Perfumaria ': 'Saúde & Beleza',
+  'Perfimaria e farmácia': 'Saúde & Beleza',
+  'Skin care': 'Saúde & Beleza',
+  'remédios e cosméticos': 'Saúde & Beleza',
+  'creme para estria': 'Saúde & Beleza',
+  'curativos': 'Saúde & Beleza',
+  'sugadores': 'Saúde & Beleza',
+  'health': 'Saúde & Beleza',
+  '1- Saúde, 2- Desempenho Físico, 3- Perda de Peso, 4- Bem-estar, 5- Beleza': 'Saúde & Beleza',
+  'Proteínas': 'Saúde & Beleza',
+
+  // Bebês & Kids
+  'Carrinho de Bebê, Berço, Cadeira de Carro, Bebê Conforto': 'Bebês & Kids',
+  'Brinquedos ': 'Bebês & Kids',
+
+  // Entretenimento
+  'Streaming': 'Entretenimento',
+  'Mídia': 'Entretenimento',
+  'Colecionáveis': 'Entretenimento',
+  'entertainment': 'Entretenimento',
+  'livros ': 'Entretenimento',
+
+  // Serviços & Outros
+  'Câmbio PF e PJ': 'Serviços',
+  'financial-services': 'Serviços',
+  'serviços ': 'Serviços',
+  'education': 'Serviços',
+  'pneu': 'Outros',
+  'retail': 'Outros',
+  'industry': 'Outros',
+  'others': 'Outros',
+  'outros ': 'Outros',
+};
+
+
+
+async function fetchLomadee(path: string) {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    headers: { 'x-api-key': API_KEY },
+    signal: AbortSignal.timeout(10000),
+  });
+  return res.json();
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const tipo = searchParams.get('tipo') || 'products';
-  const busca = searchParams.get('q') || '';
-  const pagina = parseInt(searchParams.get('pagina') || '1');
+  const tipo = searchParams.get('tipo') || 'campaigns';
+  const filtro = searchParams.get('filtro') || '';
 
   try {
-    let url = '';
-
-    if (tipo === 'campaigns') {
-      url = `${BASE_URL}/affiliate/campaigns?limit=20&page=${pagina}`;
-    } else if (tipo === 'brands') {
-      url = `${BASE_URL}/affiliate/brands?limit=20&page=${pagina}`;
-    } else {
-      const params = new URLSearchParams({
-        limit: '24',
-        page: String(pagina),
-      });
-      if (busca) params.set('search', busca);
-      url = `${BASE_URL}/affiliate/products?${params}`;
-    }
-
-    const res = await fetch(url, {
-      headers: { 'x-api-key': API_KEY },
-      signal: AbortSignal.timeout(10000),
-    });
-
-    const data = await res.json();
-
-    // Retorna raw para campaigns e brands — para inspecionar estrutura
-    if (tipo === 'campaigns' || tipo === 'brands') {
+         if (tipo === 'brands') {
+      const pagina = searchParams.get('pagina') || '1';
+      const data = await fetchLomadee(`/affiliate/brands?limit=20&page=${pagina}`);
       return NextResponse.json(data);
     }
 
-    // Processa produtos
-    const produtos = (data.data || [])
-      .filter((p: any) => {
-        if (!p.name || p.name === '#N/A') return false;
-        if (!p.images?.length) return false;
-        return true;
-      })
-      .map((p: any) => {
-        const option = p.options?.[0];
-        const pricing = option?.pricing?.[0];
-        const preco_oferta = pricing?.price || 0;
-        const preco_original = pricing?.listPrice || preco_oferta;
-        const desconto = preco_original > preco_oferta
-          ? Math.round((1 - preco_oferta / preco_original) * 100)
-          : 0;
-        const rating = p.metadata?.find((m: any) => m.key === 'item_rating')?.value;
+    if (tipo === 'brands-categoria') {
+      const categoria = searchParams.get('categoria') || '';
+      // Busca todas as páginas
+      const paginas = await Promise.all(
+        [1,2,3,4,5,6,7].map(p => fetchLomadee(`/affiliate/brands?limit=20&page=${p}`))
+      );
+      const todasMarcas = paginas.flatMap((d: any) => d.data || []);
 
-        return {
-          id: p.id,
-          titulo: p.name,
-          descricao: p.description?.slice(0, 200).replace(/\n/g, ' ').trim() || '',
-          imagem: p.images?.[0]?.url || '',
-          link: p.url,
-          preco_original,
-          preco_oferta,
-          desconto,
-          rating: rating ? parseFloat(rating) : null,
-          vendedor: option?.seller || '',
-          fonte: 'Lomadee',
-        };
+      // Mapeia categorias
+      const marcasComCategoria = todasMarcas.map((m: any) => ({
+        ...m,
+        categoriaInterna: SEGMENTO_PARA_CATEGORIA[m.segment] || 'Outros',
+      }));
+
+      // Agrupa por categoria
+      const porCategoria: Record<string, any[]> = {};
+      marcasComCategoria.forEach((m: any) => {
+        if (!porCategoria[m.categoriaInterna]) porCategoria[m.categoriaInterna] = [];
+        porCategoria[m.categoriaInterna].push(m);
       });
 
-    return NextResponse.json({
-      items: produtos,
-      total: data.count || produtos.length,
-      pagina,
-    });
+      if (categoria && porCategoria[categoria]) {
+        return NextResponse.json({
+          data: porCategoria[categoria],
+          categorias: Object.keys(porCategoria).sort(),
+        });
+      }
+
+      return NextResponse.json({
+        data: marcasComCategoria,
+        categorias: Object.keys(porCategoria).sort(),
+        porCategoria,
+      });
+    }
+
+
+
+
+    if (tipo === 'segmentos') {
+      // Busca todas as 7 páginas e extrai segmentos únicos
+      const paginas = await Promise.all(
+        [1,2,3,4,5,6,7].map(p => fetchLomadee(`/affiliate/brands?limit=20&page=${p}`))
+      );
+      const todasMarcas = paginas.flatMap((d: any) => d.data || []);
+      const segmentos = [...new Set(todasMarcas.map((m: any) => m.segment).filter(Boolean))].sort();
+      return NextResponse.json({ segmentos, total: segmentos.length });
+    }
+
+    // Busca todas as campanhas
+    const pagina = searchParams.get('pagina') || '1';
+    const limite = searchParams.get('limite') || '20';
+    const data = await fetchLomadee(`/affiliate/campaigns?limit=${limite}&page=${pagina}`);
+    const campanhas = data.data || [];
+
+    // Filtra por tipo se solicitado
+    let resultado = campanhas;
+    if (filtro === 'cupons') {
+      resultado = campanhas.filter((c: any) =>
+        c.type === 'GenericCoupon' || c.type === 'PersonalCoupon'
+      );
+    } else if (filtro === 'ofertas') {
+      resultado = campanhas.filter((c: any) => c.type === 'Offer');
+      } else if (filtro === 'destaque') {
+      // Prioriza: 1) isHighlight, 2) tem banner, 3) é oferta (não cupom), 4) mais recente
+      resultado = campanhas
+        .filter((c: any) => c.status === 'onTime')
+        .sort((a: any, b: any) => {
+          const scoreA =
+            (a.isHighlight ? 100 : 0) +
+            (a.mediaKit?.banners?.length ? 50 : 0) +
+            (a.type === 'Offer' ? 25 : 0);
+          const scoreB =
+            (b.isHighlight ? 100 : 0) +
+            (b.mediaKit?.banners?.length ? 50 : 0) +
+            (b.type === 'Offer' ? 25 : 0);
+          if (scoreA !== scoreB) return scoreB - scoreA;
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        })
+        .slice(0, 1);
+    }
+
+    return NextResponse.json({ data: resultado, total: resultado.length });
   } catch (e) {
     console.error('Erro Lomadee:', e);
-    return NextResponse.json({ items: [], total: 0, pagina: 1 });
+    return NextResponse.json({ data: [], total: 0 });
   }
 }
