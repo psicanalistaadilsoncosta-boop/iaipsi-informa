@@ -314,7 +314,21 @@ async function getAds(): Promise<AdItem[]> {
     return [];
   }
 }
+async function getOfertasMix(): Promise<any[]> {
+  try {
+    const res = await fetch('http://localhost:3000/api/ofertas-mix', {
+      next: { revalidate: 900 },
+    });
+    const data = await res.json();
+    return data.items || [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function Home() {
-  const [posts, ads, editorial, sabores] = await Promise.all([getNews(), getAds(), getEditorial(), getSabores()]);
-  return <NewsClient posts={posts} ads={ads} editorial={editorial} sabores={sabores} />;
+  const [posts, ads, editorial, sabores, ofertasMix] = await Promise.all([
+    getNews(), getAds(), getEditorial(), getSabores(), getOfertasMix()
+  ]);
+  return <NewsClient posts={posts} ads={ads} editorial={editorial} sabores={sabores} ofertasMix={ofertasMix} />;
 }

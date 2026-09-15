@@ -3,6 +3,105 @@
 import { useState, useEffect, Fragment } from 'react';
 import { FeedItem, AdItem, EditorialItem, SaboresItem } from './page';
 
+// ─── CARD DE OFERTA NO GRID ───────────────────────────────────────────────
+function OfertaCard({ item }: { item: any }) {
+  const [copiado, setCopiado] = useState(false);
+
+  if (item.tipo === 'campanha') {
+    return (
+      <article style={{ backgroundColor: '#fff', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', boxShadow: '0 2px 6px rgba(220,38,38,0.08)', breakInside: 'avoid', marginBottom: '20px' }}>
+        {item.imagem && (
+          <div style={{ height: '140px', overflow: 'hidden', backgroundColor: '#f3f4f6' }}>
+            <img src={item.imagem} alt={item.titulo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+          </div>
+        )}
+        <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', flexGrow: 1, gap: '10px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ backgroundColor: item.isCupom ? '#7c3aed' : '#dc2626', color: '#fff', fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', textTransform: 'uppercase' }}>
+              {item.isCupom ? '🏷 Cupom' : '🔥 Oferta'}
+            </span>
+            <span style={{ fontSize: '0.68rem', color: '#9ca3af' }}>Publicidade</span>
+          </div>
+          <h3 style={{ fontSize: '0.88rem', fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+            {item.titulo}
+          </h3>
+          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {item.isCupom && item.code && (
+              <button onClick={() => { navigator.clipboard.writeText(item.code); setCopiado(true); setTimeout(() => setCopiado(false), 2000); }}
+                style={{ backgroundColor: copiado ? '#047857' : '#f5f3ff', color: copiado ? '#fff' : '#7c3aed', border: '1px dashed #7c3aed', borderRadius: '6px', padding: '6px', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', letterSpacing: '1px', textAlign: 'center' }}>
+                {copiado ? '✅ Copiado!' : item.code}
+              </button>
+            )}
+            <a href={item.link} target="_blank" rel="noopener noreferrer sponsored" style={{ backgroundColor: '#dc2626', color: '#fff', padding: '8px', borderRadius: '6px', fontWeight: 700, fontSize: '0.82rem', textAlign: 'center', textDecoration: 'none' }}>
+              {item.isCupom ? 'Usar cupom →' : 'Ver oferta →'}
+            </a>
+          </div>
+        </div>
+      </article>
+    );
+  }
+
+  if (item.tipo === 'marca') {
+    return (
+      <a href={item.link} target="_blank" rel="noopener noreferrer sponsored" style={{ textDecoration: 'none', breakInside: 'avoid', display: 'block', marginBottom: '20px' }}>
+        <article style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '20px', boxShadow: '0 2px 6px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', textAlign: 'center', minHeight: '160px', justifyContent: 'center' }}>
+          <span style={{ fontSize: '0.65rem', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Publicidade</span>
+          <div style={{ width: '64px', height: '64px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #f3f4f6', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img src={item.logo} alt={item.titulo} style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+          </div>
+          <div>
+            <div style={{ fontWeight: 700, color: '#111827', fontSize: '0.95rem' }}>{item.titulo}</div>
+            <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '2px' }}>{item.segment}</div>
+          </div>
+          <div style={{ backgroundColor: '#dc2626', color: '#fff', padding: '7px 16px', borderRadius: '6px', fontWeight: 700, fontSize: '0.8rem' }}>
+            Visitar loja →
+          </div>
+        </article>
+      </a>
+    );
+  }
+
+  if (item.tipo === 'produto') {
+    return (
+      <a href={item.link} target="_blank" rel="noopener noreferrer sponsored" style={{ textDecoration: 'none', breakInside: 'avoid', display: 'block', marginBottom: '20px' }}>
+        <article style={{ backgroundColor: '#fff', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>
+          <div style={{ height: '160px', overflow: 'hidden', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', padding: '8px' }}>
+            {item.imagem && <img src={item.imagem} alt={item.titulo} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
+            {item.desconto > 0 && (
+              <span style={{ position: 'absolute', top: '8px', left: '8px', backgroundColor: '#dc2626', color: '#fff', fontSize: '0.72rem', fontWeight: 700, padding: '2px 8px', borderRadius: '6px' }}>
+                -{item.desconto}%
+              </span>
+            )}
+            <span style={{ position: 'absolute', top: '8px', right: '8px', fontSize: '0.65rem', color: '#9ca3af', fontWeight: 600 }}>Publicidade</span>
+          </div>
+          <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px', flexGrow: 1 }}>
+            <span style={{ backgroundColor: item.color, color: '#fff', fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', textTransform: 'uppercase', alignSelf: 'flex-start' }}>
+              {item.categoria}
+            </span>
+            <h3 style={{ fontSize: '0.82rem', fontWeight: 600, color: '#111827', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+              {item.titulo}
+            </h3>
+            <div style={{ marginTop: 'auto' }}>
+              {item.preco_original > item.preco && (
+                <div style={{ fontSize: '0.72rem', color: '#9ca3af', textDecoration: 'line-through' }}>
+                  R$ {item.preco_original.toFixed(2).replace('.', ',')}
+                </div>
+              )}
+              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#dc2626' }}>
+                R$ {item.preco.toFixed(2).replace('.', ',')}
+              </div>
+            </div>
+            <div style={{ backgroundColor: '#dc2626', color: '#fff', padding: '7px', borderRadius: '6px', fontWeight: 700, fontSize: '0.8rem', textAlign: 'center' }}>
+              Ver no Alibaba →
+            </div>
+          </div>
+        </article>
+      </a>
+    );
+  }
+
+  return null;
+}
 const CATEGORY_COLORS: Record<string, string> = {
   'Política': '#1e3a8a',
   'Economia': '#047857',
@@ -227,17 +326,18 @@ function NewsCard({ item }: { item: FeedItem }) {
 }
 
 // ─── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────
-export default function NewsClient({ posts, ads, editorial, sabores }: { posts: FeedItem[]; ads: AdItem[]; editorial: EditorialItem[]; sabores: SaboresItem[] }) {
+export default function NewsClient({ posts, ads, editorial, sabores, ofertasMix }: { posts: FeedItem[]; ads: AdItem[]; editorial: EditorialItem[]; sabores: SaboresItem[]; ofertasMix: any[] }) {  
   const safePosts = posts ?? [];
   const safeAds = ads ?? [];
   const safeEditorial = editorial ?? [];
   const safeSabores = sabores ?? [];
 
   // Todos os anúncios ativos — independente da posição
-    const allAds = safeAds.filter(a => a.active !== false);
+  const allAds = safeAds.filter(a => a.active !== false);
   const adsTopo = safeAds.filter(a => a.position === 'topo' && a.active !== false);
   const adsMeio = safeAds.filter(a => a.position === 'meio' && a.active !== false);
   const adsRodape = safeAds.filter(a => a.position === 'rodape' && a.active !== false);
+  const safeOfertasMix = ofertasMix ?? [];
 
   const categories = [
     'Todas',
@@ -361,7 +461,12 @@ export default function NewsClient({ posts, ads, editorial, sabores }: { posts: 
         ) : (
           filtered.map((item, index) => (
             <Fragment key={`item-${index}`}>
-                           {index > 0 && index % 12 === 0 && adsMeio.length > 0 && (
+                           {index > 0 && index % 6 === 0 && (() => {
+                const ofertaIndex = Math.floor(index / 6) - 1;
+                const oferta = safeOfertasMix[ofertaIndex % Math.max(safeOfertasMix.length, 1)];
+                return oferta ? <OfertaCard item={oferta} /> : null;
+              })()}
+              {index > 0 && index % 12 === 0 && adsMeio.length > 0 && (
                 <div style={{ breakInside: 'avoid', marginBottom: '20px' }}>
                   <AdBannerRotating ads={adsMeio} />
                 </div>
