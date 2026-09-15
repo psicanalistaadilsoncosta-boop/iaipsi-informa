@@ -53,8 +53,8 @@ export async function GET() {
     results.push(...marcas);
   } catch {}
 
-  // Embaralha para variar
-  results.sort(() => Math.random() - 0.5);
+   // Ordem fixa: campanhas primeiro, depois marcas
+  // (embaralhar causava hydration mismatch no React)
 
   return NextResponse.json({ items: results });
 }
