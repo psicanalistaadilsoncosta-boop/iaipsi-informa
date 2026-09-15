@@ -327,7 +327,7 @@ function NewsCard({ item }: { item: FeedItem }) {
 
 // ─── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────
 export default function NewsClient({ posts, ads, editorial, sabores, ofertasMix }: { posts: FeedItem[]; ads: AdItem[]; editorial: EditorialItem[]; sabores: SaboresItem[]; ofertasMix: any[] }) {  
-  const safePosts = posts ?? [];
+const safePosts = posts ?? [];
   const safeAds = ads ?? [];
   const safeEditorial = editorial ?? [];
   const safeSabores = sabores ?? [];
