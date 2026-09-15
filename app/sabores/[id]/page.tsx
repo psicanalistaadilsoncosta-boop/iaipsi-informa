@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import fs from 'fs/promises';
+import path from 'path';
+
 
 interface SaboresItem {
   id: string;
@@ -24,10 +27,11 @@ function renderContent(text: string) {
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params as { id: string };
+  const { id } = (await params) as { id: string };
   try {
-    const res = await fetch(`https://informa.iaipsi.com/sabores.json`);
-    const items = await res.json();
+    const filePath = path.join(process.cwd(), 'public', 'sabores.json');
+    const raw = await fs.readFile(filePath, 'utf-8');
+    const items = JSON.parse(raw);    const items = await res.json();
     const item = items.find((p: any) => p.id === id);
     if (!item) return {};
     return {
