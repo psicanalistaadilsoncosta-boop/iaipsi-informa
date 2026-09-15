@@ -42,6 +42,23 @@ async function getItem(id: string): Promise<EditorialItem | null> {
   } catch { return null; }
 }
 
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const item = await getItem(id);
+  if (!item) return {};
+  return {
+    title: item.title,
+    description: item.analysis.replace(/\*\*/g, '').split('\n').find((l: string) => l.trim()) || '',
+    openGraph: {
+      title: item.title,
+      description: item.analysis.replace(/\*\*/g, '').split('\n').find((l: string) => l.trim()) || '',
+      type: 'article',
+      publishedTime: item.publishedAt,
+      authors: ['Adilson Costa'],
+    },
+  };
+}
+
 export default async function EditorialPostPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const item = await getItem(id);

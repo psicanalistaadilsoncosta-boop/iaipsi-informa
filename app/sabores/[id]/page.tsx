@@ -23,6 +23,26 @@ function renderContent(text: string) {
   });
 }
 
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params as { id: string };
+  try {
+    const res = await fetch(`https://informa.iaipsi.com/sabores.json`);
+    const items = await res.json();
+    const item = items.find((p: any) => p.id === id);
+    if (!item) return {};
+    return {
+      title: `${item.prato} — ${item.destino}`,
+      description: item.intro,
+      openGraph: {
+        title: `${item.prato} — ${item.destino}`,
+        description: item.intro,
+        type: 'article',
+        images: item.imageUrl ? [{ url: item.imageUrl }] : [],
+      },
+    };
+  } catch { return {}; }
+}
+
 export default function SaboresPostPage() {
   const params = useParams();
   const [item, setItem] = useState<SaboresItem | null>(null);
