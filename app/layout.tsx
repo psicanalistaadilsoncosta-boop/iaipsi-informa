@@ -39,6 +39,8 @@ export const metadata: Metadata = {
   },
 };
 
+import Script from 'next/script';
+
 export default function RootLayout({
   children,
 }: {
@@ -46,7 +48,23 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      <body>
+        {children}
+        <Script
+          id="travelpayouts"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function () {
+                var script = document.createElement("script");
+                script.async = 1;
+                script.src = 'https://emrldtp.com/NTc0NTU2.js?t=574556';
+                document.head.appendChild(script);
+              })();
+            `,
+          }}
+        />
+      </body>
     </html>
   );
 }
