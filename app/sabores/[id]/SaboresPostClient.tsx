@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+
 
 interface SaboresItem {
   id: string;
@@ -32,6 +33,19 @@ export default function SaboresPostClient({ item }: { item: SaboresItem | null }
   );
 
   const recipe = item.recipe || null;
+
+  const tpRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!tpRef.current) return;
+    const script = document.createElement('script');
+    script.async = true;
+    script.charset = 'utf-8';
+    script.src = 'https://tpwgts.com/content?currency=brl&trs=574556&shmarker=778270.778270&locale=pt&powered_by=true&limit=4&primary_color=00AE98&results_background_color=FFFFFF&form_background_color=FFFFFF&promo_id=4563&campaign_id=111';
+    tpRef.current.appendChild(script);
+  }, []);
+
+
 
   return (
     <main style={{ maxWidth: '780px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
@@ -72,15 +86,12 @@ export default function SaboresPostClient({ item }: { item: SaboresItem | null }
             ✈️ Publicidade — Viagens
           </span>
         </div>
-        <div id="tp-sabores" style={{ minHeight: '100px', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {/* Travelpayouts injeta aqui — fallback abaixo */}
-          <a href="/ofertas" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', backgroundColor: '#eff6ff', borderRadius: '8px', padding: '16px 20px', textDecoration: 'none', gap: '12px' }}>
-            <div>
-              <div style={{ fontSize: '0.72rem', color: '#2563eb', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>✈️ Que tal viajar?</div>
-              <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111827' }}>Confira ofertas de viagem e hospedagem</div>
-            </div>
-            <span style={{ backgroundColor: '#2563eb', color: '#fff', padding: '8px 16px', borderRadius: '6px', fontWeight: 700, fontSize: '0.85rem', whiteSpace: 'nowrap' }}>Ver ofertas →</span>
-          </a>
+                      <div ref={tpRef} id="tp-sabores" style={{ minHeight: '100px' }}>
+          <script
+            async
+            src="https://tpwgts.com/content?currency=brl&trs=574556&shmarker=778270.778270&locale=pt&powered_by=true&limit=4&primary_color=00AE98&results_background_color=FFFFFF&form_background_color=FFFFFF&promo_id=4563&campaign_id=111"
+            charSet="utf-8"
+          />
         </div>
       </div>
 
