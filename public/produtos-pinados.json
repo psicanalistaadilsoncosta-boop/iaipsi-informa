@@ -1,5 +1,55 @@
 [
   {
+    "id": "8993",
+    "nome": "Shorts Reto Alta Amarelo",
+    "imagem": "https://mariavalentina.vteximg.com.br/arquivos/ids/502620/SHORTS-RETO-ALTA---AMARELO---36.jpg?v=639232018958930000",
+    "link": "https://lmdee.link/QuilJ8KUPq8p",
+    "preco": 485.9,
+    "precoOriginal": 485.9,
+    "desconto": 0,
+    "categoria": "RoupasShorts e Bermudas",
+    "loja": "Maria Valentina",
+    "disponivel": true,
+    "estoque": 10,
+    "parcelas": "9",
+    "valorParcela": 53.98,
+    "skuId": "2339070",
+    "linkOriginal": "https://www.mariavalentina.com.br/shorts-reto-alta-amarelo-366899/p",
+    "plataforma": "vtex",
+    "organizationId": "a6bb78df-7055-4184-bd84-51a4cb831bf6",
+    "destinos": [
+      "selecionadas",
+      "ofertas-selecionadas",
+      "parcelado"
+    ],
+    "pinedAt": "2026-09-16T20:34:15.243Z"
+  },
+  {
+    "id": "8994",
+    "nome": "Vestido Solto Decote Canoa Manga Curta Midi Amarelo",
+    "imagem": "https://mariavalentina.vteximg.com.br/arquivos/ids/502638/VESTIDO-SOLTO-DECOTE-CANOA-MANGA-CURTA-MIDI---AMARELO---PP.jpg?v=639232019500470000",
+    "link": "https://lmdee.link/6gXCWoGz3sjI",
+    "preco": 669.9,
+    "precoOriginal": 669.9,
+    "desconto": 0,
+    "categoria": "RoupasVestidos",
+    "loja": "Maria Valentina",
+    "disponivel": true,
+    "estoque": 10,
+    "parcelas": "12",
+    "valorParcela": 55.82,
+    "skuId": "2339924",
+    "linkOriginal": "https://www.mariavalentina.com.br/vestido-solto-decote-canoa-manga-curta-midi-amarelo-367040/p",
+    "plataforma": "vtex",
+    "organizationId": "a6bb78df-7055-4184-bd84-51a4cb831bf6",
+    "destinos": [
+      "selecionadas",
+      "parcelado",
+      "ofertas-selecionadas"
+    ],
+    "pinedAt": "2026-09-16T20:34:07.470Z"
+  },
+  {
     "id": "2236",
     "nome": "Boneco Funko Pop! Disney Carros - Salto Do Relampago Mcqueen",
     "imagem": "https://funkobr.vteximg.com.br/arquivos/ids/172453/13234_0-.jpg?v=639223064654730000",
