@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 
 const DESTINOS = [
-  { id: 'selecionadas', label: '⭐ Ofertas Selecionadas', cor: '#2563eb' },
+  { id: 'ofertas-selecionadas', label: '⭐ Ofertas Selecionadas', cor: '#2563eb' },
   { id: 'oferta-do-dia', label: '🔥 Oferta do Dia', cor: '#dc2626' },
   { id: 'parcelado', label: '💳 Parcelado sem Juros', cor: '#047857' },
   { id: 'mix', label: '📰 Entre Notícias', cor: '#7c3aed' },
@@ -146,7 +146,9 @@ export default function BuscarProdutosPage() {
   const [total, setTotal] = useState(0);
   const [excluirShopee, setExcluirShopee] = useState(true);
   const [modalProduto, setModalProduto] = useState<Produto | null>(null);
-  const [modoBusca, setModoBusca] = useState<'palavra' | 'link'>('palavra');
+  const [modoBusca, setModoBusca] = useState<'palavra' | 'link' | 'awin' | 'loja'>('palavra');
+  const [urlLoja, setUrlLoja] = useState('');
+  const [buscandoLoja, setBuscandoLoja] = useState(false);
   const [linkLoja, setLinkLoja] = useState('');
   const [buscandoLink, setBuscandoLink] = useState(false);
 
@@ -179,6 +181,52 @@ export default function BuscarProdutosPage() {
       setTotal(json.total || 0);
     } finally { setLoading(false); }
   }
+
+  async function handleBuscarLoja(q = '') {
+    if (!urlLoja.trim()) return;
+    setBuscandoLoja(true);
+    setProdutos([]);
+    try {
+         // Busca o organizationId da loja no Lomadee pelo domínio
+      let orgId = '';
+      try {
+        const brandsRes = await fetch('/api/lomadee?tipo=brands-categoria');
+        const brandsJson = await brandsRes.json();
+        const dominio = new URL(urlLoja).hostname.replace('www.', '');
+        const marca = (brandsJson.data || []).find((m: any) =>
+          m.site && m.site.replace('www.', '').replace('https://', '').includes(dominio)
+        );
+        orgId = marca?.id || '';
+      } catch {}
+
+      const params = new URLSearchParams({ url: urlLoja, limit: '40' });
+      if (orgId) params.set('orgId', orgId);
+      if (q) params.set('q', q);
+      const res = await fetch(`/api/scrape?${params}`);
+      const json = await res.json();
+      if (json.error) { alert(`Erro: ${json.error}`); return; }
+      setProdutos(json.data || []);
+      setTotal(json.total || 0);
+    } catch {
+      alert('Erro ao buscar produtos da loja.');
+    } finally { setBuscandoLoja(false); }
+  }
+
+  async function handleBuscarAwin(q = '') {
+    setLoading(true);
+    setProdutos([]);
+    try {
+      const params = new URLSearchParams({ limit: '40' });
+      if (q) params.set('q', q);
+      const res = await fetch(`/api/awin?${params}`);
+      const json = await res.json();
+      setProdutos(json.data || []);
+      setTotal(json.total || 0);
+    } catch {
+      alert('Erro ao buscar produtos Arno.');
+    } finally { setLoading(false); }
+  }
+
 
   async function handleBuscarPorLink() {
     if (!linkLoja.trim()) return;
@@ -226,10 +274,11 @@ export default function BuscarProdutosPage() {
     } finally { setBuscandoLink(false); }
   }
 
-  async function handleConfirmarPinar(produto: Produto, destinos: string[], parcelas: string, valorParcela: string) {
+    async function handleConfirmarPinar(produto: Produto, destinos: string[], parcelas: string, valorParcela: string) {
     setModalProduto(null);
     setGerando(produto.id);
     try {
+      // Gera link de afiliado
       const shortRes = await fetch('/api/produtos/shorten', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -238,10 +287,35 @@ export default function BuscarProdutosPage() {
       const shortData = await shortRes.json();
       const linkAfiliado = shortData.shortUrl || produto.link;
 
+      // Se não tem parcelas e é VTEX, busca via simulação
+      let parcelasFinal = parcelas;
+      let valorParcelaFinal = valorParcela;
+
+      if (!parcelasFinal && (produto as any).plataforma === 'vtex' && (produto as any).skuId) {
+        try {
+          const lojaUrl = new URL(produto.linkOriginal || produto.link).origin;
+          const simRes = await fetch('/api/vtex-parcelas', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lojaUrl, skuId: (produto as any).skuId }),
+          });
+          const simData = await simRes.json();
+          parcelasFinal = simData.parcelas || '';
+          valorParcelaFinal = simData.valorParcela || '';
+        } catch {}
+      }
+
       await fetch('/api/produtos/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...produto, link: linkAfiliado, linkOriginal: produto.link, destinos, parcelas, valorParcela }),
+        body: JSON.stringify({
+          ...produto,
+          link: linkAfiliado,
+          linkOriginal: produto.link,
+          destinos,
+          parcelas: parcelasFinal,
+          valorParcela: valorParcelaFinal,
+        }),
       });
       await loadPinados();
     } catch {
@@ -326,8 +400,14 @@ export default function BuscarProdutosPage() {
             <button onClick={() => setModoBusca('palavra')} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'palavra' ? '#2563eb' : '#fff', color: modoBusca === 'palavra' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               🔍 Por palavra-chave
             </button>
-            <button onClick={() => setModoBusca('link')} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'link' ? '#2563eb' : '#fff', color: modoBusca === 'link' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                      <button onClick={() => setModoBusca('link')} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'link' ? '#2563eb' : '#fff', color: modoBusca === 'link' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               🔗 Por link da loja
+            </button>
+            <button onClick={() => setModoBusca('loja')} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'loja' ? '#be185d' : '#fff', color: modoBusca === 'loja' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+              🌐 Por site da loja
+            </button>
+            <button onClick={() => { setModoBusca('awin'); handleBuscarAwin(); }} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'awin' ? '#00AE98' : '#fff', color: modoBusca === 'awin' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+              🏠 Arno (Awin)
             </button>
           </div>
 
@@ -351,6 +431,42 @@ export default function BuscarProdutosPage() {
                 </div>
                 <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: '6px 0 0' }}>
                   O sistema identifica a loja e exibe seus produtos disponíveis.
+                </p>
+              </div>
+            )}
+
+            {/* Awin — Arno */}
+            {modoBusca === 'awin' && (
+              <div>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <input
+                    placeholder="Filtrar por nome (ex: liquidificador, ventilador...)"
+                    onChange={e => handleBuscarAwin(e.target.value)}
+                    style={{ flex: 1, padding: '9px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.88rem', boxSizing: 'border-box' }} />
+                </div>
+                <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: '6px 0 0' }}>
+                  Produtos da Arno via Awin — links de afiliado já inclusos.
+                </p>
+              </div>
+            )}
+
+            {/* Busca por site — VTEX/Shopify */}
+            {modoBusca === 'loja' && (
+              <div>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                  <input value={urlLoja} onChange={e => setUrlLoja(e.target.value)}
+                    placeholder="https://www.vivavinho.com.br"
+                    style={{ flex: 1, padding: '9px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.88rem', boxSizing: 'border-box' }} />
+                  <button onClick={() => handleBuscarLoja()} disabled={buscandoLoja || !urlLoja.trim()}
+                    style={{ padding: '9px 20px', borderRadius: '8px', border: 'none', backgroundColor: '#be185d', color: '#fff', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    {buscandoLoja ? '⏳' : '🔍 Buscar'}
+                  </button>
+                </div>
+                <input placeholder="Filtrar por nome (ex: malbec, ventilador...)"
+                  onChange={e => handleBuscarLoja(e.target.value)}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.85rem', boxSizing: 'border-box' }} />
+                <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: '6px 0 0' }}>
+                  Detecta automaticamente Shopify e VTEX (Vivavinho, Arno, etc.)
                 </p>
               </div>
             )}

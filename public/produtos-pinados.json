@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "id": "2236",
+    "nome": "Boneco Funko Pop! Disney Carros - Salto Do Relampago Mcqueen",
+    "imagem": "https://funkobr.vteximg.com.br/arquivos/ids/172453/13234_0-.jpg?v=639223064654730000",
+    "link": "https://lmdee.link/JyuMA1Wwf6bg",
+    "preco": 199.99,
+    "precoOriginal": 199.99,
+    "desconto": 0,
+    "categoria": "FunkoPOP Funko",
+    "loja": "Carros",
+    "disponivel": true,
+    "estoque": 100,
+    "parcelas": "",
+    "valorParcela": "",
+    "plataforma": "vtex",
+    "organizationId": "2c0005fa-a3d6-4062-b0a7-ab9490101e27",
+    "linkOriginal": "https://www.funko.com.br/boneco-funko-pop-disney-carros-salto-do-relampago-mcqueen-13234/p",
+    "destinos": [
+      "selecionadas",
+      "ofertas-selecionadas",
+      "parcelado"
+    ],
+    "pinedAt": "2026-09-16T17:31:37.326Z"
+  }
+]

@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "csv-parse": "^7.0.2",
     "iconv-lite": "^0.7.3",
     "next": "latest",
     "react": "latest",
