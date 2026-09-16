@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       : produtos;
 
         // Injeta organizationId do Lomadee em cada produto
-    const data = filtrados.map(p => ({
+        const data = filtrados.map((p: any) => ({
       ...p,
       organizationId: organizationId || p.organizationId,
     }));

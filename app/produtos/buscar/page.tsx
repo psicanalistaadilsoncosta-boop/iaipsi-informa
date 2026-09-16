@@ -20,6 +20,9 @@ interface Produto {
   organizationId: string;
   estoque: number;
   loja: string;
+  skuId?: string;
+  linkOriginal?: string;
+  plataforma?: string;
 }
 
 interface ProdutoPinado extends Produto {
@@ -293,7 +296,7 @@ export default function BuscarProdutosPage() {
 
       if (!parcelasFinal && (produto as any).plataforma === 'vtex' && (produto as any).skuId) {
         try {
-          const lojaUrl = new URL(produto.linkOriginal || produto.link).origin;
+          const lojaUrl = new URL((produto as any).linkOriginal || produto.link).origin;
           const simRes = await fetch('/api/vtex-parcelas', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
