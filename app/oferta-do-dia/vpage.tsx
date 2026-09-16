@@ -48,58 +48,17 @@ function Countdown({ endAt }: { endAt: string }) {
   );
 }
 
-function formatarPreco(valor: string) {
-  return parseFloat(valor).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-}
-
 export default function OfertaDoDiaPage() {
   const [oferta, setOferta] = useState<OfertaDia | null>(null);
   const [loading, setLoading] = useState(true);
   const [copiado, setCopiado] = useState(false);
   const [imagemAtiva, setImagemAtiva] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
 
-   useEffect(() => {
-    // Tenta produtos pinados primeiro
-    fetch('/produtos-pinados.json')
+  useEffect(() => {
+    fetch('/oferta-do-dia.json')
       .then(r => r.json())
-      .then((pinados: any[]) => {
-        const ativo = pinados.find(p =>
-          p.destinos?.includes('oferta-do-dia') && p.ativo === true
-        );
-        if (ativo) {
-          // Mapeia para o formato OfertaDia
-          setOferta({
-            titulo: ativo.nome,
-            descricao: '',
-            imagem: ativo.imagem,
-            imagens: [],
-            link: ativo.link,
-            loja: ativo.loja || '',
-            logo: '',
-            preco: String(ativo.preco),
-            precoOriginal: String(ativo.precoOriginal),
-            parcelas: ativo.parcelas || '',
-            valorParcela: ativo.valorParcela || '',
-            cupom: '',
-            validade: '',
-            categoria: ativo.categoria || '',
-          });
-        } else {
-          // Fallback para oferta-do-dia.json manual
-          return fetch('/oferta-do-dia.json')
-            .then(r => r.json())
-            .then(d => { if (d.titulo) setOferta(d); });
-        }
-      })
+      .then(d => { if (d.titulo) setOferta(d); })
       .finally(() => setLoading(false));
-
-    function checkMobile() {
-      setIsMobile(window.innerWidth < 768);
-    }
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   function copiar() {
@@ -131,9 +90,9 @@ export default function OfertaDoDiaPage() {
     : 0;
 
   return (
-    <main style={{ maxWidth: '1000px', margin: '0 auto', padding: isMobile ? '16px' : '30px 20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+    <main style={{ maxWidth: '1000px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <a href="/ofertas" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#dc2626', fontWeight: 600, fontSize: '0.85rem', textDecoration: 'none' }}>
           ← Voltar às ofertas
         </a>
@@ -144,38 +103,14 @@ export default function OfertaDoDiaPage() {
 
       <div style={{ backgroundColor: '#fff', borderRadius: '20px', overflow: 'hidden', border: '1px solid #e5e7eb', boxShadow: '0 8px 32px rgba(0,0,0,0.06)' }}>
 
-        {/* Layout responsivo — lado a lado no desktop, coluna no mobile */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-          gap: '0',
-        }}>
+        {/* Layout lado a lado */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0' }}>
 
-          {/* Imagens */}
-          <div style={{
-            backgroundColor: '#f9fafb',
-            padding: isMobile ? '20px' : '32px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '16px',
-            borderRight: isMobile ? 'none' : '1px solid #f3f4f6',
-            borderBottom: isMobile ? '1px solid #f3f4f6' : 'none',
-          }}>
+          {/* Esquerda — imagens */}
+          <div style={{ backgroundColor: '#f9fafb', padding: '32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', borderRight: '1px solid #f3f4f6' }}>
 
-            <div style={{
-              width: '100%',
-              maxWidth: '340px',
-              height: isMobile ? '260px' : '320px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: '#fff',
-              borderRadius: '16px',
-              border: '1px solid #e5e7eb',
-              overflow: 'hidden',
-              padding: '16px',
-            }}>
+            {/* Imagem principal */}
+            <div style={{ width: '100%', maxWidth: '340px', height: '320px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', borderRadius: '16px', border: '1px solid #e5e7eb', overflow: 'hidden', padding: '16px' }}>
               {todasImagens[imagemAtiva] ? (
                 <img src={todasImagens[imagemAtiva]} alt={oferta.titulo} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
               ) : (
@@ -183,13 +118,12 @@ export default function OfertaDoDiaPage() {
               )}
             </div>
 
+            {/* Miniaturas */}
             {todasImagens.length > 1 && (
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
                 {todasImagens.map((img, i) => (
                   <button key={i} onClick={() => setImagemAtiva(i)} style={{
-                    width: '56px', height: '56px', borderRadius: '8px', overflow: 'hidden',
-                    border: `2px solid ${imagemAtiva === i ? '#dc2626' : '#e5e7eb'}`,
-                    backgroundColor: '#fff', cursor: 'pointer', padding: '4px', flexShrink: 0,
+                    width: '56px', height: '56px', borderRadius: '8px', overflow: 'hidden', border: `2px solid ${imagemAtiva === i ? '#dc2626' : '#e5e7eb'}`, backgroundColor: '#fff', cursor: 'pointer', padding: '4px', flexShrink: 0,
                   }}>
                     <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                   </button>
@@ -198,10 +132,10 @@ export default function OfertaDoDiaPage() {
             )}
           </div>
 
-          {/* Dados */}
-          <div style={{ padding: isMobile ? '20px' : '32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Direita — dados */}
+          <div style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
-            {/* Loja */}
+                       {/* Loja */}
             {oferta.loja && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                 {oferta.logo && (
@@ -213,11 +147,11 @@ export default function OfertaDoDiaPage() {
                 {oferta.categoria && (
                   <span style={{ fontSize: '0.68rem', color: '#9ca3af', backgroundColor: '#f3f4f6', padding: '2px 8px', borderRadius: '20px' }}>{oferta.categoria}</span>
                 )}
-              </div>
+                        </div>
             )}
 
             {/* Título */}
-            <h1 style={{ fontSize: isMobile ? '1.2rem' : '1.4rem', fontWeight: 800, color: '#111827', margin: 0, lineHeight: 1.3 }}>
+            <h1 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#111827', margin: 0, lineHeight: 1.3 }}>
               {oferta.titulo}
             </h1>
 
@@ -231,15 +165,15 @@ export default function OfertaDoDiaPage() {
             {/* Preço */}
             {oferta.preco && (
               <div>
-                {oferta.precoOriginal && parseFloat(oferta.precoOriginal) > parseFloat(oferta.preco) && (
-                  <div style={{ fontSize: '0.9rem', color: '#9ca3af', textDecoration: 'line-through' }}>
-                    R$ {formatarPreco(oferta.precoOriginal)}
+                {oferta.precoOriginal && (
+                                    <div style={{ fontSize: '0.9rem', color: '#9ca3af', textDecoration: 'line-through' }}>
+                    R$ {parseFloat(oferta.precoOriginal).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
                   </div>
                 )}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: isMobile ? '1.6rem' : '2rem', fontWeight: 800, color: '#dc2626' }}>
-                    R$ {formatarPreco(oferta.preco)}
-                  </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                 <span style={{ fontSize: '2rem', fontWeight: 800, color: '#dc2626' }}>
+                  R$ {parseFloat(oferta.preco).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+                </span>
                   {desconto > 0 && (
                     <span style={{ backgroundColor: '#dc2626', color: '#fff', fontSize: '0.85rem', fontWeight: 700, padding: '4px 10px', borderRadius: '6px' }}>
                       -{desconto}%
@@ -248,22 +182,22 @@ export default function OfertaDoDiaPage() {
                 </div>
               </div>
             )}
-
             {/* Parcelas */}
             {oferta.parcelas && oferta.valorParcela && (
               <div style={{ fontSize: '0.88rem', color: '#6b7280' }}>
                 ou em <strong style={{ color: '#111827' }}>{oferta.parcelas}x</strong> de{' '}
                 <strong style={{ color: '#111827' }}>
-                  R$ {formatarPreco(oferta.valorParcela)}
+                  R$ {parseFloat(oferta.valorParcela).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
                 </strong>{' '}
                 sem juros
               </div>
             )}
 
+
             {/* Countdown */}
             {oferta.validade && (
               <div>
-                <p style={{ fontSize: '0.78rem', color: '#6b7280', margin: '0 0 4px', textAlign: 'center' }}>⏱ Termina em:</p>
+                <p style={{ fontSize: '0.78rem', color: '#6b7280', margin: '0 0 4px' }}>⏱ Termina em:</p>
                 <Countdown endAt={oferta.validade} />
               </div>
             )}

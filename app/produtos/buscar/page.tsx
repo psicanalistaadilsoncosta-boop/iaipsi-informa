@@ -30,6 +30,7 @@ interface ProdutoPinado extends Produto {
   destinos: string[];
   parcelas?: string;
   valorParcela?: string;
+  ativo?: boolean;
 }
 
 function LoginScreen({ onLogin }: { onLogin: () => void }) {
@@ -326,11 +327,20 @@ export default function BuscarProdutosPage() {
     } finally { setGerando(null); }
   }
 
-  async function handleAtualizarDestinos(pinado: ProdutoPinado, novosDestinos: string[]) {
+   async function handleAtualizarDestinos(pinado: ProdutoPinado, novosDestinos: string[]) {
     await fetch('/api/produtos/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...pinado, destinos: novosDestinos }),
+    });
+    await loadPinados();
+  }
+
+  async function handleAtivarOfertaDia(pinado: ProdutoPinado) {
+    await fetch('/api/produtos/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...pinado, ativo: true }),
     });
     await loadPinados();
   }
@@ -648,6 +658,11 @@ export default function BuscarProdutosPage() {
                     <small style={{ color: '#9ca3af', fontSize: '0.7rem' }}>
                       Pinado em {new Date(p.pinedAt).toLocaleDateString('pt-BR')}
                     </small>
+                                        {p.destinos?.includes('oferta-do-dia') && (
+                      <button onClick={() => handleAtivarOfertaDia(p)} style={{ padding: '6px', borderRadius: '6px', border: 'none', backgroundColor: p.ativo ? '#dc2626' : '#f3f4f6', color: p.ativo ? '#fff' : '#374151', fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer', marginBottom: '4px', width: '100%' }}>
+                        {p.ativo ? '🔥 Ativa agora' : '🔥 Ativar como Oferta do Dia'}
+                      </button>
+                    )}
                     <button onClick={() => handleDespinar(p.id)} style={{ padding: '6px', borderRadius: '6px', border: '1px solid #fca5a5', backgroundColor: '#fff', color: '#dc2626', fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer' }}>
                       🗑 Remover
                     </button>

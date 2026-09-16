@@ -14,7 +14,8 @@ export interface ProdutoPinado {
   parcelas?: string;
   valorParcela?: string;
   organizationId: string;
-  destinos: string[]; // ['oferta-do-dia', 'selecionadas', 'parcelado']
+  destinos: string[];
+  ativo?: boolean;
   pinedAt: string;
 }
 
@@ -27,13 +28,20 @@ async function read(): Promise<ProdutoPinado[]> {
 }
 
 export async function POST(req: NextRequest) {
-  try {
+   try {
     const produto: ProdutoPinado = await req.json();
-    const existing = await read();
+    let existing = await read();
     const idx = existing.findIndex(p => p.id === produto.id);
 
+    // Se está ativando como oferta do dia, desativa todos os outros
+    if (produto.ativo && produto.destinos?.includes('oferta-do-dia')) {
+      existing = existing.map(p => ({
+        ...p,
+        ativo: p.destinos?.includes('oferta-do-dia') ? false : p.ativo,
+      }));
+    }
+
     if (idx >= 0) {
-      // Atualiza destinos se já existir
       existing[idx] = { ...existing[idx], ...produto, pinedAt: existing[idx].pinedAt };
       await fs.writeFile(FILE, JSON.stringify(existing, null, 2));
     } else {
