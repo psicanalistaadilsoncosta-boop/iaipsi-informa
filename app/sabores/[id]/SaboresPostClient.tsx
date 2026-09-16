@@ -79,19 +79,32 @@ export default function SaboresPostClient({ item }: { item: SaboresItem | null }
         {renderContent(item.content)}
       </article>
 
-      {/* Banner Travelpayouts */}
+          {/* Banner Viagens — parceiros Lomadee */}
       <div style={{ margin: '32px 0', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', backgroundColor: '#fff' }}>
         <div style={{ padding: '8px 16px', backgroundColor: '#f9fafb', borderBottom: '1px solid #f3f4f6' }}>
-          <span style={{ fontSize: '0.65rem', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            ✈️ Publicidade — Viagens
+          <span style={{ fontSize: '0.65rem', color: '#0284c7', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            ✈️ Publicidade — Viagens & Destinos
           </span>
         </div>
-                      <div ref={tpRef} id="tp-sabores" style={{ minHeight: '100px' }}>
-          <script
-            async
-            src="https://tpwgts.com/content?currency=brl&trs=574556&shmarker=778270.778270&locale=pt&powered_by=true&limit=4&primary_color=00AE98&results_background_color=FFFFFF&form_background_color=FFFFFF&promo_id=4563&campaign_id=111"
-            charSet="utf-8"
-          />
+        <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {[
+            { nome: 'DeÔnibus', desc: 'Passagens de ônibus para todo o Brasil', link: 'https://lmdee.link/2eKoCETo37uy', logo: 'https://cdn.lomadee.com.br/logos/b89e4834-6f7c-4ac8-9972-5d579488432c/logo', cor: '#0284c7' },
+            { nome: 'Zupper', desc: 'Pacotes de viagem e turismo', link: 'https://lmdee.link/7xelkDTpX9bG', logo: 'https://cdn.lomadee.com.br/logos/c7fda3cb-c9e5-4a06-822d-5d687cc56802/logo', cor: '#047857' },
+            { nome: 'Up4you', desc: 'Malas e acessórios de viagem', link: 'https://lmdee.link/oeWHq7VnRES5', logo: 'https://cdn.lomadee.com.br/logos/9ad41f3f-431f-44e9-bf4c-ead611331557/logo', cor: '#7c3aed' },
+          ].map((marca, i) => (
+            <a key={i} href={marca.link} target="_blank" rel="noopener noreferrer sponsored" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '12px', backgroundColor: '#f9fafb', borderRadius: '8px', padding: '12px 16px', border: '1px solid #f3f4f6' }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#fff', border: '1px solid #e5e7eb', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <img src={marca.logo} alt={marca.nome} style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, color: '#111827', fontSize: '0.9rem' }}>{marca.nome}</div>
+                <div style={{ fontSize: '0.78rem', color: '#6b7280', marginTop: '2px' }}>{marca.desc}</div>
+              </div>
+              <span style={{ backgroundColor: marca.cor, color: '#fff', padding: '6px 12px', borderRadius: '6px', fontWeight: 700, fontSize: '0.78rem', whiteSpace: 'nowrap' }}>
+                Ver →
+              </span>
+            </a>
+          ))}
         </div>
       </div>
 
