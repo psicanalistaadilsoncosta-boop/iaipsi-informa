@@ -5,6 +5,7 @@ export const revalidate = 900; // 15 min
 const API_KEY = process.env.LOMADEE_API_KEY || '';
 const BASE_URL = 'https://api.lomadee.com.br';
 
+
 // Mapa de segmentos para categorias do site
 const SEGMENTO_PARA_CATEGORIA: Record<string, string> = {
   // Eletrodomésticos & Eletrônicos
@@ -99,97 +100,50 @@ const SEGMENTO_PARA_CATEGORIA: Record<string, string> = {
   'outros ': 'Outros',
 };
 
-async function fetchLomadee(path: string, revalidate = 900) {
+
+
+async function fetchLomadee(path: string) {
   const res = await fetch(`${BASE_URL}${path}`, {
     headers: { 'x-api-key': API_KEY },
     signal: AbortSignal.timeout(10000),
-    next: { revalidate },
   });
   return res.json();
 }
-
-// Busca todas as páginas de campanhas em paralelo (até 5 = 100 campanhas)
-async function fetchAllCampaigns(): Promise<any[]> {
-  const paginas = await Promise.all(
-    [1, 2, 3, 4, 5].map(p =>
-      fetchLomadee(`/affiliate/campaigns?limit=20&page=${p}`).catch(() => ({ data: [] }))
-    )
-  );
-  return paginas.flatMap((d: any) => d.data || []);
-}
-
-// Busca o detalhe de uma campanha (traz code + channels/shortUrls)
-async function fetchCampaignDetail(id: string) {
-  try {
-    const detalhe = await fetchLomadee(`/affiliate/campaigns/${id}`, 3600);
-    return detalhe.data || {};
-  } catch {
-    return {};
-  }
-}
-
-// Aplica delay para respeitar o rate limit da Lomadee
-const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const tipo = searchParams.get('tipo') || 'campaigns';
   const filtro = searchParams.get('filtro') || '';
 
+
+
+
+
   try {
     if (tipo === 'campaigns') {
       const pagina = searchParams.get('pagina') || '1';
+      const filtro = searchParams.get('filtro') || '';
 
-      // Busca 2 páginas rápidas (compatibilidade com o comportamento antigo)
-     const paginas = await Promise.all(
-  [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(p =>
-    fetchLomadee(`/affiliate/campaigns?limit=20&page=${p}`).catch(() => ({ data: [] }))
-  )
-);
+      const [page1, page2] = await Promise.all([
+        fetchLomadee(`/affiliate/campaigns?limit=20&page=${pagina}`),
+        pagina === '1' ? fetchLomadee('/affiliate/campaigns?limit=20&page=2') : Promise.resolve({ data: [] }),
+      ]);
 
-let campanhas = paginas.flatMap((d: any) => d.data || []);
+      let campanhas = [...(page1.data || []), ...(page2.data || [])];
 
       // Filtra por tipo se solicitado
       if (filtro === 'cupons') {
-        campanhas = campanhas.filter(
-          (c: any) => c.type === 'GenericCoupon' || c.type === 'PersonalCoupon'
+        campanhas = campanhas.filter((c: any) =>
+          c.type === 'GenericCoupon' || c.type === 'PersonalCoupon'
         );
-
-        // 🔥 Busca o detalhe de cada cupom (code + link de afiliado)
-        const cuponsCompletos: any[] = [];
-        for (const c of campanhas) {
-          const detalhe = await fetchCampaignDetail(c.id);
-          cuponsCompletos.push({
-            ...c,
-            ...detalhe,
-            linkAfiliado:
-              detalhe?.channels?.[0]?.shortUrls?.[0] ||
-              detalhe?.shortUrls?.[0] ||
-              null,
-          });
-          await sleep(1000); // rate limit: ~1s entre chamadas
-        }
-
-        return NextResponse.json({
-          data: cuponsCompletos,
-          total: cuponsCompletos.length,
-        });
-      }
-
-      if (filtro === 'ofertas') {
+      } else if (filtro === 'ofertas') {
         campanhas = campanhas.filter((c: any) => c.type === 'Offer');
       } else if (filtro === 'destaque') {
         campanhas = campanhas
           .filter((c: any) => c.status === 'onTime')
           .sort((a: any, b: any) => {
-            const scoreA =
-              (a.isHighlight ? 100 : 0) +
-              (a.mediaKit?.banners?.length ? 50 : 0) +
-              (a.type === 'Offer' ? 25 : 0);
-            const scoreB =
-              (b.isHighlight ? 100 : 0) +
-              (b.mediaKit?.banners?.length ? 50 : 0) +
-              (b.type === 'Offer' ? 25 : 0);
+            const scoreA = (a.isHighlight ? 100 : 0) + (a.mediaKit?.banners?.length ? 50 : 0) + (a.type === 'Offer' ? 25 : 0);
+            const scoreB = (b.isHighlight ? 100 : 0) + (b.mediaKit?.banners?.length ? 50 : 0) + (b.type === 'Offer' ? 25 : 0);
             if (scoreA !== scoreB) return scoreB - scoreA;
             return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
           })
@@ -199,34 +153,9 @@ let campanhas = paginas.flatMap((d: any) => d.data || []);
       return NextResponse.json({ data: campanhas, total: campanhas.length });
     }
 
-    // 🔹 NOVO: buscar TODAS as campanhas e filtrar cupons em uma chamada
-    if (tipo === 'cupons') {
-      const todas = await fetchAllCampaigns();
-      const cupons = todas.filter(
-        (c: any) => c.type === 'GenericCoupon' || c.type === 'PersonalCoupon'
-      );
 
-      const cuponsCompletos: any[] = [];
-      for (const c of cupons) {
-        const detalhe = await fetchCampaignDetail(c.id);
-        cuponsCompletos.push({
-          ...c,
-          ...detalhe,
-          linkAfiliado:
-            detalhe?.channels?.[0]?.shortUrls?.[0] ||
-            detalhe?.shortUrls?.[0] ||
-            null,
-        });
-        await sleep(1000);
-      }
 
-      return NextResponse.json({
-        data: cuponsCompletos,
-        total: cuponsCompletos.length,
-      });
-    }
-
-    if (tipo === 'brands') {
+         if (tipo === 'brands') {
       const pagina = searchParams.get('pagina') || '1';
       const data = await fetchLomadee(`/affiliate/brands?limit=20&page=${pagina}`);
       return NextResponse.json(data);
@@ -234,16 +163,19 @@ let campanhas = paginas.flatMap((d: any) => d.data || []);
 
     if (tipo === 'brands-categoria') {
       const categoria = searchParams.get('categoria') || '';
+      // Busca todas as páginas
       const paginas = await Promise.all(
-        [1, 2, 3, 4, 5, 6, 7].map(p => fetchLomadee(`/affiliate/brands?limit=20&page=${p}`))
+        [1,2,3,4,5,6,7].map(p => fetchLomadee(`/affiliate/brands?limit=20&page=${p}`))
       );
       const todasMarcas = paginas.flatMap((d: any) => d.data || []);
 
+      // Mapeia categorias
       const marcasComCategoria = todasMarcas.map((m: any) => ({
         ...m,
         categoriaInterna: SEGMENTO_PARA_CATEGORIA[m.segment] || 'Outros',
       }));
 
+      // Agrupa por categoria
       const porCategoria: Record<string, any[]> = {};
       marcasComCategoria.forEach((m: any) => {
         if (!porCategoria[m.categoriaInterna]) porCategoria[m.categoriaInterna] = [];
@@ -263,7 +195,6 @@ let campanhas = paginas.flatMap((d: any) => d.data || []);
         porCategoria,
       });
     }
-
     if (tipo === 'products') {
       const q = searchParams.get('q') || '';
       const pagina = searchParams.get('pagina') || '1';
@@ -272,19 +203,18 @@ let campanhas = paginas.flatMap((d: any) => d.data || []);
       const orgId = searchParams.get('orgId') || '';
 
       const params = new URLSearchParams({
-        limit: '100', // 🔥 máximo permitido
+        limit: '100',
         page: pagina,
         isAvailable: 'true',
       });
       if (q) params.set('search', q);
-      if (priceMin && priceMax)
-        params.set('price', `${parseInt(priceMin) * 100}:${parseInt(priceMax) * 100}`);
+      if (priceMin && priceMax) params.set('price', `${parseInt(priceMin) * 100}:${parseInt(priceMax) * 100}`);
       if (orgId) params.set('organizationIds', orgId);
 
       const data = await fetchLomadee(`/affiliate/products?${params}`);
 
       const produtos = (data.data || [])
-        .filter((p: any) => {
+                 .filter((p: any) => {
           if (!p.name || p.name === '#N/A' || !p.images?.length) return false;
           if (!p.available) return false;
           if (searchParams.get('excluirShopee') === 'true') {
@@ -300,16 +230,12 @@ let campanhas = paginas.flatMap((d: any) => d.data || []);
           const pricing = option?.pricing?.[0];
           const preco = pricing?.price || 0;
           const precoOriginal = pricing?.listPrice || pricing?.price || 0;
-          const desconto =
-            precoOriginal > preco ? Math.round((1 - preco / precoOriginal) * 100) : 0;
+          const desconto = precoOriginal > preco ? Math.round((1 - preco / precoOriginal) * 100) : 0;
 
           const estoque = p.options?.[0]?.stocks?.[0]?.value;
           const vendedor = p.options?.[0]?.seller || '';
-          const loja =
-            vendedor.includes('shopee') || p.url.includes('shopee.com')
-              ? 'Shopee'
-              : vendedor || 'Loja parceira';
-
+          const loja = vendedor.includes('shopee') || p.url.includes('shopee.com')
+            ? 'Shopee' : vendedor || 'Loja parceira';
           return {
             id: p.id,
             nome: p.name,
@@ -328,28 +254,34 @@ let campanhas = paginas.flatMap((d: any) => d.data || []);
       return NextResponse.json({ data: produtos, total: data.count || 0 });
     }
 
+
+
     if (tipo === 'segmentos') {
+      // Busca todas as 7 páginas e extrai segmentos únicos
       const paginas = await Promise.all(
-        [1, 2, 3, 4, 5, 6, 7].map(p => fetchLomadee(`/affiliate/brands?limit=20&page=${p}`))
+        [1,2,3,4,5,6,7].map(p => fetchLomadee(`/affiliate/brands?limit=20&page=${p}`))
       );
       const todasMarcas = paginas.flatMap((d: any) => d.data || []);
-      const segmentos = [
-        ...new Set(todasMarcas.map((m: any) => m.segment).filter(Boolean)),
-      ].sort();
+      const segmentos = [...new Set(todasMarcas.map((m: any) => m.segment).filter(Boolean))].sort();
       return NextResponse.json({ segmentos, total: segmentos.length });
     }
 
-    // Fallback: busca todas as campanhas
-    const campanhas = await fetchAllCampaigns();
+    // Busca todas as campanhas
+    const pagina = searchParams.get('pagina') || '1';
+    const limite = searchParams.get('limite') || '20';
+    const data = await fetchLomadee(`/affiliate/campaigns?limit=${limite}&page=${pagina}`);
+    const campanhas = data.data || [];
 
+    // Filtra por tipo se solicitado
     let resultado = campanhas;
     if (filtro === 'cupons') {
-      resultado = campanhas.filter(
-        (c: any) => c.type === 'GenericCoupon' || c.type === 'PersonalCoupon'
+      resultado = campanhas.filter((c: any) =>
+        c.type === 'GenericCoupon' || c.type === 'PersonalCoupon'
       );
     } else if (filtro === 'ofertas') {
       resultado = campanhas.filter((c: any) => c.type === 'Offer');
-    } else if (filtro === 'destaque') {
+      } else if (filtro === 'destaque') {
+      // Prioriza: 1) isHighlight, 2) tem banner, 3) é oferta (não cupom), 4) mais recente
       resultado = campanhas
         .filter((c: any) => c.status === 'onTime')
         .sort((a: any, b: any) => {
