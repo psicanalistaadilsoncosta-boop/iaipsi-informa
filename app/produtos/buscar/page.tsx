@@ -150,7 +150,7 @@ export default function BuscarProdutosPage() {
   const [total, setTotal] = useState(0);
   const [excluirShopee, setExcluirShopee] = useState(true);
   const [modalProduto, setModalProduto] = useState<Produto | null>(null);
-  const [modoBusca, setModoBusca] = useState<'palavra' | 'link' | 'awin' | 'loja'>('palavra');
+  const [modoBusca, setModoBusca] = useState<'palavra' | 'link' | 'awin' | 'spicy' | 'loja'>('palavra');
   const [urlLoja, setUrlLoja] = useState('');
   const [buscandoLoja, setBuscandoLoja] = useState(false);
   const [linkLoja, setLinkLoja] = useState('');
@@ -216,11 +216,11 @@ export default function BuscarProdutosPage() {
     } finally { setBuscandoLoja(false); }
   }
 
-  async function handleBuscarAwin(q = '') {
+   async function handleBuscarAwin(q = '', loja = 'arno') {
     setLoading(true);
     setProdutos([]);
     try {
-      const params = new URLSearchParams({ limit: '40' });
+      const params = new URLSearchParams({ limit: '40', loja });
       if (q) params.set('q', q);
       const res = await fetch(`/api/awin?${params}`);
       const json = await res.json();
@@ -419,8 +419,11 @@ export default function BuscarProdutosPage() {
             <button onClick={() => setModoBusca('loja')} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'loja' ? '#be185d' : '#fff', color: modoBusca === 'loja' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               🌐 Por site da loja
             </button>
-            <button onClick={() => { setModoBusca('awin'); handleBuscarAwin(); }} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'awin' ? '#00AE98' : '#fff', color: modoBusca === 'awin' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                        <button onClick={() => { setModoBusca('awin'); handleBuscarAwin('', 'arno'); }} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'awin' ? '#00AE98' : '#fff', color: modoBusca === 'awin' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               🏠 Arno (Awin)
+            </button>
+            <button onClick={() => { setModoBusca('spicy'); handleBuscarAwin('', 'spicy'); }} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'spicy' ? '#dc2626' : '#fff', color: modoBusca === 'spicy' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+              🌶 Spicy (Awin)
             </button>
           </div>
 
@@ -449,12 +452,12 @@ export default function BuscarProdutosPage() {
             )}
 
             {/* Awin — Arno */}
-            {modoBusca === 'awin' && (
+                      {(modoBusca === 'awin' || modoBusca === 'spicy') && (
               <div>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <input
-                    placeholder="Filtrar por nome (ex: liquidificador, ventilador...)"
-                    onChange={e => handleBuscarAwin(e.target.value)}
+                    placeholder="Filtrar por nome..."
+                    onChange={e => handleBuscarAwin(e.target.value, modoBusca === 'spicy' ? 'spicy' : 'arno')}
                     style={{ flex: 1, padding: '9px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.88rem', boxSizing: 'border-box' }} />
                 </div>
                 <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: '6px 0 0' }}>

@@ -7,7 +7,7 @@ export const revalidate = 3600;
 
   const FEEDS: Record<string, string> = {
   arno: process.env.AWIN_FEED_ARNO || '',
-  tramontina: process.env.AWIN_FEED_TRAMONTINA || '',
+  spicy: process.env.AWIN_FEED_SPICY || '',
   // adicione novos aqui
 };
 export async function GET(request: NextRequest) {
