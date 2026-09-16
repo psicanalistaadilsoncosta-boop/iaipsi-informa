@@ -317,8 +317,24 @@ async function getAds(): Promise<AdItem[]> {
 async function getOfertasMix(): Promise<any[]> {
   try {
     const API_KEY = process.env.LOMADEE_API_KEY || '';
-    const BASE_URL = 'https://api.lomadee.com.br';
+    const BASE_URL = 'https://api-beta.lomadee.com.br';
 
+    // Produtos pinados por você
+    let produtosPinados: any[] = [];
+    try {
+      const filePath = (await import('path')).join(process.cwd(), 'public', 'produtos-pinados.json');
+      const raw = await (await import('fs/promises')).readFile(filePath, 'utf-8');
+      produtosPinados = JSON.parse(raw).map((p: any) => ({
+        tipo: 'produto',
+        id: p.id,
+        titulo: p.nome,
+        imagem: p.imagem,
+        link: p.link,
+        preco: p.preco,
+        precoOriginal: p.precoOriginal,
+        desconto: p.desconto,
+      }));
+    } catch {}
     const [campData, brandData] = await Promise.all([
       fetch(`${BASE_URL}/affiliate/campaigns?limit=20`, {
         headers: { 'x-api-key': API_KEY },
@@ -356,7 +372,7 @@ async function getOfertasMix(): Promise<any[]> {
         segment: m.segment,
       }));
 
-    return [...campanhas, ...marcas];
+       return [...produtosPinados, ...campanhas, ...marcas];
   } catch {
     return [];
   }

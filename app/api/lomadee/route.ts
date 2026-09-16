@@ -5,6 +5,7 @@ export const revalidate = 900; // 15 min
 const API_KEY = process.env.LOMADEE_API_KEY || '';
 const BASE_URL = 'https://api.lomadee.com.br';
 
+
 // Mapa de segmentos para categorias do site
 const SEGMENTO_PARA_CATEGORIA: Record<string, string> = {
   // Eletrodomésticos & Eletrônicos
@@ -155,7 +156,64 @@ export async function GET(request: Request) {
         porCategoria,
       });
     }
+    if (tipo === 'products') {
+      const q = searchParams.get('q') || '';
+      const pagina = searchParams.get('pagina') || '1';
+      const priceMin = searchParams.get('priceMin') || '';
+      const priceMax = searchParams.get('priceMax') || '';
+      const orgId = searchParams.get('orgId') || '';
 
+      const params = new URLSearchParams({
+        limit: '20',
+        page: pagina,
+        isAvailable: 'true',
+      });
+      if (q) params.set('search', q);
+      if (priceMin && priceMax) params.set('price', `${parseInt(priceMin) * 100}:${parseInt(priceMax) * 100}`);
+      if (orgId) params.set('organizationIds', orgId);
+
+      const data = await fetchLomadee(`/affiliate/products?${params}`);
+
+      const produtos = (data.data || [])
+                 .filter((p: any) => {
+          if (!p.name || p.name === '#N/A' || !p.images?.length) return false;
+          if (!p.available) return false;
+          if (searchParams.get('excluirShopee') === 'true') {
+            if (p.url?.includes('shopee.com')) return false;
+            if (p.organizationId === '124df9f6-2449-4bf5-ae80-dfc1fac6d46a') return false;
+          }
+          const stock = p.options?.[0]?.stocks?.[0]?.value;
+          if (stock !== undefined && stock <= 0) return false;
+          return true;
+        })
+        .map((p: any) => {
+          const option = p.options?.[0];
+          const pricing = option?.pricing?.[0];
+          const preco = pricing?.price || 0;
+          const precoOriginal = pricing?.listPrice || pricing?.price || 0;
+          const desconto = precoOriginal > preco ? Math.round((1 - preco / precoOriginal) * 100) : 0;
+
+          const estoque = p.options?.[0]?.stocks?.[0]?.value;
+          const vendedor = p.options?.[0]?.seller || '';
+          const loja = vendedor.includes('shopee') || p.url.includes('shopee.com')
+            ? 'Shopee' : vendedor || 'Loja parceira';
+          return {
+            id: p.id,
+            nome: p.name,
+            imagem: p.images?.[0]?.url || '',
+            link: p.url,
+            preco,
+            precoOriginal,
+            desconto,
+            disponivel: p.available,
+            organizationId: p.organizationId,
+            estoque: estoque ?? 99,
+            loja,
+          };
+        });
+
+      return NextResponse.json({ data: produtos, total: data.count || 0 });
+    }
 
 
 

@@ -91,8 +91,8 @@ function OfertaCard({ item }: { item: any }) {
                 R$ {item.preco.toFixed(2).replace('.', ',')}
               </div>
             </div>
-            <div style={{ backgroundColor: '#dc2626', color: '#fff', padding: '7px', borderRadius: '6px', fontWeight: 700, fontSize: '0.8rem', textAlign: 'center' }}>
-              Ver no Alibaba →
+                       <div style={{ backgroundColor: '#dc2626', color: '#fff', padding: '7px', borderRadius: '6px', fontWeight: 700, fontSize: '0.8rem', textAlign: 'center' }}>
+              Ver oferta →
             </div>
           </div>
         </article>

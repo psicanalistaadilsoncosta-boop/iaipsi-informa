@@ -1,0 +1,324 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+
+interface Produto {
+  id: string;
+  nome: string;
+  imagem: string;
+  link: string;
+  preco: number;
+  precoOriginal: number;
+  desconto: number;
+  organizationId: string;
+  estoque: number;
+  loja: string;
+}
+
+interface ProdutoPinado extends Produto {
+  pinedAt: string;
+}
+
+function LoginScreen({ onLogin }: { onLogin: () => void }) {
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await fetch('/api/editorial/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      if (res.ok) onLogin();
+      else setError('Senha incorreta.');
+    } catch { setError('Erro.'); }
+    finally { setLoading(false); }
+  }
+
+  return (
+    <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f9fafb', fontFamily: 'system-ui' }}>
+      <div style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '40px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', width: '100%', maxWidth: '380px', borderTop: '5px solid #2563eb' }}>
+        <h1 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#111827', margin: '0 0 4px' }}>Buscar Produtos</h1>
+        <p style={{ color: '#6b7280', fontSize: '0.9rem', margin: '0 0 28px' }}>Painel de curadoria</p>
+        <form onSubmit={handleSubmit}>
+          <input type="password" placeholder="Senha" value={password} onChange={e => setPassword(e.target.value)}
+            style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.95rem', marginBottom: '12px', boxSizing: 'border-box' }} autoFocus />
+          {error && <p style={{ color: '#dc2626', fontSize: '0.82rem', margin: '0 0 10px' }}>{error}</p>}
+          <button type="submit" disabled={loading} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: '#2563eb', color: '#fff', fontWeight: 700, cursor: 'pointer' }}>
+            {loading ? 'Verificando...' : 'Entrar'}
+          </button>
+        </form>
+      </div>
+    </main>
+  );
+}
+
+export default function BuscarProdutosPage() {
+  const [auth, setAuth] = useState<boolean | null>(null);
+  const [busca, setBusca] = useState('');
+  const [precoMin, setPrecoMin] = useState('');
+  const [precoMax, setPrecoMax] = useState('');
+  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [pinados, setPinados] = useState<ProdutoPinado[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [gerando, setGerando] = useState<string | null>(null);
+  const [aba, setAba] = useState<'buscar' | 'pinados'>('buscar');
+  const [pagina, setPagina] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [excluirShopee, setExcluirShopee] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/editorial/auth/check').then(r => r.json()).then(d => setAuth(d.ok)).catch(() => setAuth(false));
+  }, []);
+
+  useEffect(() => { if (auth) loadPinados(); }, [auth]);
+
+  async function loadPinados() {
+    try {
+      const res = await fetch('/produtos-pinados.json');
+      setPinados(await res.json());
+    } catch { setPinados([]); }
+  }
+
+  async function handleBuscar(pag = 1) {
+    if (!busca.trim()) return;
+    setLoading(true);
+    setPagina(pag);
+    try {
+      const params = new URLSearchParams({ tipo: 'products', q: busca, pagina: String(pag) });
+      if (precoMin) params.set('priceMin', precoMin);
+      if (precoMax) params.set('priceMax', precoMax);
+      if (excluirShopee) params.set('excluirShopee', 'true');
+      const res = await fetch(`/api/lomadee?${params}`);
+      const data = await res.json();
+      setProdutos(data.data || []);
+      setTotal(data.total || 0);
+    } finally { setLoading(false); }
+  }
+
+  async function handlePinar(produto: Produto) {
+    setGerando(produto.id);
+    try {
+      // Gera link de afiliado
+      const shortRes = await fetch('/api/produtos/shorten', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: produto.link, organizationId: produto.organizationId }),
+      });
+      const shortData = await shortRes.json();
+      const linkAfiliado = shortData.shortUrl || produto.link;
+
+      // Salva
+      await fetch('/api/produtos/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...produto, link: linkAfiliado, linkOriginal: produto.link }),
+      });
+
+      await loadPinados();
+      alert(`✅ "${produto.nome}" adicionado! Link: ${linkAfiliado}`);
+    } catch {
+      alert('Erro ao pinar produto.');
+    } finally { setGerando(null); }
+  }
+
+  async function handleDespinar(id: string) {
+    if (!confirm('Remover este produto?')) return;
+    await fetch('/api/produtos/save', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+    await loadPinados();
+  }
+
+  const isPinado = (id: string) => pinados.some(p => p.id === id);
+
+  if (auth === null) return (
+    <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f9fafb' }}>
+      <p style={{ color: '#9ca3af', fontFamily: 'system-ui' }}>Verificando...</p>
+    </main>
+  );
+
+  if (!auth) return <LoginScreen onLogin={() => setAuth(true)} />;
+
+  return (
+    <main style={{ maxWidth: '1060px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+
+      <header style={{ backgroundColor: '#fff', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: '24px', borderTop: '6px solid #2563eb' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <h1 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#111827', margin: 0 }}>🔍 Curadoria de Produtos</h1>
+            <p style={{ color: '#6b7280', fontSize: '0.9rem', margin: '4px 0 0' }}>Busque e pine produtos para aparecer entre as notícias</p>
+          </div>
+          <a href="/" style={{ backgroundColor: '#f3f4f6', color: '#374151', padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 600 }}>← Site</a>
+        </div>
+      </header>
+
+      {/* Abas */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+        {(['buscar', 'pinados'] as const).map(a => (
+          <button key={a} onClick={() => setAba(a)} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', backgroundColor: aba === a ? '#2563eb' : '#fff', color: aba === a ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+            {a === 'buscar' ? '🔍 Buscar produtos' : `📌 Pinados (${pinados.length})`}
+          </button>
+        ))}
+      </div>
+
+      {/* Aba buscar */}
+      {aba === 'buscar' && (
+        <div>
+          {/* Filtros */}
+          <div style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '20px', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+              <div style={{ flex: 2, minWidth: '200px' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '4px' }}>Busca</label>
+                <input value={busca} onChange={e => setBusca(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleBuscar(1)}
+                  placeholder="ex: smartwatch, notebook, vinho..."
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }} />
+              </div>
+              <div style={{ flex: 1, minWidth: '120px' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '4px' }}>Preço mín (R$)</label>
+                <input value={precoMin} onChange={e => setPrecoMin(e.target.value)} placeholder="ex: 100"
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }} />
+              </div>
+              <div style={{ flex: 1, minWidth: '120px' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '4px' }}>Preço máx (R$)</label>
+                <input value={precoMax} onChange={e => setPrecoMax(e.target.value)} placeholder="ex: 500"
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }} />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 0' }}>
+                <input type="checkbox" id="excluirShopee" checked={excluirShopee}
+                  onChange={e => setExcluirShopee(e.target.checked)}
+                  style={{ width: '16px', height: '16px', cursor: 'pointer' }} />
+                <label htmlFor="excluirShopee" style={{ fontSize: '0.85rem', fontWeight: 600, color: '#374151', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  Excluir Shopee
+                </label>
+              </div>
+
+
+              <button onClick={() => handleBuscar(1)} disabled={loading || !busca.trim()} style={{ padding: '9px 24px', borderRadius: '8px', border: 'none', backgroundColor: '#2563eb', color: '#fff', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                {loading ? '⏳' : '🔍 Buscar'}
+              </button>
+            </div>
+          </div>
+
+          {/* Resultados */}
+          {produtos.length > 0 && (
+            <>
+              <div style={{ fontSize: '0.82rem', color: '#6b7280', marginBottom: '12px' }}>
+                {total.toLocaleString('pt-BR')} produtos encontrados — página {pagina}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px', marginBottom: '20px' }}>
+                {produtos.map(p => (
+                  <div key={p.id} style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 2px 6px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column' }}>
+
+                    <div style={{ height: '160px', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', position: 'relative' }}>
+                      {p.imagem && <img src={p.imagem} alt={p.nome} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />}
+                      {p.desconto > 0 && (
+                        <span style={{ position: 'absolute', top: '8px', left: '8px', backgroundColor: '#dc2626', color: '#fff', fontSize: '0.7rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px' }}>
+                          -{p.desconto}%
+                        </span>
+                      )}
+                      {isPinado(p.id) && (
+                        <span style={{ position: 'absolute', top: '8px', right: '8px', backgroundColor: '#047857', color: '#fff', fontSize: '0.7rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px' }}>
+                          📌 Pinado
+                        </span>
+                      )}
+                    </div>
+
+                    <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', flexGrow: 1, gap: '8px' }}>
+                      <h3 style={{ fontSize: '0.82rem', fontWeight: 600, color: '#111827', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {p.nome}
+                    </h3>
+                    <div style={{ fontSize: '0.7rem', color: p.loja === 'Shopee' ? '#ea580c' : '#047857', fontWeight: 600 }}>
+                      🏪 {p.loja}
+                    </div>
+                    {p.estoque !== undefined && p.estoque <= 5 && (
+                      <div style={{ fontSize: '0.72rem', color: p.estoque === 0 ? '#dc2626' : '#ea580c', fontWeight: 600 }}>
+                        {p.estoque === 0 ? '⚠️ Esgotado' : `⚠️ Últimas ${p.estoque} unidades`}
+                      </div>
+                    )}
+                    <div style={{ marginTop: 'auto' }}>
+                        {p.precoOriginal > p.preco && (
+                          <div style={{ fontSize: '0.72rem', color: '#9ca3af', textDecoration: 'line-through' }}>
+                            R$ {p.precoOriginal.toFixed(2).replace('.', ',')}
+                          </div>
+                        )}
+                        <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#dc2626' }}>
+                          R$ {p.preco.toFixed(2).replace('.', ',')}
+                        </div>
+                      </div>
+                                            <a href={p.link} target="_blank" rel="noopener noreferrer"
+                        style={{ display: 'block', padding: '6px', borderRadius: '6px', border: '1px solid #e5e7eb', backgroundColor: '#f9fafb', color: '#374151', fontWeight: 600, fontSize: '0.78rem', textAlign: 'center', textDecoration: 'none', marginBottom: '6px' }}>
+                        🔗 Ver na loja
+                      </a>
+                      <button
+                        onClick={() => handlePinar(p)}
+                        disabled={isPinado(p.id) || gerando === p.id}
+                        style={{ width: '100%', padding: '7px', borderRadius: '6px', border: 'none', backgroundColor: isPinado(p.id) ? '#f3f4f6' : '#2563eb', color: isPinado(p.id) ? '#9ca3af' : '#fff', fontWeight: 700, fontSize: '0.8rem', cursor: isPinado(p.id) ? 'default' : 'pointer' }}>
+                        {gerando === p.id ? '⏳ Gerando link...' : isPinado(p.id) ? '✅ Já pinado' : '📌 Pinar produto'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Paginação */}
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
+                <button onClick={() => handleBuscar(pagina - 1)} disabled={pagina === 1 || loading} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', fontWeight: 600, cursor: 'pointer' }}>← Anterior</button>
+                <span style={{ padding: '8px 16px', color: '#6b7280', fontSize: '0.9rem' }}>Página {pagina}</span>
+                <button onClick={() => handleBuscar(pagina + 1)} disabled={produtos.length < 20 || loading} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', fontWeight: 600, cursor: 'pointer' }}>Próxima →</button>
+              </div>
+            </>
+          )}
+
+          {!loading && produtos.length === 0 && busca && (
+            <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>Nenhum produto encontrado para "{busca}".</div>
+          )}
+        </div>
+      )}
+
+      {/* Aba pinados */}
+      {aba === 'pinados' && (
+        <div>
+          {pinados.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>Nenhum produto pinado ainda. Busque e pine produtos na aba ao lado.</div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
+              {pinados.map(p => (
+                <div key={p.id} style={{ backgroundColor: '#fff', borderRadius: '12px', border: '2px solid #2563eb', overflow: 'hidden', boxShadow: '0 2px 6px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ height: '140px', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px' }}>
+                    {p.imagem && <img src={p.imagem} alt={p.nome} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />}
+                  </div>
+                  <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', flexGrow: 1, gap: '8px' }}>
+                    <h3 style={{ fontSize: '0.82rem', fontWeight: 600, color: '#111827', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {p.nome}
+                    </h3>
+                    <div style={{ fontSize: '1rem', fontWeight: 800, color: '#dc2626' }}>
+                      R$ {p.preco.toFixed(2).replace('.', ',')}
+                    </div>
+                    <a href={p.link} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.72rem', color: '#2563eb', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {p.link}
+                    </a>
+                    <small style={{ color: '#9ca3af', fontSize: '0.72rem' }}>
+                      Pinado em {new Date(p.pinedAt).toLocaleDateString('pt-BR')}
+                    </small>
+                    <button onClick={() => handleDespinar(p.id)} style={{ padding: '6px', borderRadius: '6px', border: '1px solid #fca5a5', backgroundColor: '#fff', color: '#dc2626', fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer' }}>
+                      🗑 Remover
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+    </main>
+  );
+}
