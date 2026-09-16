@@ -35,6 +35,15 @@ export async function POST(req: NextRequest) {
     const precoOriginal = getSchema('highPrice');
     const disponivel = html.includes('InStock') || html.includes('in_stock');
 
+       // Extrai organizationId do utm_campaign do Lomadee
+    let organizationId = '';
+    try {
+      const finalUrl = new URL(res.url || url);
+      const utmCampaign = finalUrl.searchParams.get('utm_campaign') || '';
+      const uuidMatch = utmCampaign.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+      if (uuidMatch) organizationId = uuidMatch[1];
+    } catch {}
+
     return NextResponse.json({
       titulo,
       imagem,
@@ -42,7 +51,8 @@ export async function POST(req: NextRequest) {
       preco,
       precoOriginal,
       disponivel,
-      url,
+      url: res.url || url,
+      organizationId,
     });
   } catch (e) {
     return NextResponse.json({ error: 'Não foi possível acessar a página' }, { status: 500 });
