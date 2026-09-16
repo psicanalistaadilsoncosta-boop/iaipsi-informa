@@ -1,109 +1,207 @@
-import { Suspense } from 'react';
-import Script from 'next/script';
+'use client';
 
-interface Props {
-  searchParams: Promise<{ url?: string; titulo?: string; categoria?: string; cor?: string; snippet?: string }>;
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
+
+interface Oferta {
+  tipo: string;
+  titulo: string;
+  link: string;
+  imagem?: string;
+  isCupom?: boolean;
+  code?: string;
+  preco?: number;
+  precoOriginal?: number;
+  desconto?: number;
 }
 
-export default async function NoticiaPage({ searchParams }: Props) {
-  const params = await searchParams;
-  const url = params.url || '/';
-  const titulo = params.titulo || 'Matéria completa';
-  const categoria = params.categoria || '';
-  const cor = params.cor ? `#${params.cor}` : '#2563eb';
-  const snippet = params.snippet || '';
+function NoticiaContent() {
+  const searchParams = useSearchParams();
+  const url = searchParams.get('url') || '/';
+  const titulo = searchParams.get('titulo') || 'Matéria completa';
+  const categoria = searchParams.get('categoria') || '';
+  const cor = searchParams.get('cor') ? `#${searchParams.get('cor')}` : '#2563eb';
+  const snippet = searchParams.get('snippet') || '';
+
+  const [contador, setContador] = useState(7);
+  const [oferta, setOferta] = useState<Oferta | null>(null);
+  const [copiado, setCopiado] = useState(false);
+
+  // Busca oferta aleatória
+  useEffect(() => {
+    fetch('/api/ofertas-mix')
+      .then(r => r.json())
+      .then(d => {
+        const items = d.items || [];
+        if (items.length > 0) {
+          const random = items[Math.floor(Math.random() * items.length)];
+          setOferta(random);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Countdown e redirecionamento
+  useEffect(() => {
+    if (contador <= 0) {
+      window.location.href = url;
+      return;
+    }
+    const timer = setTimeout(() => setContador(c => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [contador, url]);
+
+  function copiar(code: string) {
+    navigator.clipboard.writeText(code);
+    setCopiado(true);
+    setTimeout(() => setCopiado(false), 2000);
+  }
 
   return (
-    <main style={{ maxWidth: '780px', margin: '0 auto', padding: '20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+    <main style={{ maxWidth: '700px', margin: '0 auto', padding: '24px 20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
 
-      {/* Script Travelpayouts contextual */}
-      <Script
-        id="travelpayouts-noticia"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
-            (function () {
-              var script = document.createElement("script");
-              script.async = 1;
-              script.src = 'https://emrldtp.com/NTc0NTU2.js?t=574556';
-              document.head.appendChild(script);
-            })();
-          `,
-        }}
-      />
-
-      {/* Voltar */}
-      <a href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#6b7280', fontWeight: 600, fontSize: '0.82rem', textDecoration: 'none', marginBottom: '20px' }}>
-        ← Voltar ao IAIPSI Informa
-      </a>
-
-      {/* Banner Travelpayouts — aparece no topo */}
-      <div style={{ marginBottom: '24px', borderRadius: '10px', overflow: 'hidden', backgroundColor: '#fff', border: '1px solid #e5e7eb' }}>
-        <div style={{ padding: '8px 12px', backgroundColor: '#f9fafb', borderBottom: '1px solid #f3f4f6' }}>
-          <span style={{ fontSize: '0.65rem', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Publicidade</span>
-        </div>
-        {/* O script do Travelpayouts injeta os banners aqui automaticamente */}
-        <div id="tp-banner" style={{ minHeight: '90px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px' }}>
-          <span style={{ fontSize: '0.8rem', color: '#d1d5db' }}>Carregando oferta...</span>
-        </div>
+      {/* Barra de progresso */}
+      <div style={{ backgroundColor: '#e5e7eb', borderRadius: '999px', height: '6px', marginBottom: '24px', overflow: 'hidden' }}>
+        <div style={{
+          height: '100%',
+          backgroundColor: cor,
+          borderRadius: '999px',
+          width: `${((7 - contador) / 7) * 100}%`,
+          transition: 'width 1s linear',
+        }} />
       </div>
 
-      {/* Card da notícia */}
-      <div style={{ backgroundColor: '#fff', borderRadius: '14px', border: '1px solid #e5e7eb', padding: '32px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', marginBottom: '24px', borderLeft: `5px solid ${cor}` }}>
-
-        {categoria && (
-          <div style={{ marginBottom: '14px' }}>
-            <span style={{ backgroundColor: cor, color: '#fff', fontSize: '0.72rem', fontWeight: 700, padding: '3px 10px', borderRadius: '20px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+      {/* Aviso de redirecionamento */}
+      <div style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '20px 24px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+        <div>
+          {categoria && (
+            <span style={{ backgroundColor: cor, color: '#fff', fontSize: '0.68rem', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', textTransform: 'uppercase', letterSpacing: '0.5px', marginRight: '8px' }}>
               {categoria}
             </span>
-          </div>
-        )}
-
-        <h1 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#111827', margin: '0 0 16px', lineHeight: 1.3 }}>
-          {titulo}
-        </h1>
-
-        {snippet && (
-          <p style={{ fontSize: '0.95rem', color: '#6b7280', margin: '0 0 24px', lineHeight: 1.6 }}>
-            {snippet}
+          )}
+          <p style={{ fontSize: '0.88rem', color: '#374151', margin: '8px 0 4px', fontWeight: 600, lineHeight: 1.4 }}>
+            {titulo}
           </p>
-        )}
-
-        <a href={url} target="_blank" rel="noopener noreferrer" style={{
-          display: 'block',
-          backgroundColor: cor,
-          color: '#fff',
-          padding: '14px 24px',
-          borderRadius: '10px',
-          fontWeight: 800,
-          fontSize: '1.05rem',
-          textAlign: 'center',
-          textDecoration: 'none',
-        }}>
-          Ler matéria completa no site de origem →
-        </a>
-
-        <p style={{ fontSize: '0.72rem', color: '#9ca3af', textAlign: 'center', marginTop: '12px' }}>
-          Você será redirecionado para o site de origem da notícia
-        </p>
-      </div>
-
-      {/* Segunda área de banner abaixo da notícia */}
-      <div style={{ borderRadius: '10px', overflow: 'hidden', backgroundColor: '#fff', border: '1px solid #e5e7eb' }}>
-        <div style={{ padding: '8px 12px', backgroundColor: '#f9fafb', borderBottom: '1px solid #f3f4f6' }}>
-          <span style={{ fontSize: '0.65rem', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Publicidade</span>
+          {snippet && (
+            <p style={{ fontSize: '0.78rem', color: '#9ca3af', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+              {snippet}
+            </p>
+          )}
         </div>
-        <div style={{ minHeight: '90px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px' }}>
-          <span style={{ fontSize: '0.8rem', color: '#d1d5db' }}>Carregando oferta...</span>
+        <div style={{ textAlign: 'center', flexShrink: 0 }}>
+          <div style={{ fontSize: '2.2rem', fontWeight: 800, color: cor, lineHeight: 1 }}>{contador}</div>
+          <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '2px' }}>segundos</div>
         </div>
       </div>
 
-      <footer style={{ marginTop: '32px', textAlign: 'center' }}>
-        <p style={{ fontSize: '0.72rem', color: '#9ca3af', lineHeight: 1.6 }}>
-          © {new Date().getFullYear()} IAIPSI Informa · O conteúdo da matéria é de responsabilidade do veículo de origem.
+      {/* Botão ir agora */}
+      <a href={url} style={{ display: 'block', backgroundColor: cor, color: '#fff', padding: '12px', borderRadius: '10px', fontWeight: 700, fontSize: '0.95rem', textAlign: 'center', textDecoration: 'none', marginBottom: '24px' }}>
+        Ir para a matéria agora →
+      </a>
+
+      {/* Oferta aleatória */}
+      {oferta && (
+        <div style={{ backgroundColor: '#fff', borderRadius: '14px', border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+          <div style={{ padding: '10px 16px', backgroundColor: '#fef2f2', borderBottom: '1px solid #fee2e2', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '0.7rem', color: '#dc2626', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              🔥 Enquanto você espera — oferta especial
+            </span>
+          </div>
+
+          {oferta.tipo === 'campanha' && (
+            <div style={{ padding: '20px' }}>
+              {oferta.imagem && (
+                <div style={{ height: '160px', overflow: 'hidden', borderRadius: '8px', marginBottom: '16px', backgroundColor: '#f3f4f6' }}>
+                  <img src={oferta.imagem} alt={oferta.titulo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                </div>
+              )}
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#111827', margin: '0 0 14px', lineHeight: 1.4 }}>
+                {oferta.titulo}
+              </h3>
+              {oferta.isCupom && oferta.code && (
+                <button onClick={() => copiar(oferta.code!)} style={{ width: '100%', backgroundColor: copiado ? '#047857' : '#f5f3ff', color: copiado ? '#fff' : '#7c3aed', border: '2px dashed #7c3aed', borderRadius: '8px', padding: '10px', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer', letterSpacing: '2px', marginBottom: '10px', textAlign: 'center' }}>
+                  {copiado ? '✅ Copiado!' : oferta.code}
+                </button>
+              )}
+              <a href={oferta.link} target="_blank" rel="noopener noreferrer sponsored" style={{ display: 'block', backgroundColor: '#dc2626', color: '#fff', padding: '10px', borderRadius: '8px', fontWeight: 700, textAlign: 'center', textDecoration: 'none' }}>
+                {oferta.isCupom ? 'Usar cupom →' : 'Ver oferta →'}
+              </a>
+            </div>
+          )}
+
+          {oferta.tipo === 'marca' && (
+            <a href={oferta.link} target="_blank" rel="noopener noreferrer sponsored" style={{ textDecoration: 'none', display: 'block', padding: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                {(oferta as any).logo && (
+                  <img src={(oferta as any).logo} alt={oferta.titulo} style={{ width: '56px', height: '56px', objectFit: 'contain', borderRadius: '8px', border: '1px solid #f3f4f6' }} />
+                )}
+                <div>
+                  <div style={{ fontWeight: 700, color: '#111827', fontSize: '1rem' }}>{oferta.titulo}</div>
+                  <div style={{ fontSize: '0.78rem', color: '#6b7280', marginTop: '2px' }}>{(oferta as any).segment}</div>
+                </div>
+              </div>
+              <div style={{ marginTop: '14px', backgroundColor: '#dc2626', color: '#fff', padding: '10px', borderRadius: '8px', fontWeight: 700, textAlign: 'center' }}>
+                Visitar loja →
+              </div>
+            </a>
+          )}
+
+          {oferta.tipo === 'produto' && (
+            <a href={oferta.link} target="_blank" rel="noopener noreferrer sponsored" style={{ textDecoration: 'none', display: 'block', padding: '20px' }}>
+              {oferta.imagem && (
+                <div style={{ height: '160px', overflow: 'hidden', borderRadius: '8px', marginBottom: '14px', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', position: 'relative' }}>
+                  <img src={oferta.imagem} alt={oferta.titulo} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                  {oferta.desconto && oferta.desconto > 0 && (
+                    <span style={{ position: 'absolute', top: '8px', left: '8px', backgroundColor: '#dc2626', color: '#fff', fontSize: '0.75rem', fontWeight: 700, padding: '2px 8px', borderRadius: '6px' }}>
+                      -{oferta.desconto}%
+                    </span>
+                  )}
+                </div>
+              )}
+              <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111827', margin: '0 0 10px', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                {oferta.titulo}
+              </h3>
+              {oferta.precoOriginal && oferta.preco && oferta.precoOriginal > oferta.preco && (
+                <div style={{ fontSize: '0.8rem', color: '#9ca3af', textDecoration: 'line-through' }}>
+                  R$ {oferta.precoOriginal.toFixed(2).replace('.', ',')}
+                </div>
+              )}
+              {oferta.preco && (
+                <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#dc2626', marginBottom: '12px' }}>
+                  R$ {oferta.preco.toFixed(2).replace('.', ',')}
+                </div>
+              )}
+              <div style={{ backgroundColor: '#dc2626', color: '#fff', padding: '10px', borderRadius: '8px', fontWeight: 700, textAlign: 'center' }}>
+                Ver oferta →
+              </div>
+            </a>
+          )}
+
+          <p style={{ fontSize: '0.65rem', color: '#9ca3af', textAlign: 'center', padding: '8px', margin: 0 }}>
+            Publicidade · Preços sujeitos a alteração
+          </p>
+        </div>
+      )}
+
+      <footer style={{ marginTop: '24px', textAlign: 'center' }}>
+        <p style={{ fontSize: '0.7rem', color: '#9ca3af', margin: 0 }}>
+          © {new Date().getFullYear()} IAIPSI Informa
         </p>
       </footer>
 
     </main>
+  );
+}
+
+export default function NoticiaPage() {
+  return (
+    <Suspense fallback={
+      <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui', backgroundColor: '#f9fafb' }}>
+        <p style={{ color: '#9ca3af' }}>Carregando...</p>
+      </main>
+    }>
+      <NoticiaContent />
+    </Suspense>
   );
 }
