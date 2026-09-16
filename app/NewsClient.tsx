@@ -88,8 +88,11 @@ function OfertaCard({ item }: { item: any }) {
                 </div>
               )}
               <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#dc2626' }}>
-                R$ {item.preco.toFixed(2).replace('.', ',')}
-              </div>
+              R$ {item.preco.toFixed(2).replace('.', ',')}
+            </div>
+            <div style={{ fontSize: '0.65rem', color: '#9ca3af', marginTop: '2px', lineHeight: 1.3 }}>
+              Confira o valor no site e no carrinho
+            </div>
             </div>
                        <div style={{ backgroundColor: '#dc2626', color: '#fff', padding: '7px', borderRadius: '6px', fontWeight: 700, fontSize: '0.8rem', textAlign: 'center' }}>
               Ver oferta →
@@ -491,9 +494,11 @@ const safePosts = posts ?? [];
 
       <footer style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #e5e7eb', textAlign: 'center' }}>
         <p style={{ fontSize: '0.78rem', color: '#9ca3af', margin: 0, lineHeight: 1.8 }}>
-          © {new Date().getFullYear()} IAIPSI Informa · Notícias coletadas automaticamente dos principais portais de comunicação do Brasil e do mundo.
+                   © {new Date().getFullYear()} IAIPSI Informa · Notícias coletadas automaticamente dos principais portais de comunicação do Brasil e do mundo.
           <br />
           As análises editoriais são elaboradas com auxílio de inteligência artificial e revisadas e assinadas por Adilson Costa.
+          <br />
+          Os produtos, ofertas e cupons exibidos são de responsabilidade exclusiva dos respectivos anunciantes. Preços, condições e disponibilidade estão expressos em seus respectivos sites. Confira sempre o valor final no site do anunciante e no carrinho de compras antes de concluir a compra. Links de afiliado — ao comprar através deles você apoia o IAIPSI Informa sem custo adicional.
         </p>
       </footer>
 
