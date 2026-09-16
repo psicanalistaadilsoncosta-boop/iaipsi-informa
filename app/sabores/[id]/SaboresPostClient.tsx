@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface SaboresItem {
   id: string;
@@ -64,6 +64,26 @@ export default function SaboresPostClient({ item }: { item: SaboresItem | null }
       <article style={{ marginBottom: '40px' }}>
         {renderContent(item.content)}
       </article>
+
+      {/* Banner Travelpayouts */}
+      <div style={{ margin: '32px 0', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', backgroundColor: '#fff' }}>
+        <div style={{ padding: '8px 16px', backgroundColor: '#f9fafb', borderBottom: '1px solid #f3f4f6' }}>
+          <span style={{ fontSize: '0.65rem', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            ✈️ Publicidade — Viagens
+          </span>
+        </div>
+        <div id="tp-sabores" style={{ minHeight: '100px', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {/* Travelpayouts injeta aqui — fallback abaixo */}
+          <a href="/ofertas" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', backgroundColor: '#eff6ff', borderRadius: '8px', padding: '16px 20px', textDecoration: 'none', gap: '12px' }}>
+            <div>
+              <div style={{ fontSize: '0.72rem', color: '#2563eb', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>✈️ Que tal viajar?</div>
+              <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111827' }}>Confira ofertas de viagem e hospedagem</div>
+            </div>
+            <span style={{ backgroundColor: '#2563eb', color: '#fff', padding: '8px 16px', borderRadius: '6px', fontWeight: 700, fontSize: '0.85rem', whiteSpace: 'nowrap' }}>Ver ofertas →</span>
+          </a>
+        </div>
+      </div>
+
 
       {recipe && (
         <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '32px' }}>
