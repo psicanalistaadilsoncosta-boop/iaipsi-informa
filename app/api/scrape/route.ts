@@ -14,11 +14,11 @@ export async function GET(request: NextRequest) {
     const { produtos, plataforma } = await detectAndFetch(url, limit);
 
     const filtrados = q
-      ? produtos.filter(p => p.nome.toLowerCase().includes(q.toLowerCase()))
+      ? produtos.filter((p: any) => p.nome.toLowerCase().includes(q.toLowerCase()))
       : produtos;
 
-        // Injeta organizationId do Lomadee em cada produto
-        const data = filtrados.map((p: any) => ({
+    // Injeta organizationId do Lomadee em cada produto
+    const data = filtrados.map((p: any) => ({
       ...p,
       organizationId: organizationId || p.organizationId,
     }));
