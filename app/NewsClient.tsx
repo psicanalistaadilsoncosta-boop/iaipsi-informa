@@ -366,9 +366,12 @@ const safePosts = posts ?? [];
                         <p style={{ color: '#6b7280', fontSize: '1rem', margin: '6px 0 0' }}>
               Política · Economia · Esportes · Saúde Mental · Ciência · Psicanálise · Tecnologia · Liderança · Mundo
             </p>
-            <a href="/ofertas" style={{ display: 'inline-block', marginTop: '10px', backgroundColor: '#dc2626', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>
-              🛍 Ofertas & Experiências
-            </a>
+                       <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
+              <a href="/ofertas" style={{ backgroundColor: '#dc2626', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>🛍 Ofertas & Cupons</a>
+              <a href="/ofertas-selecionadas" style={{ backgroundColor: '#2563eb', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>⭐ Selecionadas</a>
+              <a href="/parcelado" style={{ backgroundColor: '#047857', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>💳 Parcelado</a>
+              <a href="/oferta-do-dia" style={{ backgroundColor: '#b45309', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>🔥 Oferta do Dia</a>
+            </div>
           </div>
         </div>
       </header>

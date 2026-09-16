@@ -6,12 +6,15 @@ export interface ProdutoPinado {
   id: string;
   nome: string;
   imagem: string;
-  link: string; // link de afiliado
+  link: string;
   linkOriginal: string;
   preco: number;
   precoOriginal: number;
   desconto: number;
+  parcelas?: string;
+  valorParcela?: string;
   organizationId: string;
+  destinos: string[]; // ['oferta-do-dia', 'selecionadas', 'parcelado']
   pinedAt: string;
 }
 
@@ -27,11 +30,16 @@ export async function POST(req: NextRequest) {
   try {
     const produto: ProdutoPinado = await req.json();
     const existing = await read();
-    if (existing.find(p => p.id === produto.id)) {
-      return NextResponse.json({ success: true, message: 'Já pinado' });
+    const idx = existing.findIndex(p => p.id === produto.id);
+
+    if (idx >= 0) {
+      // Atualiza destinos se já existir
+      existing[idx] = { ...existing[idx], ...produto, pinedAt: existing[idx].pinedAt };
+      await fs.writeFile(FILE, JSON.stringify(existing, null, 2));
+    } else {
+      const updated = [{ ...produto, pinedAt: new Date().toISOString() }, ...existing].slice(0, 100);
+      await fs.writeFile(FILE, JSON.stringify(updated, null, 2));
     }
-    const updated = [{ ...produto, pinedAt: new Date().toISOString() }, ...existing].slice(0, 20);
-    await fs.writeFile(FILE, JSON.stringify(updated, null, 2));
     return NextResponse.json({ success: true });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
