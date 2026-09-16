@@ -115,7 +115,46 @@ export async function GET(request: Request) {
   const tipo = searchParams.get('tipo') || 'campaigns';
   const filtro = searchParams.get('filtro') || '';
 
+
+
+
+
   try {
+    if (tipo === 'campaigns') {
+      const pagina = searchParams.get('pagina') || '1';
+      const filtro = searchParams.get('filtro') || '';
+
+      const [page1, page2] = await Promise.all([
+        fetchLomadee(`/affiliate/campaigns?limit=20&page=${pagina}`),
+        pagina === '1' ? fetchLomadee('/affiliate/campaigns?limit=20&page=2') : Promise.resolve({ data: [] }),
+      ]);
+
+      let campanhas = [...(page1.data || []), ...(page2.data || [])];
+
+      // Filtra por tipo se solicitado
+      if (filtro === 'cupons') {
+        campanhas = campanhas.filter((c: any) =>
+          c.type === 'GenericCoupon' || c.type === 'PersonalCoupon'
+        );
+      } else if (filtro === 'ofertas') {
+        campanhas = campanhas.filter((c: any) => c.type === 'Offer');
+      } else if (filtro === 'destaque') {
+        campanhas = campanhas
+          .filter((c: any) => c.status === 'onTime')
+          .sort((a: any, b: any) => {
+            const scoreA = (a.isHighlight ? 100 : 0) + (a.mediaKit?.banners?.length ? 50 : 0) + (a.type === 'Offer' ? 25 : 0);
+            const scoreB = (b.isHighlight ? 100 : 0) + (b.mediaKit?.banners?.length ? 50 : 0) + (b.type === 'Offer' ? 25 : 0);
+            if (scoreA !== scoreB) return scoreB - scoreA;
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          })
+          .slice(0, 1);
+      }
+
+      return NextResponse.json({ data: campanhas, total: campanhas.length });
+    }
+
+
+
          if (tipo === 'brands') {
       const pagina = searchParams.get('pagina') || '1';
       const data = await fetchLomadee(`/affiliate/brands?limit=20&page=${pagina}`);
