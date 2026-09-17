@@ -130,7 +130,7 @@ export default function OfertaDestaque() {
 
       {/* Card principal estilo Groupon */}
       <div style={{ backgroundColor: '#fff', borderRadius: '16px', overflow: 'hidden', border: '1px solid #e5e7eb', boxShadow: '0 4px 20px rgba(220,38,38,0.08)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 0 }}>
+         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '24px' }}>
 
           {/* Esquerda — imagem */}
           <div style={{ backgroundColor: '#f9fafb', padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', borderRight: '1px solid #f3f4f6', position: 'relative' }}>
