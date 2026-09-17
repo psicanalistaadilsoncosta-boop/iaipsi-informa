@@ -221,7 +221,7 @@ export default function BuscarProdutosPage() {
     setLoading(true);
     setProdutos([]);
     try {
-      const params = new URLSearchParams({ limit: '40', loja });
+      const params = new URLSearchParams({ limit: '400', loja });
       if (q) params.set('q', q);
       const res = await fetch(`/api/awin?${params}`);
       const json = await res.json();

@@ -376,10 +376,7 @@ export default function OfertasPage() {
               <a href="/oferta-do-dia" style={{ padding: '8px 14px', borderRadius: '3px', border: '1px solid #e8e8e8', color: '#dc2626', fontWeight: 600, fontSize: '0.8rem', textDecoration: 'none' }}>
                 🔥 Oferta do Dia
               </a>
-              <a href="/cupons" style={{ padding: '8px 14px', borderRadius: '3px', border: '1px solid #e8e8e8', color: '#7c3aed', fontWeight: 600, fontSize: '0.8rem', textDecoration: 'none' }}>
-                🏷 Só Cupons
-              </a>
-            </div>
+               </div>
           </div>
 
           {/* Abas sublinhadas */}

@@ -1,5 +1,33 @@
 [
   {
+    "id": "37881698359",
+    "nome": "Fondue Inox e Cerâmica 11 Peças 1,5 Litros 2 em 1",
+    "imagem": "https://images2.productserve.com/?w=200&h=200&bg=white&trim=5&t=letterbox&url=ssl%3Aspicy.vteximg.com.br%2Farquivos%2Fids%2F236469_2&feedId=72009&k=8b0313e8700522463cbb977a4e6f678a9ed7b077",
+    "link": "https://www.awin1.com/pclick.php?p=37881698359&a=3093907&m=30615",
+    "preco": 399,
+    "precoOriginal": 399,
+    "desconto": 0,
+    "categoria": "",
+    "loja": "Spicy BR",
+    "emEstoque": "1",
+    "disponivel": true,
+    "organizationId": "awin-spicy",
+    "estoque": 99,
+    "parcelasTexto": "",
+    "displayPrice": "BRL399.00",
+    "linkOriginal": "https://www.awin1.com/pclick.php?p=37881698359&a=3093907&m=30615",
+    "destinos": [
+      "selecionadas",
+      "oferta-do-dia",
+      "ofertas-selecionadas",
+      "parcelado"
+    ],
+    "parcelas": "",
+    "valorParcela": "",
+    "pinedAt": "2026-09-16T22:01:27.846Z",
+    "ativo": true
+  },
+  {
     "id": "4791105",
     "nome": "Jogo de Panelas Brinox Antiaderente Ceramic Life 8 Peças Smart Plus Vanilla",
     "imagem": "https://brinox.vteximg.com.br/arquivos/ids/276492/jogo-de-panelas-brinox-antiaderente-8-pecas-cor-vanilla.jpg?v=638919087523570000",
@@ -73,7 +101,7 @@
       "oferta-do-dia"
     ],
     "pinedAt": "2026-09-16T20:54:58.831Z",
-    "ativo": true
+    "ativo": false
   },
   {
     "id": "2010316",

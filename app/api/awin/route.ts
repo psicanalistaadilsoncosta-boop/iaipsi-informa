@@ -2,28 +2,33 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createGunzip } from 'zlib';
 import { parse } from 'csv-parse';
 import { Readable } from 'stream';
+import path from 'path';
+import fs from 'fs/promises';
 
 export const revalidate = 3600;
 
-  const FEEDS: Record<string, string> = {
-  arno: process.env.AWIN_FEED_ARNO || '',
-  spicy: process.env.AWIN_FEED_SPICY || '',
+const FEEDS: Record<string, string> = {
+  arno: process.env.AWIN_FEED_ARNO || 'arno-feed.csv',
+  spicy: process.env.AWIN_FEED_SPICY || 'spicy-feed.csv',
   // adicione novos aqui
 };
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get('q') || '';
   const categoria = searchParams.get('categoria') || '';
-  const limit = parseInt(searchParams.get('limit') || '20');
+  const limit = parseInt(searchParams.get('limit') || '40');
+  const loja = searchParams.get('loja') || 'arno';
+
+  // Pega o nome do arquivo do feed
+  const feedFile = FEEDS[loja] || FEEDS.arno;
+  // Remove caminho se vier com public/
+  const feedFileName = feedFile.replace(/^public\//, '');
+  const filePath = path.join(process.cwd(), 'public', feedFileName);
 
   try {
-  const loja = searchParams.get('loja') || 'arno';
-  const FEED_URL = FEEDS[loja] || FEEDS.arno;
-      // Lê do arquivo local para evitar timeout
-    const filePath = (await import('path')).join(process.cwd(), 'public', 'arno-feed.csv');
-    const buffer = await (await import('fs/promises')).readFile(filePath);
+    const buffer = await fs.readFile(filePath);
 
-       // Tenta gzip primeiro, se falhar lê direto como CSV
     const produtos = await new Promise<any[]>((resolve, reject) => {
       const records: any[] = [];
       const parser = parse({
@@ -51,12 +56,11 @@ export async function GET(request: NextRequest) {
         const gunzip = createGunzip();
         readable.pipe(gunzip).pipe(parser);
       } else {
-        // CSV direto
         readable.pipe(parser);
       }
     });
 
-    // Filtra e mapeia
+    // Filtra
     let filtrados = produtos.filter((p: any) => {
       if (p.in_stock !== 'y' && p.in_stock !== '1' && p.in_stock !== 'true') return false;
       if (!p.product_name || !p.merchant_image_url) return false;
@@ -71,7 +75,7 @@ export async function GET(request: NextRequest) {
       const precoOriginal = parseFloat(p.rrp_price) || parseFloat(p.product_price_old) || preco;
       const desconto = precoOriginal > preco ? Math.round((1 - preco / precoOriginal) * 100) : parseInt(p.savings_percent) || 0;
 
-           return {
+      return {
         id: p.aw_product_id || p.merchant_product_id,
         nome: p.product_name,
         imagem: p.aw_image_url || p.merchant_image_url || p.large_image,
@@ -80,20 +84,19 @@ export async function GET(request: NextRequest) {
         precoOriginal,
         desconto,
         categoria: p.merchant_category || p.category_name,
-        loja: p.merchant_name || 'Arno',
+        loja: p.merchant_name || loja,
         emEstoque: p.in_stock,
         disponivel: true,
-        organizationId: 'awin-arno',
+        organizationId: `awin-${loja}`,
         estoque: parseInt(p.stock_quantity) || 99,
         parcelasTexto: p.base_price_text || '',
         displayPrice: p.display_price || '',
       };
     });
 
-    // Categorias disponíveis
     const categorias = [...new Set(produtos
-      .filter(p => p.merchant_category)
-      .map(p => p.merchant_category)
+      .filter((p: any) => p.merchant_category)
+      .map((p: any) => p.merchant_category)
     )].sort();
 
     return NextResponse.json({
