@@ -1,5 +1,53 @@
 [
   {
+    "id": "18",
+    "nome": "Espumante Moscatel Jolimont",
+    "imagem": "https://vinhosjolimont.vteximg.com.br/arquivos/ids/157388/Medalhas---Moscatel.png?v=639044319058930000",
+    "link": "https://lmdee.link/OwF6EwM1spOS",
+    "preco": 119,
+    "precoOriginal": 119,
+    "desconto": 0,
+    "categoria": "VinhosEspumante",
+    "loja": "Jolimont",
+    "disponivel": true,
+    "estoque": 99999,
+    "parcelas": "3",
+    "valorParcela": 39.66,
+    "skuId": "906",
+    "linkOriginal": "https://www.vinhosjolimont.com.br/espumante-moscatel-jolimont/p",
+    "plataforma": "vtex",
+    "organizationId": "6fe8dae4-a946-4c32-8142-18de9ac8b608",
+    "destinos": [
+      "selecionadas",
+      "ofertas-selecionadas"
+    ],
+    "pinedAt": "2026-09-17T00:46:13.919Z"
+  },
+  {
+    "id": "277",
+    "nome": "Feijão Carioca 200G Só Aquecer Vapza",
+    "imagem": "https://vapza.vteximg.com.br/arquivos/ids/157047/Feijao-Carioca.png?v=638938857693330000",
+    "link": "https://lmdee.link/NAMhle2GUxMt",
+    "preco": 6.9,
+    "precoOriginal": 6.9,
+    "desconto": 0,
+    "categoria": "Para sua casaSó aquecer",
+    "loja": "Vapza",
+    "disponivel": true,
+    "estoque": 99999,
+    "parcelas": "1",
+    "valorParcela": 6.9,
+    "skuId": "289",
+    "linkOriginal": "https://www.vapza.com.br/feijao-carioca-200g-vapza--nova-embalagem-/p",
+    "plataforma": "vtex",
+    "organizationId": "e03cdaaf-233d-4019-9171-0e12be587de0",
+    "destinos": [
+      "selecionadas",
+      "ofertas-selecionadas"
+    ],
+    "pinedAt": "2026-09-17T00:44:53.086Z"
+  },
+  {
     "id": "37881698359",
     "nome": "Fondue Inox e Cerâmica 11 Peças 1,5 Litros 2 em 1",
     "imagem": "https://images2.productserve.com/?w=200&h=200&bg=white&trim=5&t=letterbox&url=ssl%3Aspicy.vteximg.com.br%2Farquivos%2Fids%2F236469_2&feedId=72009&k=8b0313e8700522463cbb977a4e6f678a9ed7b077",

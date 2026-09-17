@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { kv } from '@/lib/kv';
+import fs from 'fs/promises';
+import path from 'path';
 
 export interface SaboresItem {
   id: string;
@@ -14,23 +15,20 @@ export interface SaboresItem {
   publishedAt: string;
 }
 
-const KEY = 'sabores:items';
-
-async function read(): Promise<SaboresItem[]> {
-  try {
-    const data = await kv.get<SaboresItem[]>(KEY);
-    return data || [];
-  } catch {
-    return [];
-  }
-}
-
 export async function POST(req: NextRequest) {
   try {
     const item = await req.json();
-    const existing = await read();
+    const filePath = path.join(process.cwd(), 'public', 'sabores.json');
 
-    const newItem: SaboresItem = {
+    let existing: SaboresItem[] = [];
+    try {
+      const raw = await fs.readFile(filePath, 'utf-8');
+      existing = JSON.parse(raw);
+    } catch {
+      existing = [];
+    }
+
+     const newItem: SaboresItem = {
       id: Date.now().toString(),
       prato: item.prato,
       destino: item.destino,
@@ -44,7 +42,7 @@ export async function POST(req: NextRequest) {
     };
 
     const updated = [newItem, ...existing].slice(0, 20);
-    await kv.set(KEY, updated);
+    await fs.writeFile(filePath, JSON.stringify(updated, null, 2), 'utf-8');
 
     return NextResponse.json({ success: true, item: newItem });
   } catch (error) {
@@ -54,11 +52,14 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  // Atualiza só a imagem de um item
   try {
     const { id, imageUrl } = await req.json();
-    const existing = await read();
+    const filePath = path.join(process.cwd(), 'public', 'sabores.json');
+    const raw = await fs.readFile(filePath, 'utf-8');
+    const existing: SaboresItem[] = JSON.parse(raw);
     const updated = existing.map(item => item.id === id ? { ...item, imageUrl } : item);
-    await kv.set(KEY, updated);
+    await fs.writeFile(filePath, JSON.stringify(updated, null, 2), 'utf-8');
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Erro ao atualizar imagem' }, { status: 500 });
@@ -68,9 +69,11 @@ export async function PATCH(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     const { id } = await req.json();
-    const existing = await read();
+    const filePath = path.join(process.cwd(), 'public', 'sabores.json');
+    const raw = await fs.readFile(filePath, 'utf-8');
+    const existing: SaboresItem[] = JSON.parse(raw);
     const updated = existing.filter(item => item.id !== id);
-    await kv.set(KEY, updated);
+    await fs.writeFile(filePath, JSON.stringify(updated, null, 2), 'utf-8');
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Erro ao deletar' }, { status: 500 });

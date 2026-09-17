@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { kv } from '@/lib/kv';
+import fs from 'fs/promises';
+import path from 'path';
 
 export interface ProdutoPinado {
   id: string;
@@ -18,17 +19,16 @@ export interface ProdutoPinado {
   pinedAt: string;
 }
 
-const KEY = 'produtos:pinados';
+const FILE = path.join(process.cwd(), 'public', 'produtos-pinados.json');
 
 async function read(): Promise<ProdutoPinado[]> {
   try {
-    const data = await kv.get<ProdutoPinado[]>(KEY);
-    return data || [];
+    return JSON.parse(await fs.readFile(FILE, 'utf-8'));
   } catch { return []; }
 }
 
 export async function POST(req: NextRequest) {
-  try {
+   try {
     const produto: ProdutoPinado = await req.json();
     let existing = await read();
     const idx = existing.findIndex(p => p.id === produto.id);
@@ -43,11 +43,11 @@ export async function POST(req: NextRequest) {
 
     if (idx >= 0) {
       existing[idx] = { ...existing[idx], ...produto, pinedAt: existing[idx].pinedAt };
+      await fs.writeFile(FILE, JSON.stringify(existing, null, 2));
     } else {
-      existing = [{ ...produto, pinedAt: new Date().toISOString() }, ...existing].slice(0, 100);
+      const updated = [{ ...produto, pinedAt: new Date().toISOString() }, ...existing].slice(0, 100);
+      await fs.writeFile(FILE, JSON.stringify(updated, null, 2));
     }
-
-    await kv.set(KEY, existing);
     return NextResponse.json({ success: true });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
@@ -58,19 +58,9 @@ export async function DELETE(req: NextRequest) {
   try {
     const { id } = await req.json();
     const existing = await read();
-    await kv.set(KEY, existing.filter(p => p.id !== id));
+    await fs.writeFile(FILE, JSON.stringify(existing.filter(p => p.id !== id), null, 2));
     return NextResponse.json({ success: true });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
-  }
-}
-
-// GET — para o painel ler os pinados
-export async function GET() {
-  try {
-    const data = await read();
-    return NextResponse.json(data);
-  } catch {
-    return NextResponse.json([]);
   }
 }

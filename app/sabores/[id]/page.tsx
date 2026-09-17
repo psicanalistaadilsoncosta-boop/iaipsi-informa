@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import SaboresPostClient from './SaboresPostClient';
+import { kv } from '@/lib/kv';
 
 interface SaboresItem {
   id: string;
@@ -15,6 +16,10 @@ interface SaboresItem {
 }
 
 async function getItem(id: string): Promise<SaboresItem | null> {
+  try {
+    const data = await kv.get<SaboresItem[]>('sabores:items');
+    if (data) return data.find(i => i.id === id) || null;
+  } catch {}
   try {
     const filePath = path.join(process.cwd(), 'public', 'sabores.json');
     const raw = await fs.readFile(filePath, 'utf-8');

@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import Link from 'next/link';
+import { kv } from '@/lib/kv';
 
 interface EditorialItem {
   id: string;
@@ -34,6 +35,10 @@ function renderAnalysis(text: string) {
 }
 
 async function getItem(id: string): Promise<EditorialItem | null> {
+  try {
+    const data = await kv.get<EditorialItem[]>('editorial:items');
+    if (data) return data.find(i => i.id === id) || null;
+  } catch {}
   try {
     const filePath = path.join(process.cwd(), 'public', 'editorial.json');
     const raw = await fs.readFile(filePath, 'utf-8');

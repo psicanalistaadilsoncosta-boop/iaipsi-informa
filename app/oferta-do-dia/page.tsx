@@ -61,7 +61,7 @@ export default function OfertaDoDiaPage() {
 
    useEffect(() => {
     // Tenta produtos pinados primeiro
-    fetch('/produtos-pinados.json')
+        fetch('/api/produtos/save')
       .then(r => r.json())
       .then((pinados: any[]) => {
         const ativo = pinados.find(p =>

@@ -1,7 +1,6 @@
-import Link from 'next/link';
-import { kv } from '@/lib/kv';
 import fs from 'fs/promises';
 import path from 'path';
+import Link from 'next/link';
 
 interface SaboresItem {
   id: string;
@@ -14,10 +13,6 @@ interface SaboresItem {
 }
 
 async function getSabores(): Promise<SaboresItem[]> {
-  try {
-    const data = await kv.get<SaboresItem[]>('sabores:items');
-    if (data && data.length > 0) return data;
-  } catch {}
   try {
     const filePath = path.join(process.cwd(), 'public', 'sabores.json');
     const raw = await fs.readFile(filePath, 'utf-8');
@@ -45,7 +40,7 @@ export default async function ArquivoSaboresPage() {
       {items.length === 0 ? (
         <p style={{ color: '#6b7280', textAlign: 'center', padding: '40px' }}>Nenhum post publicado ainda.</p>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
+             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
           {items.map(item => (
             <Link key={item.id} href={`/sabores/${item.id}`} style={{ textDecoration: 'none' }}>
               <article style={{ backgroundColor: '#fff', borderRadius: '14px', overflow: 'hidden', border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', cursor: 'pointer' }}>
@@ -62,6 +57,7 @@ export default async function ArquivoSaboresPage() {
                     <div style={{ fontSize: '0.65rem', color: '#fcd34d', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{item.destino}</div>
                   </div>
                 </div>
+
                 <div style={{ padding: '20px' }}>
                   <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#111827', margin: '0 0 8px', lineHeight: 1.3 }}>{item.prato}</h2>
                   <p style={{ fontSize: '0.85rem', color: '#6b7280', fontStyle: 'italic', margin: '0 0 12px', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>

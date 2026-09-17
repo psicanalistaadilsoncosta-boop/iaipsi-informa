@@ -1,7 +1,6 @@
-import Link from 'next/link';
-import { kv } from '@/lib/kv';
 import fs from 'fs/promises';
 import path from 'path';
+import Link from 'next/link';
 
 interface EditorialItem {
   id: string;
@@ -31,10 +30,6 @@ function getPreview(analysis: string): string {
 }
 
 async function getEditorial(): Promise<EditorialItem[]> {
-  try {
-    const data = await kv.get<EditorialItem[]>('editorial:items');
-    if (data && data.length > 0) return data;
-  } catch {}
   try {
     const filePath = path.join(process.cwd(), 'public', 'editorial.json');
     const raw = await fs.readFile(filePath, 'utf-8');
@@ -67,6 +62,7 @@ export default async function ArquivoEditorialPage() {
           {items.map(item => (
             <Link key={item.id} href={`/editorial/${item.id}`} style={{ textDecoration: 'none' }}>
               <article style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '24px', boxShadow: '0 2px 6px rgba(0,0,0,0.04)', borderLeft: `5px solid ${color(item.category)}`, cursor: 'pointer' }}>
+
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
                   {item.category && (
                     <span style={{ backgroundColor: color(item.category), color: '#fff', fontSize: '0.72rem', fontWeight: 700, padding: '3px 10px', borderRadius: '20px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -77,15 +73,19 @@ export default async function ArquivoEditorialPage() {
                     {new Date(item.publishedAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
                   </small>
                 </div>
+
                 <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#111827', margin: '0 0 8px', lineHeight: 1.4 }}>
                   {item.title}
                 </h2>
+
                 <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '0 0 12px', lineHeight: 1.55, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                   {getPreview(item.analysis)}
                 </p>
+
                 <span style={{ fontSize: '0.82rem', color: color(item.category), fontWeight: 600 }}>
                   Ler análise completa →
                 </span>
+
               </article>
             </Link>
           ))}

@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import Link from 'next/link';
+import { kv } from '@/lib/kv';
 
 interface ProdutoPinado {
   id: string;
@@ -19,12 +20,15 @@ interface ProdutoPinado {
 
 async function getProdutos(): Promise<ProdutoPinado[]> {
   try {
+    const data = await kv.get<ProdutoPinado[]>('produtos:pinados');
+    const all = data || [];
+    return all.filter(p => p.destinos?.includes('parcelado')).slice(0, 20);
+  } catch {}
+  try {
     const filePath = path.join(process.cwd(), 'public', 'produtos-pinados.json');
     const raw = await fs.readFile(filePath, 'utf-8');
     const all: ProdutoPinado[] = JSON.parse(raw);
-    return all
-      .filter(p => p.destinos?.includes('parcelado'))
-      .slice(0, 20);
+    return all.filter(p => p.destinos?.includes('parcelado')).slice(0, 20);
   } catch { return []; }
 }
 

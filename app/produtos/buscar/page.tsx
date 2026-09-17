@@ -163,9 +163,9 @@ export default function BuscarProdutosPage() {
 
   useEffect(() => { if (auth) loadPinados(); }, [auth]);
 
-  async function loadPinados() {
+   async function loadPinados() {
     try {
-      const res = await fetch('/produtos-pinados.json');
+      const res = await fetch('/api/produtos/save');
       const json = await res.json();
       setPinados(Array.isArray(json) ? json : []);
     } catch { setPinados([]); }
@@ -204,7 +204,7 @@ export default function BuscarProdutosPage() {
         orgId = marca?.id || '';
       } catch {}
 
-      const params = new URLSearchParams({ url: urlLoja, limit: '40' });
+      const params = new URLSearchParams({ url: urlLoja, limit: '50' });
       if (orgId) params.set('orgId', orgId);
       if (q) params.set('q', q);
       const res = await fetch(`/api/scrape?${params}`);
