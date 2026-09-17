@@ -48,7 +48,12 @@ export default async function ParceladoPage() {
           Produtos selecionados com parcelamento sem juros — facilite sua compra.
         </p>
       </header>
-
+      <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fbbf24', borderRadius: '10px', padding: '12px 20px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <span style={{ fontSize: '1.2rem' }}>⚠️</span>
+        <p style={{ fontSize: '0.82rem', color: '#92400e', margin: 0, lineHeight: 1.5 }}>
+          <strong>Atenção:</strong> Condições de parcelamento, preços e disponibilidade são de responsabilidade do anunciante. As parcelas exibidas podem não refletir as condições atuais da loja. Confirme sempre no site e no carrinho antes de finalizar.
+        </p>
+      </div>
       {produtos.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>
           Nenhum produto disponível no momento. Volte em breve!

@@ -378,7 +378,12 @@ export default function OfertasPage() {
               </a>
                </div>
           </div>
-
+      <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fbbf24', borderRadius: '10px', padding: '12px 20px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <span style={{ fontSize: '1.2rem' }}>⚠️</span>
+        <p style={{ fontSize: '0.82rem', color: '#92400e', margin: 0, lineHeight: 1.5 }}>
+          <strong>Atenção:</strong> Condições de parcelamento, preços e disponibilidade são de responsabilidade do anunciante. As parcelas exibidas podem não refletir as condições atuais da loja. Confirme sempre no site e no carrinho antes de finalizar.
+        </p>
+      </div>
           {/* Abas sublinhadas */}
           <nav style={{ display: 'flex', gap: '28px' }}>
             {(['campanhas', 'marcas'] as const).map(a => (

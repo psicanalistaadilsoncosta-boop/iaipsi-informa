@@ -46,7 +46,12 @@ export default async function OfertasSelecionadasPage() {
           Produtos escolhidos a dedo — qualidade e custo-benefício garantidos.
         </p>
       </header>
-
+      <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fbbf24', borderRadius: '10px', padding: '12px 20px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <span style={{ fontSize: '1.2rem' }}>⚠️</span>
+        <p style={{ fontSize: '0.82rem', color: '#92400e', margin: 0, lineHeight: 1.5 }}>
+          <strong>Atenção:</strong> Preços, parcelas e disponibilidade são de responsabilidade do anunciante e podem ser alterados a qualquer momento. Confira sempre as condições atuais no site da loja antes de finalizar a compra.
+        </p>
+      </div>
       {produtos.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>
           Nenhuma oferta selecionada no momento. Volte em breve!

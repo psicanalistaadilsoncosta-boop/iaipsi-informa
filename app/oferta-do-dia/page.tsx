@@ -282,7 +282,9 @@ export default function OfertaDoDiaPage() {
                 </button>
               </div>
             )}
-
+            <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fbbf24', borderRadius: '8px', padding: '10px 14px', fontSize: '0.75rem', color: '#92400e', lineHeight: 1.5 }}>
+              ⚠️ Preço e condições sujeitos a alteração. Confira no site do anunciante antes de comprar.
+            </div>
             {/* CTA */}
             <a href={oferta.link} target="_blank" rel="noopener noreferrer sponsored" style={{
               display: 'block', backgroundColor: '#dc2626', color: '#fff',
