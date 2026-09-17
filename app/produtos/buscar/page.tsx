@@ -31,6 +31,8 @@ interface ProdutoPinado extends Produto {
   parcelas?: string;
   valorParcela?: string;
   ativo?: boolean;
+  categoria?: string;
+  loja?: string;
 }
 
 function LoginScreen({ onLogin }: { onLogin: () => void }) {
