@@ -150,6 +150,7 @@ export default function BuscarProdutosPage() {
   const [total, setTotal] = useState(0);
   const [excluirShopee, setExcluirShopee] = useState(true);
   const [modalProduto, setModalProduto] = useState<Produto | null>(null);
+  const [destaqueHomeId, setDestaqueHomeId] = useState<string | null>(null);
   const [modoBusca, setModoBusca] = useState<'palavra' | 'link' | 'awin' | 'spicy' | 'loja'>('palavra');
   const [lojaAwin, setLojaAwin] = useState('arno');
   const [urlLoja, setUrlLoja] = useState('');
@@ -161,7 +162,14 @@ export default function BuscarProdutosPage() {
     fetch('/api/editorial/auth/check').then(r => r.json()).then(d => setAuth(d.ok)).catch(() => setAuth(false));
   }, []);
 
-  useEffect(() => { if (auth) loadPinados(); }, [auth]);
+  useEffect(() => {
+    if (auth) {
+      loadPinados();
+      fetch('/api/produtos/save?tipo=destaque-home')
+        .then(r => r.json())
+        .then(d => setDestaqueHomeId(d.id || null));
+    }
+  }, [auth]);
 
    async function loadPinados() {
     try {
@@ -335,6 +343,39 @@ export default function BuscarProdutosPage() {
       body: JSON.stringify({ ...pinado, destinos: novosDestinos }),
     });
     await loadPinados();
+  }
+
+   async function handleDestacarHome(pinado: ProdutoPinado) {
+    setGerando(pinado.id);
+    try {
+      // Gera frase editorial via IA
+      const fraseRes = await fetch('/api/oferta-frase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome: pinado.nome, categoria: pinado.categoria }),
+      });
+      const fraseData = await fraseRes.json();
+      const fraseGerada = fraseData.frase || '';
+
+      // Pede confirmação/edição
+      const fraseEditada = window.prompt(
+        '🔹 Frase editorial gerada pela IA — edite se quiser:',
+        fraseGerada
+      );
+      if (fraseEditada === null) return; // cancelou
+
+      // Salva destaque + frase no KV
+      await fetch('/api/produtos/save', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: pinado.id, frase: fraseEditada }),
+      });
+      setDestaqueHomeId(pinado.id);
+    } catch {
+      alert('Erro ao gerar frase.');
+    } finally {
+      setGerando(null);
+    }
   }
 
   async function handleAtivarOfertaDia(pinado: ProdutoPinado) {
@@ -662,9 +703,14 @@ export default function BuscarProdutosPage() {
                     <small style={{ color: '#9ca3af', fontSize: '0.7rem' }}>
                       Pinado em {new Date(p.pinedAt).toLocaleDateString('pt-BR')}
                     </small>
-                                        {p.destinos?.includes('oferta-do-dia') && (
+                                         {p.destinos?.includes('oferta-do-dia') && (
                       <button onClick={() => handleAtivarOfertaDia(p)} style={{ padding: '6px', borderRadius: '6px', border: 'none', backgroundColor: p.ativo ? '#dc2626' : '#f3f4f6', color: p.ativo ? '#fff' : '#374151', fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer', marginBottom: '4px', width: '100%' }}>
                         {p.ativo ? '🔥 Ativa agora' : '🔥 Ativar como Oferta do Dia'}
+                      </button>
+                    )}
+                    {p.destinos?.includes('oferta-do-dia') && (
+                    <button onClick={() => handleDestacarHome(p)} style={{ padding: '6px', borderRadius: '6px', border: 'none', backgroundColor: destaqueHomeId === p.id ? '#b45309' : '#f3f4f6', color: destaqueHomeId === p.id ? '#fff' : '#374151', fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer', marginBottom: '4px', width: '100%' }}>
+                        {destaqueHomeId === p.id ? '⭐ Destacado na Home' : '⭐ Destacar na Home'}
                       </button>
                     )}
                     <button onClick={() => handleDespinar(p.id)} style={{ padding: '6px', borderRadius: '6px', border: '1px solid #fca5a5', backgroundColor: '#fff', color: '#dc2626', fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer' }}>

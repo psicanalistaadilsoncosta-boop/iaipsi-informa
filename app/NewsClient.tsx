@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Fragment } from 'react';
 import { FeedItem, AdItem, EditorialItem, SaboresItem } from './page';
+import OfertaDestaque from './OfertaDestaque';
 
 // ─── CARD DE OFERTA NO GRID ───────────────────────────────────────────────
 function OfertaCard({ item }: { item: any }) {
@@ -388,7 +389,7 @@ const safePosts = posts ?? [];
           Abrir Central de Jogos UOL ↗
         </a>
       </div>
-
+      <OfertaDestaque />
       <EditorialSection items={safeEditorial.slice(0, 3)} />
 
       {safeSabores.slice(0, 3).length > 0 && (

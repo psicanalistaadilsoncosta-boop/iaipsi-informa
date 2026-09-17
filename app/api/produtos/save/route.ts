@@ -66,11 +66,37 @@ export async function DELETE(req: NextRequest) {
 }
 
 // GET — para o painel ler os pinados
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const tipo = searchParams.get('tipo');
+
+  // Retorna o ID do destaque da home
+    if (tipo === 'destaque-home') {
+    try {
+      const data = await kv.get<{ id: string; frase: string }>('oferta:destaque-home');
+      if (typeof data === 'string') return NextResponse.json({ id: data, frase: '' });
+      return NextResponse.json({ id: data?.id || null, frase: data?.frase || '' });
+    } catch {
+      return NextResponse.json({ id: null, frase: '' });
+    }
+  }
+
+  // Retorna todos os pinados
   try {
     const data = await read();
     return NextResponse.json(data);
   } catch {
     return NextResponse.json([]);
+  }
+}
+
+// Salva o destaque da home
+export async function PATCH(req: NextRequest) {
+  try {
+    const { id, frase } = await req.json();
+    await kv.set('oferta:destaque-home', { id, frase: frase || '' });
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    return NextResponse.json({ error: String(e) }, { status: 500 });
   }
 }
