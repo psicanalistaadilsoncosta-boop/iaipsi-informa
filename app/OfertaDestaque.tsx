@@ -73,6 +73,45 @@ export default function OfertaDestaque() {
       .finally(() => setLoading(false));
   }, []);
 
+  const [vistoHoje, setVistoHoje] = useState(0);
+  const [vendoAgora, setVendoAgora] = useState(0);
+
+  useEffect(() => {
+    const hora = new Date().getHours();
+    const minuto = new Date().getMinutes();
+
+    // Curva realista por horário
+    const basePorHora: Record<number, number> = {
+      0: 15, 1: 10, 2: 8, 3: 6, 4: 8, 5: 12,
+      6: 35, 7: 80, 8: 140, 9: 180, 10: 220, 11: 260,
+      12: 300, 13: 320, 14: 340, 15: 360, 16: 350, 17: 330,
+      18: 310, 19: 290, 20: 260, 21: 220, 22: 160, 23: 90,
+    };
+
+    const aoVivoPorHora: Record<number, number> = {
+      0: 4, 1: 3, 2: 2, 3: 2, 4: 3, 5: 5,
+      6: 10, 7: 18, 8: 28, 9: 35, 10: 42, 11: 48,
+      12: 55, 13: 58, 14: 60, 15: 62, 16: 58, 17: 52,
+      18: 48, 19: 44, 20: 38, 21: 32, 22: 24, 23: 15,
+    };
+
+    const base = basePorHora[hora] || 100;
+    const totalHoje = base + minuto * 2 + Math.floor(Math.random() * 20);
+    const aoVivo = aoVivoPorHora[hora] + Math.floor(Math.random() * 8);
+
+    setVistoHoje(totalHoje);
+    setVendoAgora(aoVivo);
+
+    // Incrementa a cada minuto
+    const interval = setInterval(() => {
+      setVistoHoje(v => v + Math.floor(Math.random() * 3) + 1);
+      setVendoAgora(Math.floor(aoVivoPorHora[new Date().getHours()] + Math.random() * 8));
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+
   if (loading || !oferta) return null;
 
   const todasImagens = [oferta.imagem, ...(oferta.imagens || [])].filter(Boolean);
@@ -146,6 +185,17 @@ export default function OfertaDestaque() {
             <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827', margin: 0, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
               {oferta.nome}
             </h3>
+
+            {/* Visualizações */}
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.78rem', color: '#dc2626', fontWeight: 600, backgroundColor: '#fef2f2', padding: '4px 10px', borderRadius: '20px', border: '1px solid #fecaca' }}>
+                🔴 {vendoAgora} vendo agora
+              </span>
+              <span style={{ fontSize: '0.78rem', color: '#6b7280', fontWeight: 600, backgroundColor: '#f9fafb', padding: '4px 10px', borderRadius: '20px', border: '1px solid #e5e7eb' }}>
+                👁 {vistoHoje.toLocaleString('pt-BR')} viram hoje
+              </span>
+            </div>
+
 
             {/* Frase editorial IA */}
             {fraseIA && (
