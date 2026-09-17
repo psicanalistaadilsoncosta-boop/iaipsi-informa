@@ -19,10 +19,11 @@ interface Produto {
   desconto: number;
   organizationId: string;
   estoque: number;
-  loja: string;
+  loja?: string;
   skuId?: string;
   linkOriginal?: string;
   plataforma?: string;
+  categoria?: string;
 }
 
 interface ProdutoPinado extends Produto {
