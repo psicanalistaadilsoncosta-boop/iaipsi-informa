@@ -154,7 +154,9 @@ export default function BuscarProdutosPage() {
   const [excluirShopee, setExcluirShopee] = useState(true);
   const [modalProduto, setModalProduto] = useState<Produto | null>(null);
   const [destaqueHomeId, setDestaqueHomeId] = useState<string | null>(null);
-  const [modoBusca, setModoBusca] = useState<'palavra' | 'link' | 'awin' | 'spicy' | 'loja'>('palavra');
+  const [modoBusca, setModoBusca] = useState<'palavra' | 'link' | 'awin' | 'spicy' | 'loja' | 'loja-awin'>('palavra');
+  const [urlLojaAwin, setUrlLojaAwin] = useState('');
+  const [awinAnunciante, setAwinAnunciante] = useState('awin-arno');
   const [lojaAwin, setLojaAwin] = useState('arno');
   const [urlLoja, setUrlLoja] = useState('');
   const [buscandoLoja, setBuscandoLoja] = useState(false);
@@ -197,6 +199,24 @@ export default function BuscarProdutosPage() {
       setTotal(json.total || 0);
     } finally { setLoading(false); }
   }
+
+  async function handleBuscarLojaAwin() {
+    if (!urlLojaAwin.trim()) return;
+    setBuscandoLoja(true);
+    setProdutos([]);
+    try {
+      const params = new URLSearchParams({ url: urlLojaAwin, limit: '40', orgId: awinAnunciante });
+      const res = await fetch(`/api/scrape?${params}`);
+      const json = await res.json();
+      if (json.error) { alert(`Erro: ${json.error}`); return; }
+      setProdutos(json.data || []);
+      setTotal(json.total || 0);
+      if ((json.data || []).length === 0) alert('Nenhum produto encontrado. Tente outro URL.');
+    } catch {
+      alert('Erro ao buscar produtos.');
+    } finally { setBuscandoLoja(false); }
+  }
+
 
   async function handleBuscarLoja(q = '') {
     if (!urlLoja.trim()) return;
@@ -461,8 +481,11 @@ export default function BuscarProdutosPage() {
                       <button onClick={() => setModoBusca('link')} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'link' ? '#2563eb' : '#fff', color: modoBusca === 'link' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               🔗 Por link da loja
             </button>
-            <button onClick={() => setModoBusca('loja')} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'loja' ? '#be185d' : '#fff', color: modoBusca === 'loja' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-              🌐 Por site da loja
+                       <button onClick={() => setModoBusca('loja')} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'loja' ? '#be185d' : '#fff', color: modoBusca === 'loja' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+              🌐 Por site (Lomadee)
+            </button>
+            <button onClick={() => setModoBusca('loja-awin')} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'loja-awin' ? '#f59e0b' : '#fff', color: modoBusca === 'loja-awin' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+              🏷 Por site (Awin)
             </button>
              <button onClick={() => { setModoBusca('awin'); setLojaAwin('arno'); handleBuscarAwin('', 'arno'); }} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'awin' ? '#00AE98' : '#fff', color: modoBusca === 'awin' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               🏠 Arno (Awin)
@@ -528,6 +551,38 @@ export default function BuscarProdutosPage() {
                   style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.85rem', boxSizing: 'border-box' }} />
                 <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: '6px 0 0' }}>
                   Detecta automaticamente Shopify e VTEX (Vivavinho, Arno, etc.)
+                </p>
+              </div>
+            )}
+
+            {/* Busca por site Awin */}
+            {modoBusca === 'loja-awin' && (
+              <div>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                  <div style={{ flex: 2, minWidth: '200px' }}>
+                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '4px' }}>URL do site</label>
+                    <input value={urlLojaAwin} onChange={e => setUrlLojaAwin(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleBuscarLojaAwin()}
+                      placeholder="https://www.arno.com.br"
+                      style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.88rem', boxSizing: 'border-box' }} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: '160px' }}>
+                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '4px' }}>Anunciante Awin</label>
+                    <select value={awinAnunciante} onChange={e => setAwinAnunciante(e.target.value)}
+                      style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.88rem', boxSizing: 'border-box', backgroundColor: '#fff' }}>
+                      <option value="awin-arno">Arno (108626)</option>
+                      <option value="awin-spicy">Spicy (30615)</option>
+                    </select>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                    <button onClick={handleBuscarLojaAwin} disabled={buscandoLoja || !urlLojaAwin.trim()}
+                      style={{ padding: '9px 20px', borderRadius: '8px', border: 'none', backgroundColor: '#f59e0b', color: '#fff', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                      {buscandoLoja ? '⏳' : '🔍 Buscar'}
+                    </button>
+                  </div>
+                </div>
+                <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: 0 }}>
+                  Produtos encontrados terão link de afiliado Awin gerado automaticamente.
                 </p>
               </div>
             )}
@@ -600,6 +655,11 @@ export default function BuscarProdutosPage() {
                       <div style={{ fontSize: '0.7rem', color: p.loja === 'Shopee' ? '#ea580c' : '#047857', fontWeight: 600 }}>
                         🏪 {p.loja}
                       </div>
+                      {(p as any).ean && (
+                        <div style={{ fontSize: '0.68rem', color: '#9ca3af', fontWeight: 500 }}>
+                          EAN: {(p as any).ean}
+                        </div>
+                      )}
                       {p.estoque !== undefined && p.estoque <= 5 && (
                         <div style={{ fontSize: '0.72rem', color: p.estoque === 0 ? '#dc2626' : '#ea580c', fontWeight: 600 }}>
                           {p.estoque === 0 ? '⚠️ Esgotado' : `⚠️ Últimas ${p.estoque} unidades`}

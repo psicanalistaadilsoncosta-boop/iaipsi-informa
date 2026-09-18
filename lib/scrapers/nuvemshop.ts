@@ -72,8 +72,9 @@ export async function extractNuvemshopProduct(url: string): Promise<NuvemshopPro
       ? Math.round((1 - preco / precoOriginal) * 100)
       : 0;
 
-    return {
+     return {
       id: url.split('/').filter(Boolean).pop() || sku,
+      ean: sku || '',
       nome,
       url,
       imagem: imagem || null,

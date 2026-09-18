@@ -2,7 +2,9 @@
 
 import { useState, useEffect, Fragment } from 'react';
 import { FeedItem, AdItem, EditorialItem, SaboresItem } from './page';
+import FooterSite from './FooterSite';
 import OfertaDestaque from './OfertaDestaque';
+import ArtigosProdutoSection from './ArtigosProdutoSection';
 
 // ─── CARD DE OFERTA NO GRID ───────────────────────────────────────────────
 function OfertaCard({ item }: { item: any }) {
@@ -331,7 +333,7 @@ function NewsCard({ item }: { item: FeedItem }) {
 }
 
 // ─── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────
-export default function NewsClient({ posts, ads, editorial, sabores, ofertasMix }: { posts: FeedItem[]; ads: AdItem[]; editorial: EditorialItem[]; sabores: SaboresItem[]; ofertasMix: any[] }) {  
+export default function NewsClient({ posts, ads, editorial, sabores, ofertasMix, artigosProduto }: { posts: FeedItem[]; ads: AdItem[]; editorial: EditorialItem[]; sabores: SaboresItem[]; ofertasMix: any[]; artigosProduto?: any[] }) {
 const safePosts = posts ?? [];
   const safeAds = ads ?? [];
   const safeEditorial = editorial ?? [];
@@ -390,7 +392,8 @@ const safePosts = posts ?? [];
           Abrir Central de Jogos UOL ↗
         </a>
       </div>
-      <OfertaDestaque />
+       <OfertaDestaque />
+      <ArtigosProdutoSection artigos={artigosProduto || []} />
       <EditorialSection items={safeEditorial.slice(0, 3)} />
 
       {safeSabores.slice(0, 3).length > 0 && (
@@ -497,15 +500,7 @@ const safePosts = posts ?? [];
         </div>
       )}
 
-      <footer style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #e5e7eb', textAlign: 'center' }}>
-        <p style={{ fontSize: '0.78rem', color: '#9ca3af', margin: 0, lineHeight: 1.8 }}>
-                   © {new Date().getFullYear()} IAIPSI Informa · Notícias coletadas automaticamente dos principais portais de comunicação do Brasil e do mundo.
-          <br />
-          As análises editoriais são elaboradas com auxílio de inteligência artificial e revisadas e assinadas por Adilson Costa.
-          <br />
-          Os produtos, ofertas e cupons exibidos são de responsabilidade exclusiva dos respectivos anunciantes. Preços, condições e disponibilidade estão expressos em seus respectivos sites. Confira sempre o valor final no site do anunciante e no carrinho de compras antes de concluir a compra. Links de afiliado — ao comprar através deles você apoia o IAIPSI Informa sem custo adicional.
-        </p>
-      </footer>
+            <FooterSite />
 
     </main>
   );

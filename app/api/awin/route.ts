@@ -77,6 +77,7 @@ export async function GET(request: NextRequest) {
 
       return {
         id: p.aw_product_id || p.merchant_product_id,
+        ean: p.ean || p.gtin || p.merchant_product_id || '',
         nome: p.product_name,
         imagem: p.aw_image_url || p.merchant_image_url || p.large_image,
         link: p.aw_deep_link,

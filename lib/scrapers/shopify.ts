@@ -16,8 +16,9 @@ export async function fetchShopify(baseUrl: string, limit = 20) {
     const precoOriginal = parseFloat(variant?.compare_at_price || String(preco));
     const imagem = p.images?.[0]?.src || '';
 
-    return {
+  return {
       id: String(p.id),
+      ean: variant?.barcode || '',
       nome: p.title,
       imagem,
       link: `${url}/products/${p.handle}`,

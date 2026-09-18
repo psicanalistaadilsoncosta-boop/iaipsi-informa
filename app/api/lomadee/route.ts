@@ -312,6 +312,7 @@ let campanhas = paginas.flatMap((d: any) => d.data || []);
 
           return {
             id: p.id,
+            ean: p.ean || p.gtin || '',
             nome: p.name,
             imagem: p.images?.[0]?.url || '',
             link: p.url,

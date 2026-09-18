@@ -251,6 +251,13 @@ export interface SaboresItem {
   publishedAt: string;
 }
 
+async function getArtigosProduto() {
+  try {
+    const data = await kv.get<any[]>('artigos:produtos');
+    return (data || []).filter(a => a.publicado).slice(0, 3);
+  } catch { return []; }
+}
+
 async function getSabores(): Promise<SaboresItem[]> {
   try {
     // Tenta KV primeiro
@@ -394,8 +401,8 @@ async function getOfertasMix(): Promise<any[]> {
 }
 
 export default async function Home() {
-  const [posts, ads, editorial, sabores, ofertasMix] = await Promise.all([
-    getNews(), getAds(), getEditorial(), getSabores(), getOfertasMix()
+   const [posts, ads, editorial, sabores, ofertasMix, artigosProduto] = await Promise.all([
+    getNews(), getAds(), getEditorial(), getSabores(), getOfertasMix(), getArtigosProduto()
   ]);
-    return <NewsClient posts={posts} ads={ads} editorial={editorial} sabores={sabores} ofertasMix={ofertasMix} />;
+  return <NewsClient posts={posts} ads={ads} editorial={editorial} sabores={sabores} ofertasMix={ofertasMix} artigosProduto={artigosProduto} />;
 }

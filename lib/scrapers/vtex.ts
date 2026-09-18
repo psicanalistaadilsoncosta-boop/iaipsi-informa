@@ -23,6 +23,7 @@ export async function fetchVtex(baseUrl: string, limit = 20) {
 
     return {
       id: String(p.productId),
+      ean: sku?.ean || sku?.referenceId?.[0]?.Value || '',
       nome: p.productName,
       imagem,
       // Evita link duplicado
