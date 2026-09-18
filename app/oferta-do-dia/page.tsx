@@ -153,7 +153,7 @@ function CardOferta({ p }: { p: ProdutoPinado }) {
         </div>
 
         {/* CTA */}
-        <a href={p.link} target="_blank" rel="noopener noreferrer sponsored" style={{
+        <a href={`/ir?url=${encodeURIComponent(p.link)}&nome=${encodeURIComponent(p.nome)}&imagem=${encodeURIComponent(p.imagem)}`} style={{
           display: 'block', backgroundColor: '#dc2626', color: '#fff',
           padding: '12px', borderRadius: '10px', fontWeight: 800,
           fontSize: '1rem', textAlign: 'center', textDecoration: 'none',

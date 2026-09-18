@@ -33,9 +33,10 @@ function OfertaCard({ item }: { item: any }) {
                 {copiado ? '✅ Copiado!' : item.code}
               </button>
             )}
-            <a href={item.link} target="_blank" rel="noopener noreferrer sponsored" style={{ backgroundColor: '#dc2626', color: '#fff', padding: '8px', borderRadius: '6px', fontWeight: 700, fontSize: '0.82rem', textAlign: 'center', textDecoration: 'none' }}>
+           <a href={`/ir?url=${encodeURIComponent(item.link)}&nome=${encodeURIComponent(item.titulo)}&imagem=${encodeURIComponent(item.imagem || '')}`} style={{ backgroundColor: '#dc2626', color: '#fff', padding: '8px', borderRadius: '6px', fontWeight: 700, fontSize: '0.82rem', textAlign: 'center', textDecoration: 'none' }}>
               {item.isCupom ? 'Usar cupom →' : 'Ver oferta →'}
             </a>
+          
           </div>
         </div>
       </article>
@@ -44,7 +45,7 @@ function OfertaCard({ item }: { item: any }) {
 
   if (item.tipo === 'marca') {
     return (
-      <a href={item.link} target="_blank" rel="noopener noreferrer sponsored" style={{ textDecoration: 'none', breakInside: 'avoid', display: 'block', marginBottom: '20px' }}>
+            <a href={`/ir?url=${encodeURIComponent(item.link)}&nome=${encodeURIComponent(item.titulo)}&imagem=${encodeURIComponent(item.logo || '')}`} style={{ textDecoration: 'none', breakInside: 'avoid', display: 'block', marginBottom: '20px' }}>
         <article style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '20px', boxShadow: '0 2px 6px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', textAlign: 'center', minHeight: '160px', justifyContent: 'center' }}>
           <span style={{ fontSize: '0.65rem', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Publicidade</span>
           <div style={{ width: '64px', height: '64px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #f3f4f6', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -64,7 +65,7 @@ function OfertaCard({ item }: { item: any }) {
 
   if (item.tipo === 'produto') {
     return (
-      <a href={item.link} target="_blank" rel="noopener noreferrer sponsored" style={{ textDecoration: 'none', breakInside: 'avoid', display: 'block', marginBottom: '20px' }}>
+            <a href={`/ir?url=${encodeURIComponent(item.link)}&nome=${encodeURIComponent(item.titulo)}&imagem=${encodeURIComponent(item.imagem || '')}`} style={{ textDecoration: 'none', breakInside: 'avoid', display: 'block', marginBottom: '20px' }}>
         <article style={{ backgroundColor: '#fff', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>
           <div style={{ height: '160px', overflow: 'hidden', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', padding: '8px' }}>
             {item.imagem && <img src={item.imagem} alt={item.titulo} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />}

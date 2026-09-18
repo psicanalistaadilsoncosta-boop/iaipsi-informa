@@ -191,9 +191,7 @@ function CampanhaCard({ c }: { c: Campanha }) {
             </button>
           )}
           <a
-            href={link}
-            target="_blank"
-            rel="noopener noreferrer sponsored"
+           href={`/ir?url=${encodeURIComponent(link)}&nome=${encodeURIComponent(c.name)}&imagem=${encodeURIComponent(banner || '')}`}
             style={{
               backgroundColor: '#dc2626',
               color: '#fff',

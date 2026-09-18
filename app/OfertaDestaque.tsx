@@ -241,7 +241,7 @@ export default function OfertaDestaque() {
             </div>
 
             {/* CTA */}
-            <a href={oferta.link} target="_blank" rel="noopener noreferrer sponsored" style={{
+                      <a href={`/ir?url=${encodeURIComponent(oferta.link)}&nome=${encodeURIComponent(oferta.nome)}&imagem=${encodeURIComponent(oferta.imagem)}`} style={{
               display: 'block', backgroundColor: '#dc2626', color: '#fff',
               padding: '14px 24px', borderRadius: '12px', fontWeight: 800,
               fontSize: '1.1rem', textAlign: 'center', textDecoration: 'none',

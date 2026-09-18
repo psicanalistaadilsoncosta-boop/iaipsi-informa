@@ -67,7 +67,7 @@ export default async function ParceladoPage() {
             const temParcela = p.parcelas && p.valorParcela;
 
             return (
-              <a key={p.id} href={p.link} target="_blank" rel="noopener noreferrer sponsored" style={{ textDecoration: 'none' }}>
+              <a key={p.id} href={`/ir?url=${encodeURIComponent(p.link)}&nome=${encodeURIComponent(p.nome)}&imagem=${encodeURIComponent(p.imagem)}`} style={{ textDecoration: 'none' }}>
                 <article style={{ backgroundColor: '#fff', borderRadius: '14px', overflow: 'hidden', border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', height: '100%' }}>
 
                   <div style={{ height: '200px', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', position: 'relative' }}>
