@@ -23,7 +23,7 @@ function IrContent() {
 
   useEffect(() => {
     const inicio = Date.now();
-    const duracao = 3000;
+    const duracao = 2000;
 
     const interval = setInterval(() => {
       const elapsed = Date.now() - inicio;
