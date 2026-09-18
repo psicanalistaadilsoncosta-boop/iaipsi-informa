@@ -191,9 +191,7 @@ export default function OfertaDestaque() {
               <span style={{ fontSize: '0.78rem', color: '#dc2626', fontWeight: 600, backgroundColor: '#fef2f2', padding: '4px 10px', borderRadius: '20px', border: '1px solid #fecaca' }}>
                 🔴 {vendoAgora} vendo agora
               </span>
-              <span style={{ fontSize: '0.78rem', color: '#6b7280', fontWeight: 600, backgroundColor: '#f9fafb', padding: '4px 10px', borderRadius: '20px', border: '1px solid #e5e7eb' }}>
-                👁 {vistoHoje.toLocaleString('pt-BR')} viram hoje
-              </span>
+              
             </div>
 
 
