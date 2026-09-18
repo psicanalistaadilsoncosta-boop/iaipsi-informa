@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@upstash/redis": "^1.38.4",
+    "@vercel/analytics": "^2.0.1",
     "csv-parse": "^7.0.2",
     "iconv-lite": "^0.7.3",
     "next": "latest",

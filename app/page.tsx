@@ -4,6 +4,7 @@ import iconv from 'iconv-lite';
 import fs from 'fs/promises';
 import path from 'path';
 import { kv } from '@/lib/kv';
+import { Analytics } from "@vercel/analytics/next"
 
 export interface FeedItem {
   title?: string;
