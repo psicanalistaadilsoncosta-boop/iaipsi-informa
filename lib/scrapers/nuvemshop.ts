@@ -9,6 +9,7 @@ export interface NuvemshopProduct {
   disponivel: boolean;
   estoque: number;
   descricao: string | null;
+  ean?: string;
 }
 
 const HEADERS = {
