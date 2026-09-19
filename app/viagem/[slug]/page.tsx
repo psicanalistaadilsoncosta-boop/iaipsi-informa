@@ -173,7 +173,7 @@ export default async function ArtigoViagemPage({ params }: { params: Promise<{ s
             )}
 
             <a
-              href={`/ir?url=${encodeURIComponent(artigo.affiliateUrl)}&nome=${encodeURIComponent(artigo.titulo)}&imagem=${encodeURIComponent(artigo.imagem)}`}
+              href={`/ir?url=${encodeURIComponent(artigo.affiliateUrl ?? '')}&nome=${encodeURIComponent(artigo.titulo)}&imagem=${encodeURIComponent(artigo.imagem)}`}
               style={{ display: 'block', backgroundColor: '#0f766e', color: '#fff', padding: '12px 20px', borderRadius: '10px', fontWeight: 800, fontSize: '0.95rem', textDecoration: 'none', textAlign: 'center' }}
             >
               👉 Ver disponibilidade e reservar
@@ -222,7 +222,7 @@ export default async function ArtigoViagemPage({ params }: { params: Promise<{ s
           Pronto para viver essa experiência em {artigo.destino}?
         </p>
         <a
-          href={`/ir?url=${encodeURIComponent(artigo.affiliateUrl)}&nome=${encodeURIComponent(artigo.titulo)}&imagem=${encodeURIComponent(artigo.imagem)}`}
+          href={`/ir?url=${encodeURIComponent(artigo.affiliateUrl ?? '')}&nome=${encodeURIComponent(artigo.titulo)}&imagem=${encodeURIComponent(artigo.imagem)}`}
           style={{ display: 'inline-block', backgroundColor: '#0f766e', color: '#fff', padding: '14px 32px', borderRadius: '10px', fontWeight: 800, fontSize: '1rem', textDecoration: 'none' }}
         >
           🌍 Ver disponibilidade na Viator

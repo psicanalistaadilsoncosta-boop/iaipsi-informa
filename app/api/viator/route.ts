@@ -85,8 +85,6 @@ export async function GET(req: NextRequest) {
                             ?.sort((a: any, b: any) => b.width - a.width)[0]?.url ?? ''
                         ).filter(Boolean),
       affiliate_url:    p.productUrl ?? '',
-      rating:           p.reviews?.combinedAverageRating ?? null,
-      totalReviews:     p.reviews?.totalReviews ?? 0,
       flags:            p.flags ?? [],
       destination_code: destCode || '',
       rating: p.reviews?.combinedAverageRating ?? p.rating ?? null,
