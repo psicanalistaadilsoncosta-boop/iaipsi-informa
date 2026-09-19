@@ -5,6 +5,7 @@ import { FeedItem, AdItem, EditorialItem, SaboresItem } from './page';
 import FooterSite from './FooterSite';
 import OfertaDestaque from './OfertaDestaque';
 import ArtigosProdutoSection from './ArtigosProdutoSection';
+import ViagemDestaque from './ViagemDestaque';
 
 // ─── CARD DE OFERTA NO GRID ───────────────────────────────────────────────
 function OfertaCard({ item }: { item: any }) {
@@ -333,7 +334,7 @@ function NewsCard({ item }: { item: FeedItem }) {
 }
 
 // ─── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────
-export default function NewsClient({ posts, ads, editorial, sabores, ofertasMix, artigosProduto }: { posts: FeedItem[]; ads: AdItem[]; editorial: EditorialItem[]; sabores: SaboresItem[]; ofertasMix: any[]; artigosProduto?: any[] }) {
+export default function NewsClient({ posts, ads, editorial, sabores, ofertasMix, artigosProduto, viagemDestaque }: { posts: FeedItem[]; ads: AdItem[]; editorial: EditorialItem[]; sabores: SaboresItem[]; ofertasMix: any[]; artigosProduto?: any[]; viagemDestaque?: any }) {
 const safePosts = posts ?? [];
   const safeAds = ads ?? [];
   const safeEditorial = editorial ?? [];
@@ -374,7 +375,8 @@ const safePosts = posts ?? [];
               <a href="/ofertas" style={{ backgroundColor: '#dc2626', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>🛍 Ofertas & Cupons</a>
               <a href="/ofertas-selecionadas" style={{ backgroundColor: '#2563eb', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>⭐ Selecionadas</a>
               <a href="/parcelado" style={{ backgroundColor: '#047857', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>💳 Parcelado</a>
-              <a href="/oferta-do-dia" style={{ backgroundColor: '#b45309', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>🔥 Oferta do Dia</a>
+                            <a href="/oferta-do-dia" style={{ backgroundColor: '#b45309', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>🔥 Oferta do Dia</a>
+              <a href="/viagens" style={{ backgroundColor: '#0f766e', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>🌍 Viagens</a>
             </div>
           </div>
         </div>
@@ -392,8 +394,9 @@ const safePosts = posts ?? [];
           Abrir Central de Jogos UOL ↗
         </a>
       </div>
-       <OfertaDestaque />
+            <OfertaDestaque />
       <ArtigosProdutoSection artigos={artigosProduto || []} />
+      {viagemDestaque && <ViagemDestaque viagem={viagemDestaque} />}
       <EditorialSection items={safeEditorial.slice(0, 3)} />
 
       {safeSabores.slice(0, 3).length > 0 && (

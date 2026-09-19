@@ -4,6 +4,7 @@ import iconv from 'iconv-lite';
 import fs from 'fs/promises';
 import path from 'path';
 import { kv } from '@/lib/kv';
+import { getViagemDestaque } from './ViagemDestaque';
 import { Analytics } from "@vercel/analytics/next"
 
 export interface FeedItem {
@@ -402,8 +403,8 @@ async function getOfertasMix(): Promise<any[]> {
 }
 
 export default async function Home() {
-   const [posts, ads, editorial, sabores, ofertasMix, artigosProduto] = await Promise.all([
-    getNews(), getAds(), getEditorial(), getSabores(), getOfertasMix(), getArtigosProduto()
+    const [posts, ads, editorial, sabores, ofertasMix, artigosProduto, viagemDestaque] = await Promise.all([
+    getNews(), getAds(), getEditorial(), getSabores(), getOfertasMix(), getArtigosProduto(), getViagemDestaque()
   ]);
-  return <NewsClient posts={posts} ads={ads} editorial={editorial} sabores={sabores} ofertasMix={ofertasMix} artigosProduto={artigosProduto} />;
+  return <NewsClient posts={posts} ads={ads} editorial={editorial} sabores={sabores} ofertasMix={ofertasMix} artigosProduto={artigosProduto} viagemDestaque={viagemDestaque} />
 }
