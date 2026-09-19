@@ -72,47 +72,6 @@ export default async function ArtigoProdutoPage({ params }: { params: Promise<{ 
   return (
     <main style={{ maxWidth: '860px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
 
-      {/* Responsive styles */}
-      <style>{`
-        .produto-grid {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-          gap: 0;
-        }
-        .produto-imagem {
-          background-color: #f9fafb;
-          padding: 32px;
-          border-right: 1px solid #f3f4f6;
-        }
-        .produto-dados {
-          padding: 32px;
-          display: flex;
-          flex-direction: column;
-          gap: 14px;
-        }
-        .specs-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-          gap: 20px;
-        }
-        @media (max-width: 640px) {
-          .produto-grid {
-            grid-template-columns: 1fr;
-          }
-          .produto-imagem {
-            padding: 20px;
-            border-right: none;
-            border-bottom: 1px solid #f3f4f6;
-          }
-          .produto-dados {
-            padding: 20px;
-          }
-          .specs-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-      `}</style>
-
       <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#2563eb', fontWeight: 600, fontSize: '0.85rem', textDecoration: 'none', marginBottom: '24px' }}>
         ← Voltar ao site
       </Link>
@@ -120,15 +79,15 @@ export default async function ArtigoProdutoPage({ params }: { params: Promise<{ 
       {/* Header do produto */}
       <div style={{ backgroundColor: '#fff', borderRadius: '16px', overflow: 'hidden', border: '1px solid #e5e7eb', boxShadow: '0 4px 16px rgba(0,0,0,0.06)', marginBottom: '24px' }}>
 
-        <div className="produto-grid">
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 0 }}>
 
-          {/* Imagem */}
-          <div className="produto-imagem">
+                   {/* Imagem */}
+          <div style={{ backgroundColor: '#f9fafb', padding: '32px', borderRight: '1px solid #f3f4f6' }}>
             <GaleriaImagens imagem={artigo.imagem} gallery={artigo.gallery || []} titulo={artigo.titulo} />
           </div>
 
           {/* Dados */}
-          <div className="produto-dados">
+          <div style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6b7280' }}>{artigo.marca}</span>
@@ -187,7 +146,7 @@ export default async function ArtigoProdutoPage({ params }: { params: Promise<{ 
         <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#111827', margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           📋 Especificações Técnicas
         </h2>
-        <div className="specs-grid">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px' }}>
           {Object.values(artigo.specs).map(grupo => (
             <div key={grupo.grupo}>
               <h3 style={{ fontSize: '0.78rem', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px', paddingBottom: '6px', borderBottom: '2px solid #f3f4f6' }}>
@@ -214,7 +173,7 @@ export default async function ArtigoProdutoPage({ params }: { params: Promise<{ 
           <span style={{ fontSize: '0.72rem', color: '#9ca3af', marginLeft: '4px' }}>por Adilson Costa</span>
         </div>
         <div>{renderConteudo(artigo.conteudo)}</div>
-        <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fbbf24', borderRadius: '8px', padding: '10px 14px', marginTop: '16px', fontSize: '0.78rem', color: '#92400e', lineHeight: 1.5 }}>
+                <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fbbf24', borderRadius: '8px', padding: '10px 14px', marginTop: '16px', fontSize: '0.78rem', color: '#92400e', lineHeight: 1.5 }}>
           🤖 Artigo elaborado com auxílio de inteligência artificial e revisado por Adilson Costa. As especificações técnicas são fornecidas pelo Icecat — confirme sempre os dados no site do fabricante ou anunciante antes da compra.
         </div>
         <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', gap: '8px' }}>
