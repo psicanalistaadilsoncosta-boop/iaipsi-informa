@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import GaleriaFotos from './GaleriaFotos';
 import ArredoresDestino from './ArredoresDestino';
+import AvaliacoesPasseio from './AvaliacoesPasseio';
 
 interface ArtigoViagem {
   id: string;
@@ -16,7 +17,11 @@ interface ArtigoViagem {
   conteudo: string;
   precoBase: number;
   precoData: string;
-  affiliateUrl: string;
+   affiliateUrl?: string;
+  affiliate_url?: string;
+  product_code?: string;
+  rating?: number;
+  reviewCount?: number;
   publicado: boolean;
   createdAt: string;
 }
@@ -24,13 +29,22 @@ interface ArtigoViagem {
 async function getArtigo(slug: string): Promise<ArtigoViagem | null> {
   try {
     const artigos = await kv.get<ArtigoViagem[]>('artigos:viagens');
-    return artigos?.find(a => a.slug === slug && a.publicado) || null;
+    const raw = artigos?.find(a => a.slug === slug && a.publicado) || null;
+    if (!raw) return null;
+    // normaliza snake_case → camelCase para compatibilidade
+       return {
+      ...raw,
+      affiliateUrl: raw.affiliateUrl || raw.affiliate_url || '',
+       destino: raw.destino || (raw as any).destination_name || (raw as any).destination_code || '',
+      createdAt: raw.createdAt || (raw as any).pinedAt || new Date().toISOString(),
+      precoData: raw.precoData || (raw as any).pinedAt?.slice(0, 10) || '',
+    };
   } catch { return null; }
 }
 
 function renderConteudo(texto: string) {
   return texto.split('\n').map((linha, i) => {
-    if (!linha.trim()) return <br key={i} />;
+    if (!linha.trim() || linha.trim() === '---') return <br key={i} />;
 
     if (linha.startsWith('## ')) {
       return <h3 key={i} style={{ fontSize: '1.05rem', fontWeight: 800, color: '#111827', margin: '20px 0 8px' }}>{linha.replace('## ', '')}</h3>;
@@ -190,8 +204,17 @@ export default async function ArtigoViagemPage({ params }: { params: Promise<{ s
         </div>
       </div>
 
-      {/* Arredores */}
+   
+<AvaliacoesPasseio
+  productCode={artigo.product_code ?? ''}
+  ratingInicial={artigo.rating}
+  totalReviewsInicial={artigo.reviewCount}
+/>
+
+   {/* Arredores */}
       <ArredoresDestino destino={artigo.destino} />
+
+
 
       {/* CTA final */}
       <div style={{ backgroundColor: '#f0fdfa', borderRadius: '16px', border: '1px solid #99f6e4', padding: '24px', textAlign: 'center' }}>

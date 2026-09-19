@@ -12,8 +12,15 @@ interface ArtigoViagem {
   precoBase: number;
   precoData: string;
   affiliateUrl: string;
+  affiliate_url?: string;
   publicado: boolean;
   createdAt: string;
+  pinedAt?: string;
+  destination_code?: string;
+  destination_name?: string;
+  destinos?: string[];
+  rating?: number;
+  reviewCount?: number;
 }
 
 export default function GerenciarViagensPage() {
@@ -45,7 +52,13 @@ export default function GerenciarViagensPage() {
     try {
       const res = await fetch('/api/viagens/save');
       const data = await res.json();
-      setArtigos(Array.isArray(data) ? data.sort((a: ArtigoViagem, b: ArtigoViagem) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) : []);
+      const normalizado = (Array.isArray(data) ? data : []).map((a: ArtigoViagem) => ({
+        ...a,
+        destino: a.destino || a.destination_name || '',
+        createdAt: a.createdAt || a.pinedAt || new Date().toISOString(),
+        affiliateUrl: a.affiliateUrl || a.affiliate_url || '',
+      }));
+      setArtigos(normalizado.sort((a: ArtigoViagem, b: ArtigoViagem) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     } catch { alert('Erro ao carregar artigos'); }
     finally { setCarregando(false); }
   }

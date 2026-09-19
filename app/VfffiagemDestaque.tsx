@@ -1,5 +1,4 @@
 import { kv } from '@/lib/kv';
-import Link from 'next/link';
 
 interface PasseioDestaque {
   id: string;
@@ -32,7 +31,10 @@ export async function getViagemDestaque(): Promise<PasseioDestaque | null> {
 }
 
 export default function ViagemDestaque({ viagem }: { viagem: PasseioDestaque }) {
-   const irUrl = `/viagem/${viagem.slug}`;
+  const url = viagem.affiliate_url || viagem.affiliateUrl || '';
+  const irUrl = url
+    ? `/ir?url=${encodeURIComponent(url)}&nome=${encodeURIComponent(viagem.titulo)}&imagem=${encodeURIComponent(viagem.imagem)}`
+    : `/viagem/${viagem.slug}`;
 
   return (
     <section style={{ marginBottom: '32px' }}>
@@ -48,11 +50,7 @@ export default function ViagemDestaque({ viagem }: { viagem: PasseioDestaque }) 
         <div style={{ borderRadius: '16px', overflow: 'hidden', border: '1px solid #e5e7eb', boxShadow: '0 4px 16px rgba(0,0,0,0.08)', position: 'relative', backgroundColor: '#fff' }}>
           <div style={{ height: '320px', overflow: 'hidden', backgroundColor: '#f0fdfa', position: 'relative' }}>
             {viagem.imagem ? (
-              <img
-                src={viagem.imagem}
-                alt={viagem.titulo}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
+              <img src={viagem.imagem} alt={viagem.titulo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
               <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #0f766e 0%, #047857 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <span style={{ fontSize: '5rem' }}>🌍</span>

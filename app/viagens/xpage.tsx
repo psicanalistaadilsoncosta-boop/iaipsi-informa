@@ -11,27 +11,15 @@ interface ArtigoViagem {
   descricaoCurta: string;
   precoBase: number;
   precoData: string;
-  affiliateUrl?: string;
-  affiliate_url?: string;
+  affiliateUrl: string;
   publicado: boolean;
-  createdAt?: string;
-  pinedAt?: string;
-  rating?: number;
-  reviewCount?: number;
+  createdAt: string;
 }
 
 async function getViagens(): Promise<ArtigoViagem[]> {
   try {
     const data = await kv.get<ArtigoViagem[]>('artigos:viagens');
-    return (data || [])
-      .filter(a => a.publicado)
-      .map(a => ({
-        ...a,
-        affiliateUrl: a.affiliateUrl || a.affiliate_url || '',
-        createdAt: a.createdAt || a.pinedAt || new Date().toISOString(),
-        destino: a.destino || (a as any).destination_name || (a as any).destination_code || '',
-      }))
-      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+    return (data || []).filter(a => a.publicado).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   } catch { return []; }
 }
 
@@ -83,17 +71,10 @@ export default async function ViagensPage() {
                       ⏱ {v.duracao}
                     </span>
                   )}
-                  {v.rating != null && v.rating > 0 && (
-                    <span style={{ position: 'absolute', bottom: '10px', right: '10px', backgroundColor: 'rgba(0,0,0,0.55)', color: '#fbbf24', fontSize: '0.68rem', fontWeight: 700, padding: '3px 8px', borderRadius: '20px' }}>
-                      ★ {v.rating.toFixed(1)}{v.reviewCount ? ` (${v.reviewCount.toLocaleString('pt-BR')})` : ''}
-                    </span>
-                  )}
                 </div>
 
                 <div style={{ padding: '18px', display: 'flex', flexDirection: 'column', flexGrow: 1, gap: '10px' }}>
-                  {v.destino && (
-                    <div style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: 600 }}>📍 {v.destino}</div>
-                  )}
+                  <div style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: 600 }}>📍 {v.destino}</div>
 
                   <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                     {v.titulo}

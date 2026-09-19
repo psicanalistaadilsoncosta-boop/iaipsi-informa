@@ -16,7 +16,7 @@ export default function FooterSite() {
           <div>
             <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#111827', margin: '0 0 10px' }}>IAIPSI Informa</h3>
             <p style={{ fontSize: '0.65rem', color: '#6b7280', lineHeight: 1.6, margin: '0 0 16px' }}>
-              Agregador de notícias com curadoria editorial, análises psicanalíticas e seleção de ofertas — por Adilson Costa.
+              Agregador de notícias com curadoria editorial, análises psicanalíticas e seleção de ofertas.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <a href="https://iaipsi.com" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.65rem', color: '#2563eb', textDecoration: 'none', fontWeight: 500 }}>
@@ -67,14 +67,8 @@ export default function FooterSite() {
 
           {/* Coluna 4 — Adilson */}
           <div>
-            <h4 style={{ fontSize: '0.55rem', fontWeight: 700, color: '#374151', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Adilson Costa</h4>
-            <p style={{ fontSize: '0.55rem', color: '#6b7280', lineHeight: 1.6, margin: '0 0 12px' }}>
-              Psicanalista · Consultor Organizacional · Mestre em Psicanálise · 30+ anos no mercado financeiro
-            </p>
-            <p style={{ fontSize: '0.55rem', color: '#6b7280', lineHeight: 1.6, margin: 0, fontStyle: 'italic' }}>
-              "Liderança Consciente — onde a psicanálise encontra a gestão."
-            </p>
-          </div>
+            <h4 style={{ fontSize: '0.55rem', fontWeight: 700, color: '#374151', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}></h4>
+           </div>
 
         </div>
       </div>
@@ -86,7 +80,7 @@ export default function FooterSite() {
             <strong style={{ color: '#6b7280' }}>Notícias:</strong> Coletadas automaticamente dos principais portais de comunicação do Brasil e do mundo via feeds RSS públicos. O IAIPSI Informa não é autor das matérias jornalísticas exibidas.
           </p>
           <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: 0, lineHeight: 1.6 }}>
-            <strong style={{ color: '#6b7280' }}>Análises editoriais e Sabores & Destinos:</strong> Elaboradas com auxílio de inteligência artificial e revisadas e assinadas por Adilson Costa — Psicanalista (CRP a consultar).
+            <strong style={{ color: '#6b7280' }}>Análises editoriais e Sabores & Destinos:</strong> Elaboradas com auxílio de inteligência artificial e revisadas.
           </p>
           <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: 0, lineHeight: 1.6 }}>
             <strong style={{ color: '#6b7280' }}>Ofertas e afiliados:</strong> Os produtos, ofertas e cupons exibidos são de responsabilidade exclusiva dos respectivos anunciantes. Preços, condições e disponibilidade estão sujeitos a alteração. Confira sempre o valor final no site do anunciante antes de concluir a compra. Links de afiliado — ao comprar através deles você apoia o IAIPSI Informa sem custo adicional para você.

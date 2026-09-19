@@ -7,6 +7,55 @@ import OfertaDestaque from './OfertaDestaque';
 import ArtigosProdutoSection from './ArtigosProdutoSection';
 import ViagemDestaque from './ViagemDestaque';
 
+// ─── CARD DE VIAGEM NO GRID ───────────────────────────────────────────────
+function ViagemNoticiaCard({ viagem }: { viagem: any }) {
+  const url = viagem.affiliate_url || viagem.affiliateUrl || '';
+  const irUrl = url
+    ? `/ir?url=${encodeURIComponent(url)}&nome=${encodeURIComponent(viagem.titulo)}&imagem=${encodeURIComponent(viagem.imagem || '')}`
+    : `/viagem/${viagem.slug}`;
+
+  return (
+    <a href={irUrl} style={{ textDecoration: 'none', breakInside: 'avoid', display: 'block', marginBottom: '20px' }}>
+      <article style={{ backgroundColor: '#fff', borderRadius: '12px', overflow: 'hidden', border: '1px solid #d1fae5', boxShadow: '0 2px 8px rgba(15,118,110,0.08)', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ height: '160px', overflow: 'hidden', backgroundColor: '#f0fdfa', position: 'relative' }}>
+          {viagem.imagem ? (
+            <img src={viagem.imagem} alt={viagem.titulo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+          ) : (
+            <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #0f766e, #047857)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: '2.5rem' }}>🌍</span>
+            </div>
+          )}
+          <span style={{ position: 'absolute', top: '8px', left: '8px', backgroundColor: '#0f766e', color: '#fff', fontSize: '0.62rem', fontWeight: 700, padding: '2px 8px', borderRadius: '20px' }}>
+            ✈️ Viagem
+          </span>
+             {viagem.rating != null && Number(viagem.rating) > 0 && (
+            <span style={{ position: 'absolute', bottom: '6px', right: '8px', backgroundColor: 'rgba(0,0,0,0.55)', color: '#fbbf24', fontSize: '0.62rem', fontWeight: 700, padding: '2px 7px', borderRadius: '20px' }}>
+              ★ {Number(viagem.rating).toFixed(1)}{viagem.reviewCount ? ` (${Number(viagem.reviewCount).toLocaleString('pt-BR')})` : ''}
+            </span>
+          )}
+                 </div>
+        <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          {viagem.destino && (
+            <div style={{ fontSize: '0.68rem', color: '#6b7280', fontWeight: 600 }}>📍 {viagem.destino}</div>
+          )}
+          <h3 style={{ fontSize: '0.88rem', fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+            {viagem.titulo}
+          </h3>
+          {viagem.precoBase > 0 && (
+            <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f766e' }}>
+              R$ {viagem.precoBase.toFixed(2).replace('.', ',')}
+            </div>
+          )}
+          <div style={{ backgroundColor: '#0f766e', color: '#fff', padding: '7px', borderRadius: '6px', fontWeight: 700, fontSize: '0.8rem', textAlign: 'center', marginTop: '4px' }}>
+            Ver oferta →
+          </div>
+         
+        </div>
+      </article>
+    </a>
+  );
+}
+
 // ─── CARD DE OFERTA NO GRID ───────────────────────────────────────────────
 function OfertaCard({ item }: { item: any }) {
   const [copiado, setCopiado] = useState(false);
@@ -334,7 +383,7 @@ function NewsCard({ item }: { item: FeedItem }) {
 }
 
 // ─── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────
-export default function NewsClient({ posts, ads, editorial, sabores, ofertasMix, artigosProduto, viagemDestaque }: { posts: FeedItem[]; ads: AdItem[]; editorial: EditorialItem[]; sabores: SaboresItem[]; ofertasMix: any[]; artigosProduto?: any[]; viagemDestaque?: any }) {
+export default function NewsClient({ posts, ads, editorial, sabores, ofertasMix, artigosProduto, viagemDestaque, viagensNoticias }: { posts: FeedItem[]; ads: AdItem[]; editorial: EditorialItem[]; sabores: SaboresItem[]; ofertasMix: any[]; artigosProduto?: any[]; viagemDestaque?: any; viagensNoticias?: any[] }) {
 const safePosts = posts ?? [];
   const safeAds = ads ?? [];
   const safeEditorial = editorial ?? [];
@@ -376,7 +425,9 @@ const safePosts = posts ?? [];
               <a href="/ofertas-selecionadas" style={{ backgroundColor: '#2563eb', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>⭐ Selecionadas</a>
               <a href="/parcelado" style={{ backgroundColor: '#047857', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>💳 Parcelado</a>
                             <a href="/oferta-do-dia" style={{ backgroundColor: '#b45309', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>🔥 Oferta do Dia</a>
-              <a href="/viagens" style={{ backgroundColor: '#0f766e', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>🌍 Viagens</a>
+              <a href="/viagens-selecionadas" style={{ backgroundColor: '#0f766e', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>🌍 Viagens</a>
+               <a href="/viagens" style={{ backgroundColor: '#0f766e', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>🗺️ Roteiros de Viagem</a>
+
             </div>
           </div>
         </div>
@@ -485,6 +536,13 @@ const safePosts = posts ?? [];
                 const ofertaIndex = Math.floor(index / 6) - 1;
                 const oferta = safeOfertasMix[ofertaIndex % Math.max(safeOfertasMix.length, 1)];
                 return oferta ? <OfertaCard item={oferta} /> : null;
+              })()}
+              {index > 0 && index % 9 === 0 && (() => {
+                const safeViagens = viagensNoticias ?? [];
+                if (safeViagens.length === 0) return null;
+                const vIdx = Math.floor(index / 9) - 1;
+                const viagem = safeViagens[vIdx % safeViagens.length];
+                return viagem ? <ViagemNoticiaCard viagem={viagem} /> : null;
               })()}
               {index > 0 && index % 12 === 0 && adsMeio.length > 0 && (
                 <div style={{ breakInside: 'avoid', marginBottom: '20px' }}>

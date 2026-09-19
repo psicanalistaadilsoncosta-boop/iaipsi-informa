@@ -42,12 +42,15 @@ export async function GET(req: NextRequest) {
       rawProducts = data.products ?? [];
 
     } else {
-      // ── Busca por texto livre ──────────────────────────────────────────
+            // ── Busca por texto livre ──────────────────────────────────────────
       const body = {
         searchTerm: keyword,
-        searchTypes: [{ searchType: 'PRODUCTS', pagination: { start: 1, count: 20 } }],
+        searchTypes: [{
+          searchType: 'PRODUCTS',
+          pagination: { start: 1, count: 20 },
+          sorting: { sort: 'TRAVELER_RATING', order: 'DESCENDING' },
+        }],
         currency: 'BRL',
-        productSorting: { sort: 'TRAVELER_RATING', order: 'DESCENDING' },
       };
       const res = await fetch(`${BASE_URL}/search/freetext`, {
         method: 'POST',
@@ -59,7 +62,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: `Viator: ${res.status}`, detail: txt }, { status: 502 });
       }
       const data = await res.json();
-      rawProducts = data.products?.results ?? [];
+    rawProducts = data.products?.results ?? data.searchResults?.find((r: any) => r.searchType === 'PRODUCTS')?.results ?? [];
     }
 
     // ── Normaliza para o formato interno ─────────────────────────────────
@@ -85,7 +88,12 @@ export async function GET(req: NextRequest) {
       rating:           p.reviews?.combinedAverageRating ?? null,
       totalReviews:     p.reviews?.totalReviews ?? 0,
       flags:            p.flags ?? [],
-      destination_code: destCode,
+      destination_code: destCode || '',
+      rating: p.reviews?.combinedAverageRating ?? p.rating ?? null,
+      reviewCount: p.reviews?.totalReviews ?? p.reviewCount ?? null,
+      destino: p.destinations?.[0]?.ref
+        ? (p.destinations[0].primaryDestinationName || p.destinations[0].name || '')
+        : '',
       source:           'viator' as const,
     }));
 

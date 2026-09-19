@@ -253,6 +253,20 @@ export interface SaboresItem {
   publishedAt: string;
 }
 
+async function getViagensNoticias(): Promise<any[]> {
+  try {
+    const data = await kv.get<any[]>('artigos:viagens');
+    const all = data || [];
+    return all
+      .filter(v => v.destinos?.includes('viagens'))
+      .sort((a, b) => new Date(b.pinedAt || b.createdAt || 0).getTime() - new Date(a.pinedAt || a.createdAt || 0).getTime())
+      .slice(0, 10);
+  } catch {
+    return [];
+  }
+}
+
+
 async function getArtigosProduto() {
   try {
     const data = await kv.get<any[]>('artigos:produtos');
@@ -403,8 +417,8 @@ async function getOfertasMix(): Promise<any[]> {
 }
 
 export default async function Home() {
-    const [posts, ads, editorial, sabores, ofertasMix, artigosProduto, viagemDestaque] = await Promise.all([
-    getNews(), getAds(), getEditorial(), getSabores(), getOfertasMix(), getArtigosProduto(), getViagemDestaque()
+      const [posts, ads, editorial, sabores, ofertasMix, artigosProduto, viagemDestaque, viagensNoticias] = await Promise.all([
+    getNews(), getAds(), getEditorial(), getSabores(), getOfertasMix(), getArtigosProduto(), getViagemDestaque(), getViagensNoticias()
   ]);
-  return <NewsClient posts={posts} ads={ads} editorial={editorial} sabores={sabores} ofertasMix={ofertasMix} artigosProduto={artigosProduto} viagemDestaque={viagemDestaque} />
+  return <NewsClient posts={posts} ads={ads} editorial={editorial} sabores={sabores} ofertasMix={ofertasMix} artigosProduto={artigosProduto} viagemDestaque={viagemDestaque} viagensNoticias={viagensNoticias} />
 }

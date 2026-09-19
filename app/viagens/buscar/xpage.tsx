@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -16,34 +16,39 @@ interface Passeio {
   gallery: string[];
   affiliate_url: string;
   destination_code: string;
-  destino: string;
-  rating?: number;
-  reviewCount?: number;
   source: 'viator';
 }
 
 interface PasseioPinado extends Passeio {
-  id: string;
+  id: string;           // mesmo que product_code — compatível com o padrão do KV
   slug: string;
   pinedAt: string;
-  destinos: string[];
-  precoData: string;
+  destinos: string[];   // 'viagens-selecionadas' | 'viagem-destaque' | 'viagens'
+  precoData: string;    // "set/2026"
   descricaoCurta?: string;
-  conteudo?: string;
+  conteudo?: string;    // artigo gerado
   publicado?: boolean;
 }
 
-interface DestinoViator {
-  code: string;
-  nome: string;
-}
-
-// ─── Destinos (seções do site) ────────────────────────────────────────────────
+// ─── Destinos (equivalente às seções de produto) ──────────────────────────────
 
 const DESTINOS_VIAGEM = [
   { id: 'viagens-selecionadas', label: '⭐ Viagens Selecionadas', cor: '#0f766e' },
   { id: 'viagem-destaque',      label: '🌍 Destaque do Dia',     cor: '#0369a1' },
   { id: 'viagens',              label: '📰 Entre Notícias',      cor: '#7c3aed' },
+];
+
+// ─── Destinos Viator populares ─────────────────────────────────────────────────
+
+const DESTINOS_SUGERIDOS = [
+  { code: '732', label: '🇵🇹 Lisboa' },
+  { code: '737', label: '🇵🇹 Porto' },
+  { code: '562', label: '🇪🇸 Barcelona' },
+  { code: '687', label: '🇮🇹 Roma' },
+  { code: '546', label: '🇫🇷 Paris' },
+  { code: '684', label: '🇯🇵 Tóquio' },
+  { code: '684', label: '🇧🇷 Rio de Janeiro' },
+  { code: '946', label: '🇦🇷 Buenos Aires' },
 ];
 
 // ─── Login ────────────────────────────────────────────────────────────────────
@@ -84,85 +89,6 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
         </form>
       </div>
     </main>
-  );
-}
-
-// ─── Autocomplete de destino ──────────────────────────────────────────────────
-
-function DestinoAutocomplete({ value, onChange }: {
-  value: { code: string; nome: string } | null;
-  onChange: (d: { code: string; nome: string } | null) => void;
-}) {
-  const [query, setQuery] = useState('');
-  const [opcoes, setOpcoes] = useState<DestinoViator[]>([]);
-  const [aberto, setAberto] = useState(false);
-  const [carregando, setCarregando] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function fechar(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setAberto(false);
-    }
-    document.addEventListener('mousedown', fechar);
-    return () => document.removeEventListener('mousedown', fechar);
-  }, []);
-
-  useEffect(() => {
-    if (value) { setQuery(value.nome); setAberto(false); return; }
-    if (query.length < 2) { setOpcoes([]); setAberto(false); return; }
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(async () => {
-      setCarregando(true);
-      try {
-        const res = await fetch(`/api/viator/destinations?q=${encodeURIComponent(query)}`);
-        const json = await res.json();
-        setOpcoes(json.destinations || []);
-        setAberto(true);
-      } catch { setOpcoes([]); }
-      finally { setCarregando(false); }
-    }, 300);
-  }, [query, value]);
-
-  return (
-    <div ref={ref} style={{ position: 'relative', flex: 1 }}>
-      <input
-        value={value ? value.nome : query}
-        onChange={e => { setQuery(e.target.value); onChange(null); }}
-        onFocus={() => { if (opcoes.length > 0) setAberto(true); }}
-        placeholder="Digite o nome da cidade... ex: Lisboa, Barcelona, Roma"
-        style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: `1px solid ${value ? '#0f766e' : '#d1d5db'}`, fontSize: '0.88rem', boxSizing: 'border-box', backgroundColor: value ? '#f0fdfa' : '#fff' }}
-      />
-      {value && (
-        <button onClick={() => { onChange(null); setQuery(''); }}
-          style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: '1rem' }}>
-          ✕
-        </button>
-      )}
-      {carregando && (
-        <div style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: '0.75rem' }}>
-          ⏳
-        </div>
-      )}
-      {aberto && opcoes.length > 0 && (
-        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 100, maxHeight: '220px', overflowY: 'auto', marginTop: '4px' }}>
-          {opcoes.slice(0, 20).map(d => (
-            <button key={d.code} onClick={() => { onChange(d); setAberto(false); }}
-              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 14px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: '0.88rem', color: '#111827', borderBottom: '1px solid #f3f4f6' }}
-              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f0fdfa')}
-              onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
-            >
-              🗺 {d.nome} <span style={{ color: '#9ca3af', fontSize: '0.75rem' }}>({d.code})</span>
-            </button>
-          ))}
-        </div>
-      )}
-      {aberto && opcoes.length === 0 && query.length >= 2 && !carregando && (
-        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '12px 14px', fontSize: '0.82rem', color: '#9ca3af', zIndex: 100, marginTop: '4px' }}>
-          Nenhum destino encontrado para "{query}"
-        </div>
-      )}
-    </div>
   );
 }
 
@@ -235,7 +161,7 @@ export default function BuscarViagensPage() {
 
   // Busca
   const [modoBusca, setModoBusca] = useState<'destino' | 'keyword'>('destino');
-  const [destinoSelecionado, setDestinoSelecionado] = useState<{ code: string; nome: string } | null>(null);
+  const [destCode, setDestCode] = useState('');
   const [keyword, setKeyword] = useState('');
   const [passeios, setPasseios] = useState<Passeio[]>([]);
   const [loading, setLoading] = useState(false);
@@ -272,7 +198,7 @@ export default function BuscarViagensPage() {
 
   async function handleBuscar() {
     const params = new URLSearchParams();
-    if (modoBusca === 'destino' && destinoSelecionado) params.set('destCode', destinoSelecionado.code);
+    if (modoBusca === 'destino' && destCode.trim()) params.set('destCode', destCode.trim());
     else if (modoBusca === 'keyword' && keyword.trim()) params.set('keyword', keyword.trim());
     else return;
 
@@ -294,6 +220,8 @@ export default function BuscarViagensPage() {
     setModalPasseio(null);
     setGerando(passeio.product_code);
     try {
+           const destinoLabel = DESTINOS_SUGERIDOS.find(d => d.code === passeio.destination_code)?.label
+        .replace(/^[^\s]+\s/, '') || passeio.destination_code;
       const payload: PasseioPinado = {
         ...passeio,
         id: passeio.product_code,
@@ -302,7 +230,9 @@ export default function BuscarViagensPage() {
         destinos,
         precoData: precoDataAtual(),
         publicado: false,
+        destino: destinoLabel,
       };
+
       await fetch('/api/viagens/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -323,7 +253,7 @@ export default function BuscarViagensPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           titulo:       pinado.titulo,
-          destino:      pinado.destino || pinado.destination_code,
+          destino:      pinado.destination_code,
           duracao:      pinado.duracao,
           descricao:    pinado.descricao,
           destaques:    pinado.destaques,
@@ -411,7 +341,6 @@ export default function BuscarViagensPage() {
             <p style={{ color: '#6b7280', fontSize: '0.9rem', margin: '4px 0 0' }}>Busque passeios Viator, pine e publique artigos editoriais</p>
           </div>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
- <a href="/viagem/gerenciar" target="_blank" style={{ backgroundColor: '#f3f4f6', color: '#374151', padding: '6px 12px', borderRadius: '6px', textDecoration: 'none', fontSize: '0.78rem', fontWeight: 600 }}>✏️ Gerenciar Roteiros</a>
             <a href="/viagens" target="_blank" style={{ backgroundColor: '#f3f4f6', color: '#374151', padding: '6px 12px', borderRadius: '6px', textDecoration: 'none', fontSize: '0.78rem', fontWeight: 600 }}>🌍 Ver Viagens</a>
             <a href="/viagens-selecionadas" target="_blank" style={{ backgroundColor: '#f3f4f6', color: '#374151', padding: '6px 12px', borderRadius: '6px', textDecoration: 'none', fontSize: '0.78rem', fontWeight: 600 }}>⭐ Selecionadas</a>
             <a href="/produtos/buscar" style={{ backgroundColor: '#f3f4f6', color: '#374151', padding: '6px 12px', borderRadius: '6px', textDecoration: 'none', fontSize: '0.78rem', fontWeight: 600 }}>📦 Produtos</a>
@@ -439,7 +368,7 @@ export default function BuscarViagensPage() {
           <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
             <button onClick={() => setModoBusca('destino')}
               style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'destino' ? '#0f766e' : '#fff', color: modoBusca === 'destino' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-              🗺 Por destino
+              🗺 Por código de destino
             </button>
             <button onClick={() => setModoBusca('keyword')}
               style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'keyword' ? '#0369a1' : '#fff', color: modoBusca === 'keyword' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
@@ -453,23 +382,27 @@ export default function BuscarViagensPage() {
             {modoBusca === 'destino' && (
               <div>
                 <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '8px' }}>
-                  Destino
+                  Código do destino Viator
                 </label>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <DestinoAutocomplete
-                    value={destinoSelecionado}
-                    onChange={setDestinoSelecionado}
-                  />
-                  <button onClick={handleBuscar} disabled={loading || !destinoSelecionado}
-                    style={{ padding: '9px 20px', borderRadius: '8px', border: 'none', backgroundColor: '#0f766e', color: '#fff', fontWeight: 700, cursor: (!destinoSelecionado || loading) ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap', opacity: (!destinoSelecionado || loading) ? 0.6 : 1 }}>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                  <input value={destCode} onChange={e => setDestCode(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleBuscar()}
+                    placeholder="ex: 732 (Lisboa), 562 (Barcelona)"
+                    style={{ flex: 1, padding: '9px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.88rem', boxSizing: 'border-box' }} />
+                  <button onClick={handleBuscar} disabled={loading || !destCode.trim()}
+                    style={{ padding: '9px 20px', borderRadius: '8px', border: 'none', backgroundColor: '#0f766e', color: '#fff', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                     {loading ? '⏳ Buscando...' : '🔍 Buscar'}
                   </button>
                 </div>
-                {destinoSelecionado && (
-                  <p style={{ fontSize: '0.75rem', color: '#0f766e', margin: '8px 0 0', fontWeight: 600 }}>
-                    ✓ Buscando passeios em {destinoSelecionado.nome} (código {destinoSelecionado.code})
-                  </p>
-                )}
+                {/* Atalhos de destino */}
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  {DESTINOS_SUGERIDOS.map(d => (
+                    <button key={d.code + d.label} onClick={() => { setDestCode(d.code); }}
+                      style={{ padding: '4px 10px', borderRadius: '20px', border: `1px solid ${destCode === d.code ? '#0f766e' : '#e5e7eb'}`, backgroundColor: destCode === d.code ? '#f0fdfa' : '#fff', color: destCode === d.code ? '#0f766e' : '#6b7280', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}>
+                      {d.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -501,7 +434,6 @@ export default function BuscarViagensPage() {
             <>
               <div style={{ fontSize: '0.82rem', color: '#6b7280', marginBottom: '12px' }}>
                 {passeios.length} passeios encontrados
-                {destinoSelecionado && ` em ${destinoSelecionado.nome}`}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' }}>
                 {passeios.map(p => (
@@ -516,23 +448,13 @@ export default function BuscarViagensPage() {
                           📌 Pinado
                         </span>
                       )}
-                      {p.destino && (
-                        <span style={{ position: 'absolute', bottom: '8px', left: '8px', backgroundColor: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: '0.65rem', fontWeight: 600, padding: '2px 7px', borderRadius: '20px' }}>
-                          📍 {p.destino}
-                        </span>
-                      )}
                     </div>
                     <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', flexGrow: 1, gap: '6px' }}>
                       <h3 style={{ fontSize: '0.82rem', fontWeight: 600, color: '#111827', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                         {p.titulo}
                       </h3>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '0.72rem', color: '#6b7280' }}>⏱ {p.duracao}</span>
-                        {p.rating != null && p.rating > 0 && (
-                          <span style={{ fontSize: '0.72rem', color: '#d97706', fontWeight: 700 }}>
-                            ★ {p.rating.toFixed(1)}{p.reviewCount ? ` (${p.reviewCount.toLocaleString('pt-BR')})` : ''}
-                          </span>
-                        )}
+                      <div style={{ fontSize: '0.72rem', color: '#6b7280' }}>
+                        ⏱ {p.duracao}
                       </div>
                       {p.destaques?.length > 0 && (
                         <ul style={{ margin: 0, padding: '0 0 0 14px', fontSize: '0.72rem', color: '#6b7280', lineHeight: 1.5 }}>
@@ -567,6 +489,7 @@ export default function BuscarViagensPage() {
       {/* ── ABA: PINADOS ─────────────────────────────────────────────────────── */}
       {aba === 'pinados' && (
         <div>
+          {/* Filtros */}
           <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
             <button onClick={() => setFiltroDestino('todos')}
               style={{ padding: '6px 14px', borderRadius: '999px', border: `2px solid ${filtroDestino === 'todos' ? '#0f766e' : '#e5e7eb'}`, backgroundColor: filtroDestino === 'todos' ? '#0f766e' : '#fff', color: filtroDestino === 'todos' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer' }}>
@@ -602,28 +525,17 @@ export default function BuscarViagensPage() {
                         ✅ Publicado
                       </span>
                     )}
-                    {p.destino && (
-                      <span style={{ position: 'absolute', bottom: '8px', left: '8px', backgroundColor: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: '0.65rem', fontWeight: 600, padding: '2px 7px', borderRadius: '20px' }}>
-                        📍 {p.destino}
-                      </span>
-                    )}
                   </div>
                   <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', flexGrow: 1, gap: '8px' }}>
                     <h3 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.4 }}>
                       {p.titulo}
                     </h3>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '0.78rem', color: '#0f766e', fontWeight: 700 }}>
-                        R$ {p.precoBase.toFixed(2).replace('.', ',')}
-                      </span>
-                      <span style={{ color: '#9ca3af', fontSize: '0.72rem' }}>· {p.precoData}</span>
-                      {p.rating != null && p.rating > 0 && (
-                        <span style={{ fontSize: '0.72rem', color: '#d97706', fontWeight: 700 }}>
-                          ★ {p.rating.toFixed(1)}{p.reviewCount ? ` (${p.reviewCount.toLocaleString('pt-BR')})` : ''}
-                        </span>
-                      )}
+                    <div style={{ fontSize: '0.78rem', color: '#0f766e', fontWeight: 700 }}>
+                      R$ {p.precoBase.toFixed(2).replace('.', ',')}
+                      <span style={{ color: '#9ca3af', fontWeight: 400, marginLeft: '4px' }}>· {p.precoData}</span>
                     </div>
 
+                    {/* Destinos */}
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                       {DESTINOS_VIAGEM.map(d => {
                         const ativo = p.destinos?.includes(d.id);
@@ -644,12 +556,14 @@ export default function BuscarViagensPage() {
                       Pinado em {new Date(p.pinedAt).toLocaleDateString('pt-BR')}
                     </small>
 
+                    {/* Artigo gerado — preview */}
                     {artigoGerado[p.id] && (
                       <div style={{ backgroundColor: '#f0fdfa', border: '1px solid #99f6e4', borderRadius: '8px', padding: '10px', fontSize: '0.75rem', color: '#374151', maxHeight: '100px', overflow: 'auto', lineHeight: 1.5 }}>
                         {artigoGerado[p.id].slice(0, 300)}...
                       </div>
                     )}
 
+                    {/* Ações */}
                     <button onClick={() => handleGerarArtigo(p)} disabled={gerandoArtigo === p.id}
                       style={{ padding: '7px', borderRadius: '6px', border: 'none', backgroundColor: gerandoArtigo === p.id ? '#f3f4f6' : '#0369a1', color: gerandoArtigo === p.id ? '#6b7280' : '#fff', fontWeight: 700, fontSize: '0.8rem', cursor: gerandoArtigo === p.id ? 'not-allowed' : 'pointer', width: '100%' }}>
                       {gerandoArtigo === p.id ? '⏳ Gerando artigo...' : (artigoGerado[p.id] || p.conteudo) ? '🔄 Regerar artigo' : '✍️ Gerar artigo'}

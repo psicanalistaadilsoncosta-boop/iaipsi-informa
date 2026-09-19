@@ -17,8 +17,6 @@ interface Passeio {
   affiliate_url: string;
   destination_code: string;
   destino: string;
-  rating?: number;
-  reviewCount?: number;
   source: 'viator';
 }
 
@@ -411,7 +409,6 @@ export default function BuscarViagensPage() {
             <p style={{ color: '#6b7280', fontSize: '0.9rem', margin: '4px 0 0' }}>Busque passeios Viator, pine e publique artigos editoriais</p>
           </div>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
- <a href="/viagem/gerenciar" target="_blank" style={{ backgroundColor: '#f3f4f6', color: '#374151', padding: '6px 12px', borderRadius: '6px', textDecoration: 'none', fontSize: '0.78rem', fontWeight: 600 }}>✏️ Gerenciar Roteiros</a>
             <a href="/viagens" target="_blank" style={{ backgroundColor: '#f3f4f6', color: '#374151', padding: '6px 12px', borderRadius: '6px', textDecoration: 'none', fontSize: '0.78rem', fontWeight: 600 }}>🌍 Ver Viagens</a>
             <a href="/viagens-selecionadas" target="_blank" style={{ backgroundColor: '#f3f4f6', color: '#374151', padding: '6px 12px', borderRadius: '6px', textDecoration: 'none', fontSize: '0.78rem', fontWeight: 600 }}>⭐ Selecionadas</a>
             <a href="/produtos/buscar" style={{ backgroundColor: '#f3f4f6', color: '#374151', padding: '6px 12px', borderRadius: '6px', textDecoration: 'none', fontSize: '0.78rem', fontWeight: 600 }}>📦 Produtos</a>
@@ -526,14 +523,7 @@ export default function BuscarViagensPage() {
                       <h3 style={{ fontSize: '0.82rem', fontWeight: 600, color: '#111827', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                         {p.titulo}
                       </h3>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '0.72rem', color: '#6b7280' }}>⏱ {p.duracao}</span>
-                        {p.rating != null && p.rating > 0 && (
-                          <span style={{ fontSize: '0.72rem', color: '#d97706', fontWeight: 700 }}>
-                            ★ {p.rating.toFixed(1)}{p.reviewCount ? ` (${p.reviewCount.toLocaleString('pt-BR')})` : ''}
-                          </span>
-                        )}
-                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#6b7280' }}>⏱ {p.duracao}</div>
                       {p.destaques?.length > 0 && (
                         <ul style={{ margin: 0, padding: '0 0 0 14px', fontSize: '0.72rem', color: '#6b7280', lineHeight: 1.5 }}>
                           {p.destaques.slice(0, 2).map((d, i) => <li key={i}>{d}</li>)}
@@ -612,16 +602,9 @@ export default function BuscarViagensPage() {
                     <h3 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.4 }}>
                       {p.titulo}
                     </h3>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '0.78rem', color: '#0f766e', fontWeight: 700 }}>
-                        R$ {p.precoBase.toFixed(2).replace('.', ',')}
-                      </span>
-                      <span style={{ color: '#9ca3af', fontSize: '0.72rem' }}>· {p.precoData}</span>
-                      {p.rating != null && p.rating > 0 && (
-                        <span style={{ fontSize: '0.72rem', color: '#d97706', fontWeight: 700 }}>
-                          ★ {p.rating.toFixed(1)}{p.reviewCount ? ` (${p.reviewCount.toLocaleString('pt-BR')})` : ''}
-                        </span>
-                      )}
+                    <div style={{ fontSize: '0.78rem', color: '#0f766e', fontWeight: 700 }}>
+                      R$ {p.precoBase.toFixed(2).replace('.', ',')}
+                      <span style={{ color: '#9ca3af', fontWeight: 400, marginLeft: '4px' }}>· {p.precoData}</span>
                     </div>
 
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
