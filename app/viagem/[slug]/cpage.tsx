@@ -2,7 +2,6 @@ import { kv } from '@/lib/kv';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import GaleriaFotos from './GaleriaFotos';
-import ArredoresDestino from './ArredoresDestino';
 
 interface ArtigoViagem {
   id: string;
@@ -15,7 +14,7 @@ interface ArtigoViagem {
   descricaoCurta: string;
   conteudo: string;
   precoBase: number;
-  precoData: string;
+  precoData: string;        // ex: "set/2026"
   affiliateUrl: string;
   publicado: boolean;
   createdAt: string;
@@ -39,9 +38,11 @@ function renderConteudo(texto: string) {
       return <h2 key={i} style={{ fontSize: '1.2rem', fontWeight: 800, color: '#111827', margin: '24px 0 10px' }}>{linha.replace('# ', '')}</h2>;
     }
 
+    // Processa links Markdown [texto](url) e negrito **texto**
     const parsed = linha
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, text, url) => {
+        // PLACEHOLDER_LINK não vira link clicável
         if (url === 'PLACEHOLDER_LINK') {
           return `<strong>${text}</strong>`;
         }
@@ -78,39 +79,6 @@ export default async function ArtigoViagemPage({ params }: { params: Promise<{ s
   return (
     <main style={{ maxWidth: '860px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
 
-      {/* Responsive styles */}
-      <style>{`
-        .viagem-grid {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-          gap: 0;
-        }
-        .viagem-galeria {
-          background-color: #f1f5f9;
-          padding: 32px;
-          border-right: 1px solid #f3f4f6;
-        }
-        .viagem-dados {
-          padding: 32px;
-          display: flex;
-          flex-direction: column;
-          gap: 14px;
-        }
-        @media (max-width: 640px) {
-          .viagem-grid {
-            grid-template-columns: 1fr;
-          }
-          .viagem-galeria {
-            padding: 20px;
-            border-right: none;
-            border-bottom: 1px solid #f3f4f6;
-          }
-          .viagem-dados {
-            padding: 20px;
-          }
-        }
-      `}</style>
-
       <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#0f766e', fontWeight: 600, fontSize: '0.85rem', textDecoration: 'none', marginBottom: '24px' }}>
         ← Voltar ao site
       </Link>
@@ -118,15 +86,15 @@ export default async function ArtigoViagemPage({ params }: { params: Promise<{ s
       {/* Header do passeio */}
       <div style={{ backgroundColor: '#fff', borderRadius: '16px', overflow: 'hidden', border: '1px solid #e5e7eb', boxShadow: '0 4px 16px rgba(0,0,0,0.06)', marginBottom: '24px' }}>
 
-        <div className="viagem-grid">
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 0 }}>
 
           {/* Galeria */}
-          <div className="viagem-galeria">
+          <div style={{ backgroundColor: '#f1f5f9', padding: '32px', borderRight: '1px solid #f3f4f6' }}>
             <GaleriaFotos imagem={artigo.imagem} gallery={artigo.gallery || []} titulo={artigo.titulo} />
           </div>
 
           {/* Dados */}
-          <div className="viagem-dados">
+          <div style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6b7280' }}>📍 {artigo.destino}</span>
@@ -189,9 +157,6 @@ export default async function ArtigoViagemPage({ params }: { params: Promise<{ s
           </span>
         </div>
       </div>
-
-      {/* Arredores */}
-      <ArredoresDestino destino={artigo.destino} />
 
       {/* CTA final */}
       <div style={{ backgroundColor: '#f0fdfa', borderRadius: '16px', border: '1px solid #99f6e4', padding: '24px', textAlign: 'center' }}>
