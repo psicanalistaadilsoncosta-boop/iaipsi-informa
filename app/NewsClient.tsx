@@ -446,26 +446,33 @@ const safePosts = posts ?? [];
             <img src="/compalavra.png" alt="ComAPalavra" style={{ height: '32px', objectFit: 'contain' }} />
             <a href="/compalavra" style={{ marginLeft: 'auto', fontSize: '0.8rem', color: '#1e3a5f', fontWeight: 600, textDecoration: 'none' }}>Ver todos os artigos →</a>
           </div>
-          <a href={`/compalavra/${comPalavraDestaque.slug}`} style={{ textDecoration: 'none', display: 'block' }}>
-            <div style={{ borderRadius: '14px', overflow: 'hidden', border: '2px solid #1e3a5f', boxShadow: '0 4px 16px rgba(30,58,95,0.12)', display: 'flex', backgroundColor: '#fff' }}>
-              {comPalavraDestaque.imagem && (
-                <div style={{ width: '200px', flexShrink: 0, overflow: 'hidden' }}>
-                  <img src={comPalavraDestaque.imagem} alt={comPalavraDestaque.titulo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </div>
-              )}
-              <div style={{ padding: '24px', flex: 1 }}>
-                <span style={{ display: 'inline-block', backgroundColor: '#1e3a5f', color: '#f5c518', fontSize: '0.68rem', fontWeight: 700, padding: '3px 10px', borderRadius: '20px', marginBottom: '10px', letterSpacing: '1px' }}>
+                   <a href={`/compalavra/${comPalavraDestaque.slug}`} style={{ textDecoration: 'none', display: 'block' }}>
+            <div style={{ borderRadius: '16px', overflow: 'hidden', border: '1px solid #e5e7eb', boxShadow: '0 4px 16px rgba(0,0,0,0.08)', position: 'relative', backgroundColor: '#fff' }}>
+              <div style={{ height: '320px', overflow: 'hidden', backgroundColor: '#1e3a5f', position: 'relative' }}>
+                {comPalavraDestaque.imagem ? (
+                  <img src={comPalavraDestaque.imagem} alt={comPalavraDestaque.titulo} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.7 }} />
+                ) : (
+                  <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #1e3a5f 0%, #0f2340 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ fontSize: '5rem' }}>✍️</span>
+                  </div>
+                )}
+                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '70%', background: 'linear-gradient(to top, rgba(15,25,50,0.95) 0%, transparent 100%)' }} />
+                <span style={{ position: 'absolute', top: '16px', left: '16px', backgroundColor: '#1e3a5f', color: '#f5c518', fontSize: '0.72rem', fontWeight: 700, padding: '4px 12px', borderRadius: '20px', letterSpacing: '1px' }}>
                   ✍️ COLUNA · ComAPalavra
                 </span>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827', margin: '0 0 10px', lineHeight: 1.3 }}>
-                  {comPalavraDestaque.titulo}
-                </h2>
-                {comPalavraDestaque.resumo && (
-                  <p style={{ color: '#4b5563', fontSize: '0.9rem', margin: '0 0 14px', lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                    {comPalavraDestaque.resumo}
-                  </p>
-                )}
-                <span style={{ color: '#1e3a5f', fontWeight: 700, fontSize: '0.875rem' }}>Ler artigo →</span>
+                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '24px' }}>
+                  <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff', margin: '0 0 8px', lineHeight: 1.2 }}>
+                    {comPalavraDestaque.titulo}
+                  </h3>
+                  {comPalavraDestaque.resumo && (
+                    <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.9rem', margin: '0 0 14px', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {comPalavraDestaque.resumo}
+                    </p>
+                  )}
+                  <div style={{ backgroundColor: '#1e3a5f', color: '#f5c518', padding: '10px 24px', borderRadius: '8px', fontWeight: 700, fontSize: '0.9rem', display: 'inline-block', border: '1px solid #f5c518' }}>
+                    Ler artigo →
+                  </div>
+                </div>
               </div>
             </div>
           </a>
