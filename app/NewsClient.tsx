@@ -383,7 +383,7 @@ function NewsCard({ item }: { item: FeedItem }) {
 }
 
 // ─── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────
-export default function NewsClient({ posts, ads, editorial, sabores, ofertasMix, artigosProduto, viagemDestaque, viagensNoticias }: { posts: FeedItem[]; ads: AdItem[]; editorial: EditorialItem[]; sabores: SaboresItem[]; ofertasMix: any[]; artigosProduto?: any[]; viagemDestaque?: any; viagensNoticias?: any[] }) {
+export default function NewsClient({ posts, ads, editorial, sabores, ofertasMix, artigosProduto, viagemDestaque, viagensNoticias, comPalavraDestaque }: { posts: FeedItem[]; ads: AdItem[]; editorial: EditorialItem[]; sabores: SaboresItem[]; ofertasMix: any[]; artigosProduto?: any[]; viagemDestaque?: any; viagensNoticias?: any[]; comPalavraDestaque?: any }) {
 const safePosts = posts ?? [];
   const safeAds = ads ?? [];
   const safeEditorial = editorial ?? [];
@@ -439,12 +439,38 @@ const safePosts = posts ?? [];
         </div>
       )}
 
-      <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', padding: '12px 20px', borderRadius: '8px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-        <span style={{ fontSize: '0.9rem', color: '#1e40af', fontWeight: 600 }}>⚽ Acompanhe os jogos de hoje:</span>
-        <a href="https://www.uol.com.br/esporte/futebol/central-de-jogos/" target="_blank" rel="noopener noreferrer" style={{ backgroundColor: '#2563eb', color: '#fff', padding: '6px 14px', borderRadius: '6px', fontSize: '0.85rem', textDecoration: 'none', fontWeight: 600 }}>
-          Abrir Central de Jogos UOL ↗
-        </a>
-      </div>
+           {comPalavraDestaque && (
+        <section style={{ marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
+            <div style={{ width: '4px', height: '28px', backgroundColor: '#1e3a5f', borderRadius: '2px' }} />
+            <img src="/compalavra.png" alt="ComAPalavra" style={{ height: '32px', objectFit: 'contain' }} />
+            <a href="/compalavra" style={{ marginLeft: 'auto', fontSize: '0.8rem', color: '#1e3a5f', fontWeight: 600, textDecoration: 'none' }}>Ver todos os artigos →</a>
+          </div>
+          <a href={`/compalavra/${comPalavraDestaque.slug}`} style={{ textDecoration: 'none', display: 'block' }}>
+            <div style={{ borderRadius: '14px', overflow: 'hidden', border: '2px solid #1e3a5f', boxShadow: '0 4px 16px rgba(30,58,95,0.12)', display: 'flex', backgroundColor: '#fff' }}>
+              {comPalavraDestaque.imagem && (
+                <div style={{ width: '200px', flexShrink: 0, overflow: 'hidden' }}>
+                  <img src={comPalavraDestaque.imagem} alt={comPalavraDestaque.titulo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+              )}
+              <div style={{ padding: '24px', flex: 1 }}>
+                <span style={{ display: 'inline-block', backgroundColor: '#1e3a5f', color: '#f5c518', fontSize: '0.68rem', fontWeight: 700, padding: '3px 10px', borderRadius: '20px', marginBottom: '10px', letterSpacing: '1px' }}>
+                  ✍️ COLUNA · ComAPalavra
+                </span>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827', margin: '0 0 10px', lineHeight: 1.3 }}>
+                  {comPalavraDestaque.titulo}
+                </h2>
+                {comPalavraDestaque.resumo && (
+                  <p style={{ color: '#4b5563', fontSize: '0.9rem', margin: '0 0 14px', lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {comPalavraDestaque.resumo}
+                  </p>
+                )}
+                <span style={{ color: '#1e3a5f', fontWeight: 700, fontSize: '0.875rem' }}>Ler artigo →</span>
+              </div>
+            </div>
+          </a>
+        </section>
+      )}
             <OfertaDestaque />
       <ArtigosProdutoSection artigos={artigosProduto || []} />
       {viagemDestaque && <ViagemDestaque viagem={viagemDestaque} />}
