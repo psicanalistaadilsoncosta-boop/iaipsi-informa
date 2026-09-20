@@ -1,5 +1,47 @@
 'use client';
+
 import { useState, useEffect } from 'react';
+
+function LoginScreen({ onLogin }: { onLogin: () => void }) {
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true); setError('');
+    try {
+      const res = await fetch('/api/editorial/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      if (res.ok) onLogin();
+      else setError('Senha incorreta.');
+    } catch { setError('Erro de conexão.'); }
+    setLoading(false);
+  }
+
+  return (
+    <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f9fafb' }}>
+      <form onSubmit={handleSubmit} style={{ backgroundColor: '#fff', padding: '40px', borderRadius: '16px', boxShadow: '0 4px 24px rgba(0,0,0,0.08)', width: '100%', maxWidth: '360px' }}>
+        <h1 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#111827', margin: '0 0 8px' }}>✍️ ComAPalavra</h1>
+        <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: '0 0 24px' }}>Acesso restrito</p>
+        <input
+          type="password"
+          placeholder="Senha"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.95rem', marginBottom: '12px', boxSizing: 'border-box' }}
+        />
+        {error && <p style={{ color: '#dc2626', fontSize: '0.8rem', margin: '0 0 10px', fontWeight: 600 }}>{error}</p>}
+        <button type="submit" disabled={loading} style={{ width: '100%', backgroundColor: '#0f766e', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px', fontWeight: 700, cursor: loading ? 'wait' : 'pointer', fontSize: '0.95rem' }}>
+          {loading ? 'Verificando...' : 'Entrar'}
+        </button>
+      </form>
+    </main>
+  );
+}
 
 interface ArtigoComPalavra {
   id: string; slug: string; titulo: string; conteudo: string;
@@ -8,6 +50,7 @@ interface ArtigoComPalavra {
 }
 
 export default function GerenciarComPalavraPage() {
+  const [auth, setAuth] = useState<boolean | null>(null);
   const [artigos, setArtigos] = useState<ArtigoComPalavra[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [editando, setEditando] = useState<ArtigoComPalavra | null>(null);
@@ -16,7 +59,15 @@ export default function GerenciarComPalavraPage() {
   const [revisando, setRevisando] = useState(false);
   const [revisao, setRevisao] = useState('');
 
-  useEffect(() => { carregar(); }, []);
+  useEffect(() => {
+    fetch('/api/editorial/auth/check').then(r => r.json()).then(d => {
+      setAuth(d.ok);
+      if (d.ok) carregar();
+    }).catch(() => setAuth(false));
+  }, []);
+
+  if (auth === null) return <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280' }}>Carregando...</main>;
+  if (!auth) return <LoginScreen onLogin={() => { setAuth(true); carregar(); }} />;
 
   async function carregar() {
     setCarregando(true);
