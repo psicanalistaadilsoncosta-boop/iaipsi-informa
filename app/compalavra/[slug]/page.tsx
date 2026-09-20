@@ -20,7 +20,10 @@ function renderConteudo(texto: string) {
     if (!linha.trim() || linha.trim() === '---') return <br key={i} />;
     if (linha.startsWith('## ')) return <h2 key={i} style={{ fontSize: '1.3rem', fontWeight: 800, color: '#111827', margin: '28px 0 12px' }}>{linha.replace('## ', '')}</h2>;
     if (linha.startsWith('# ')) return <h1 key={i} style={{ fontSize: '1.6rem', fontWeight: 900, color: '#111827', margin: '32px 0 14px' }}>{linha.replace('# ', '')}</h1>;
-    return <p key={i} style={{ margin: '0 0 16px', lineHeight: 1.8, color: '#1f2937', fontSize: '1.05rem' }}>{linha}</p>;
+      const html = linha
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" style="color:#0f766e;font-weight:600;">$1</a>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    return <p key={i} style={{ margin: '0 0 16px', lineHeight: 1.8, color: '#1f2937', fontSize: '1.05rem' }} dangerouslySetInnerHTML={{ __html: html }} />;
   });
 }
 
