@@ -465,7 +465,7 @@ const safePosts = posts ?? [];
                     {comPalavraDestaque.titulo}
                   </h3>
                   {comPalavraDestaque.resumo && (
-                    <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.9rem', margin: '0 0 14px', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.9rem', margin: '0 0 14px', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                       {comPalavraDestaque.resumo}
                     </p>
                   )}
