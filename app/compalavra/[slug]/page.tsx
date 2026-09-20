@@ -27,8 +27,9 @@ function renderConteudo(texto: string) {
   });
 }
 
-export default async function ArtigoComPalavraPage({ params }: { params: { slug: string } }) {
-  const artigo = await getArtigo(params.slug);
+export default async function ArtigoComPalavraPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const artigo = await getArtigo(slug);
   if (!artigo) notFound();
 
   return (
