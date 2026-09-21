@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
 
     // Filtra
     let filtrados = produtos.filter((p: any) => {
-      if (p.in_stock !== 'y' && p.in_stock !== '1' && p.in_stock !== 'true') return false;
+      if (p.in_stock && p.in_stock !== 'y' && p.in_stock !== '1' && p.in_stock !== 'true') return false;
       if (!p.product_name || !p.merchant_image_url) return false;
       if (q && !p.product_name.toLowerCase().includes(q.toLowerCase()) &&
           !p.merchant_category?.toLowerCase().includes(q.toLowerCase())) return false;
