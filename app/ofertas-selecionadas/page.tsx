@@ -86,8 +86,13 @@ export default async function OfertasSelecionadasPage() {
                       {p.nome}
                     </h2>
 
-                    {p.loja && (
+                                        {p.loja && (
                       <div style={{ fontSize: '0.72rem', color: '#6b7280', fontWeight: 500 }}>🏪 {p.loja}</div>
+                    )}
+                    {(p as any).moedaOriginal === 'USD' && (
+                      <div style={{ fontSize: '0.68rem', color: '#92400e', fontWeight: 600, backgroundColor: '#fef3c7', padding: '2px 6px', borderRadius: '4px', display: 'inline-block' }}>
+                        💵 Preço convertido de USD para R$ · cotação do dia utilizada: R$ {((p as any).cotacaoUsada || 5.7).toFixed(2).replace('.', ',')}
+                      </div>
                     )}
 
                     <div style={{ marginTop: 'auto' }}>

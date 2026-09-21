@@ -32,7 +32,7 @@ export async function fetchVtex(baseUrl: string, limit = 20) {
       precoOriginal,
       desconto: precoOriginal > preco ? Math.round((1 - preco / precoOriginal) * 100) : 0,
       categoria: p.categories?.[0]?.replace(/\//g, '').trim() || '',
-      loja: p.brand || '',
+      loja: baseUrl.replace(/^https?:\/\//, '').replace(/^www\./, '').split('.')[0],
       disponivel: seller?.IsAvailable || false,
       estoque: seller?.AvailableQuantity || 0,
       parcelas: parcelas ? String(parcelas.NumberOfInstallments) : '',

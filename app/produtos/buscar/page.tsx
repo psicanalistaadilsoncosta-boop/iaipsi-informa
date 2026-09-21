@@ -572,6 +572,10 @@ export default function BuscarProdutosPage() {
                       style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.88rem', boxSizing: 'border-box', backgroundColor: '#fff' }}>
                       <option value="awin-arno">Arno (108626)</option>
                       <option value="awin-spicy">Spicy (30615)</option>
+                      <option value="awin-italist">Italist (127855)</option>
+
+
+
                     </select>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'flex-end' }}>
@@ -652,9 +656,14 @@ export default function BuscarProdutosPage() {
                       <h3 style={{ fontSize: '0.82rem', fontWeight: 600, color: '#111827', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                         {p.nome}
                       </h3>
-                      <div style={{ fontSize: '0.7rem', color: p.loja === 'Shopee' ? '#ea580c' : '#047857', fontWeight: 600 }}>
+                                           <div style={{ fontSize: '0.7rem', color: p.loja === 'Shopee' ? '#ea580c' : '#047857', fontWeight: 600 }}>
                         🏪 {p.loja}
                       </div>
+                      {(p as any).moedaOriginal === 'USD' && (
+                        <div style={{ fontSize: '0.68rem', color: '#92400e', fontWeight: 600, backgroundColor: '#fef3c7', padding: '2px 6px', borderRadius: '4px' }}>
+                         💵 Preço convertido de USD para R$ · cotação do dia utilizada: R$ {((p as any).cotacaoUsada || 5.7).toFixed(2).replace('.', ',')}
+                        </div>
+                      )}
                       {(p as any).ean && (
                         <div style={{ fontSize: '0.68rem', color: '#9ca3af', fontWeight: 500 }}>
                           EAN: {(p as any).ean}
