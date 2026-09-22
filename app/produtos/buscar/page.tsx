@@ -263,7 +263,7 @@ export default function BuscarProdutosPage() {
     setBuscandoLoja(true);
     setProdutos([]);
     try {
-      const params = new URLSearchParams({ url: urlLojaAwin, limit: '150', orgId: awinAnunciante });
+      const params = new URLSearchParams({ url: urlLojaAwin, limit: '50', orgId: awinAnunciante });
       const res = await fetch(`/api/scrape?${params}`);
       const json = await res.json();
       if (json.error) { alert(`Erro: ${json.error}`); return; }
