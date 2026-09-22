@@ -244,8 +244,14 @@ export default function BuscarViagensPage() {
   const [pinados, setPinados] = useState<PasseioPinado[]>([]);
   const [filtroDestino, setFiltroDestino] = useState('todos');
 
-  // Modal
+   // Modal
   const [modalPasseio, setModalPasseio] = useState<Passeio | null>(null);
+
+  // Seleção em massa
+  const [modoSelecao, setModoSelecao] = useState(false);
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
+  const [modalMassa, setModalMassa] = useState<boolean>(false);
+  const [pinandoMassa, setPinandoMassa] = useState(false);
 
   // Geração de artigo
   const [gerando, setGerando] = useState<string | null>(null);
@@ -379,6 +385,53 @@ export default function BuscarViagensPage() {
   }
 
   const isPinado = (code: string) => pinados.some(p => p.id === code);
+
+  function toggleSelecao(code: string) {
+    setSelecionados(prev => {
+      const next = new Set(prev);
+      if (next.has(code)) next.delete(code); else next.add(code);
+      return next;
+    });
+  }
+
+  const passeiosMassaFake: Passeio = {
+    product_code: '__massa__',
+    titulo: `${selecionados.size} passeio${selecionados.size > 1 ? 's' : ''} selecionado${selecionados.size > 1 ? 's' : ''}`,
+    descricao: '', duracao: '', destaques: [], precoBase: 0, moeda: 'BRL',
+    imagem: '', gallery: [], affiliate_url: '', destination_code: '', destino: '',
+    source: 'viator',
+  };
+
+  async function handlePinarMassa(destinos: string[]) {
+    setModalMassa(false);
+    setPinandoMassa(true);
+    const lista = passeios.filter(p => selecionados.has(p.product_code) && !isPinado(p.product_code));
+    let ok = 0;
+    for (const passeio of lista) {
+      try {
+        const payload: PasseioPinado = {
+          ...passeio,
+          id: passeio.product_code,
+          slug: slugify(passeio.titulo),
+          pinedAt: new Date().toISOString(),
+          destinos,
+          precoData: precoDataAtual(),
+          publicado: false,
+        };
+        await fetch('/api/viagens/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        ok++;
+      } catch {}
+    }
+    await loadPinados();
+    setSelecionados(new Set());
+    setModoSelecao(false);
+    setPinandoMassa(false);
+    if (ok > 0) alert(`✅ ${ok} passeio${ok > 1 ? 's' : ''} pinado${ok > 1 ? 's' : ''}!`);
+  }
   const pinadosFiltrados = filtroDestino === 'todos' ? pinados : pinados.filter(p => p.destinos?.includes(filtroDestino));
 
   // ── Auth ──────────────────────────────────────────────────────────────────────
@@ -395,11 +448,19 @@ export default function BuscarViagensPage() {
   return (
     <main style={{ maxWidth: '1060px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f0fdfa', minHeight: '100vh' }}>
 
-      {modalPasseio && (
+         {modalPasseio && (
         <ModalDestinos
           passeio={modalPasseio}
           onConfirm={(destinos) => handleConfirmarPinar(modalPasseio, destinos)}
           onCancel={() => setModalPasseio(null)}
+        />
+      )}
+
+      {modalMassa && (
+        <ModalDestinos
+          passeio={passeiosMassaFake}
+          onConfirm={(destinos) => handlePinarMassa(destinos)}
+          onCancel={() => setModalMassa(false)}
         />
       )}
 
@@ -497,21 +558,62 @@ export default function BuscarViagensPage() {
             <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>⏳ Buscando passeios na Viator...</div>
           )}
 
-          {!loading && passeios.length > 0 && (
+                   {!loading && passeios.length > 0 && (
             <>
-              <div style={{ fontSize: '0.82rem', color: '#6b7280', marginBottom: '12px' }}>
-                {passeios.length} passeios encontrados
-                {destinoSelecionado && ` em ${destinoSelecionado.nome}`}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '0.82rem', color: '#6b7280' }}>
+                  {passeios.length} passeios encontrados
+                  {destinoSelecionado && ` em ${destinoSelecionado.nome}`}
+                </span>
+
+                {/* Toolbar seleção em massa */}
+                {!modoSelecao ? (
+                  <button onClick={() => { setModoSelecao(true); setSelecionados(new Set()); }}
+                    style={{ padding: '6px 14px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer' }}>
+                    ☑️ Selecionar em massa
+                  </button>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '0.82rem', color: '#374151', fontWeight: 600 }}>{selecionados.size} selecionado(s)</span>
+                    <button onClick={() => setSelecionados(new Set(passeios.filter(p => !isPinado(p.product_code)).map(p => p.product_code)))}
+                      style={{ padding: '5px 10px', borderRadius: '6px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontSize: '0.78rem', cursor: 'pointer' }}>
+                      Selecionar todos
+                    </button>
+                    <button onClick={() => setSelecionados(new Set())}
+                      style={{ padding: '5px 10px', borderRadius: '6px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontSize: '0.78rem', cursor: 'pointer' }}>
+                      Limpar
+                    </button>
+                    <button onClick={() => { setModoSelecao(false); setSelecionados(new Set()); }}
+                      style={{ padding: '5px 10px', borderRadius: '6px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontSize: '0.78rem', cursor: 'pointer' }}>
+                      Cancelar
+                    </button>
+                    {selecionados.size > 0 && (
+                      <button onClick={() => setModalMassa(true)} disabled={pinandoMassa}
+                        style={{ padding: '6px 14px', borderRadius: '8px', border: 'none', backgroundColor: '#0f766e', color: '#fff', fontWeight: 700, fontSize: '0.82rem', cursor: pinandoMassa ? 'not-allowed' : 'pointer', opacity: pinandoMassa ? 0.6 : 1 }}>
+                        {pinandoMassa ? '⏳ Pinando...' : `📌 Pinar ${selecionados.size}`}
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' }}>
                 {passeios.map(p => (
-                  <div key={p.product_code} style={{ backgroundColor: '#fff', borderRadius: '12px', border: `2px solid ${isPinado(p.product_code) ? '#0f766e' : '#e5e7eb'}`, overflow: 'hidden', boxShadow: '0 2px 6px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column' }}>
+                                   <div
+                    key={p.product_code}
+                    onClick={() => modoSelecao && !isPinado(p.product_code) && toggleSelecao(p.product_code)}
+                    style={{ backgroundColor: '#fff', borderRadius: '12px', border: `2px solid ${modoSelecao && selecionados.has(p.product_code) ? '#0f766e' : isPinado(p.product_code) ? '#0f766e' : '#e5e7eb'}`, overflow: 'hidden', boxShadow: '0 2px 6px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', cursor: modoSelecao && !isPinado(p.product_code) ? 'pointer' : 'default', opacity: modoSelecao && isPinado(p.product_code) ? 0.5 : 1 }}>
                     <div style={{ height: '160px', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
                       {p.imagem
                         ? <img src={p.imagem} alt={p.titulo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         : <span style={{ fontSize: '3rem' }}>🌍</span>
                       }
-                      {isPinado(p.product_code) && (
+                      {modoSelecao && !isPinado(p.product_code) && (
+                        <span style={{ position: 'absolute', top: '8px', right: '8px', width: '22px', height: '22px', borderRadius: '50%', border: `2px solid ${selecionados.has(p.product_code) ? '#0f766e' : '#d1d5db'}`, backgroundColor: selecionados.has(p.product_code) ? '#0f766e' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', color: '#fff', fontWeight: 700 }}>
+                          {selecionados.has(p.product_code) ? '✓' : ''}
+                        </span>
+                      )}
+                      {!modoSelecao && isPinado(p.product_code) && (
                         <span style={{ position: 'absolute', top: '8px', right: '8px', backgroundColor: '#0f766e', color: '#fff', fontSize: '0.7rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px' }}>
                           📌 Pinado
                         </span>
@@ -549,9 +651,9 @@ export default function BuscarViagensPage() {
                         style={{ display: 'block', padding: '6px', borderRadius: '6px', border: '1px solid #e5e7eb', backgroundColor: '#f9fafb', color: '#374151', fontWeight: 600, fontSize: '0.78rem', textAlign: 'center', textDecoration: 'none' }}>
                         🔗 Ver na Viator
                       </a>
-                      <button
-                        onClick={() => !isPinado(p.product_code) && gerando !== p.product_code && setModalPasseio(p)}
-                        disabled={isPinado(p.product_code) || gerando === p.product_code}
+                        <button
+                        onClick={() => !modoSelecao && !isPinado(p.product_code) && gerando !== p.product_code && setModalPasseio(p)}
+                        disabled={modoSelecao || isPinado(p.product_code) || gerando === p.product_code}
                         style={{ width: '100%', padding: '7px', borderRadius: '6px', border: 'none', backgroundColor: isPinado(p.product_code) ? '#f0fdfa' : '#0f766e', color: isPinado(p.product_code) ? '#0f766e' : '#fff', fontWeight: 700, fontSize: '0.8rem', cursor: isPinado(p.product_code) ? 'default' : 'pointer' }}>
                         {gerando === p.product_code ? '⏳ Pinando...' : isPinado(p.product_code) ? '✅ Já pinado' : '📌 Pinar passeio'}
                       </button>
