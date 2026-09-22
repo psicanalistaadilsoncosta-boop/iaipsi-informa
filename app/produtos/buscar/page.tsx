@@ -36,10 +36,19 @@ interface ProdutoPinado extends Produto {
   loja?: string;
 }
 
+interface LojaCron {
+  ativo: boolean;
+  frequencia: 'diario' | '2dias' | 'semanal';
+  destino: string;
+  limite?: number;
+  ultimaAtualizacao: string | null;
+}
+
 interface LojaLomadee {
   tipo: 'lomadee';
   nome: string;
   url: string;
+  cron?: LojaCron;
 }
 
 interface LojaAwin {
@@ -48,7 +57,7 @@ interface LojaAwin {
   url: string;
   anuncianteId: string;
   moedaUSD?: boolean;
-}
+  cron?: LojaCron;
 
 type Loja = LojaLomadee | LojaAwin;
 
