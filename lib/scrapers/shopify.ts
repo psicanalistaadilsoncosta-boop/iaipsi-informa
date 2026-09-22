@@ -18,7 +18,7 @@ async function getCotacaoUSD(): Promise<number> {
   for (const fonte of fontes) {
     try { return await fonte(); } catch {}
   }
-  return 5.15; // fallback — atualizar se necessário
+  return 5.14; // fallback — atualizar se necessário
 }
 
 export async function fetchShopify(baseUrl: string, limit = 400, isUSD = false) {
