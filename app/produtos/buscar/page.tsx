@@ -291,7 +291,7 @@ export default function BuscarProdutosPage() {
         orgId = marca?.id || '';
       } catch {}
 
-      const params = new URLSearchParams({ url: urlLoja, limit: '150' });
+      const params = new URLSearchParams({ url: urlLoja, limit: '50' });
       if (orgId) params.set('orgId', orgId);
       if (q) params.set('q', q);
       const res = await fetch(`/api/scrape?${params}`);
@@ -308,7 +308,7 @@ export default function BuscarProdutosPage() {
     setLoading(true);
     setProdutos([]);
     try {
-      const params = new URLSearchParams({ limit: '150', loja });
+      const params = new URLSearchParams({ limit: '50', loja });
       if (q) params.set('q', q);
       const res = await fetch(`/api/awin?${params}`);
       const json = await res.json();
