@@ -180,6 +180,12 @@ export default function BuscarProdutosPage() {
   const [linkLoja, setLinkLoja] = useState('');
   const [buscandoLink, setBuscandoLink] = useState(false);
 
+   // Seleção em massa
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
+  const [modoSelecao, setModoSelecao] = useState(false);
+  const [pinandoMassa, setPinandoMassa] = useState(false);
+  const [modalMassa, setModalMassa] = useState(false);
+
   // Lojas do KV
   const [lojasKV, setLojasKV] = useState<Loja[]>([]);
   const [lojaLomadeeSelect, setLojaLomadeeSelect] = useState('');
@@ -458,6 +464,56 @@ export default function BuscarProdutosPage() {
     await loadPinados();
   }
 
+   function toggleSelecionado(id: string) {
+    setSelecionados(prev => {
+      const novo = new Set(prev);
+      novo.has(id) ? novo.delete(id) : novo.add(id);
+      return novo;
+    });
+  }
+
+  function selecionarTodos() {
+    const naoPin = produtos.filter(p => !isPinado(p.id));
+    setSelecionados(new Set(naoPin.map(p => p.id)));
+  }
+
+  function limparSelecao() {
+    setSelecionados(new Set());
+  }
+
+  async function handlePinarMassa(destinos: string[], parcelas: string, valorParcela: string) {
+    setModalMassa(false);
+    setPinandoMassa(true);
+    const lista = produtos.filter(p => selecionados.has(p.id) && !isPinado(p.id));
+    for (const produto of lista) {
+      try {
+        const shortRes = await fetch('/api/produtos/shorten', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: produto.link, organizationId: produto.organizationId }),
+        });
+        const shortData = await shortRes.json();
+        const linkAfiliado = shortData.shortUrl || produto.link;
+        await fetch('/api/produtos/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...produto,
+            link: linkAfiliado,
+            linkOriginal: produto.link,
+            destinos,
+            parcelas,
+            valorParcela,
+          }),
+        });
+      } catch { /* continua pro próximo */ }
+    }
+    await loadPinados();
+    setSelecionados(new Set());
+    setModoSelecao(false);
+    setPinandoMassa(false);
+  }
+
   const isPinado = (id: string) => pinados.some(p => p.id === id);
   const pinadosFiltrados = filtroDestino === 'todos' ? pinados : pinados.filter(p => p.destinos?.includes(filtroDestino));
 
@@ -480,6 +536,14 @@ export default function BuscarProdutosPage() {
           produto={modalProduto}
           onConfirm={(destinos, parcelas, valorParcela) => handleConfirmarPinar(modalProduto, destinos, parcelas, valorParcela)}
           onCancel={() => setModalProduto(null)}
+        />
+      )}
+
+            {modalMassa && (
+        <ModalDestinos
+          produto={{ id: '', nome: `${selecionados.size} produtos selecionados`, imagem: '', link: '', preco: 0, precoOriginal: 0, desconto: 0, organizationId: '', estoque: 0 }}
+          onConfirm={(destinos, parcelas, valorParcela) => handlePinarMassa(destinos, parcelas, valorParcela)}
+          onCancel={() => setModalMassa(false)}
         />
       )}
 
@@ -747,12 +811,47 @@ export default function BuscarProdutosPage() {
 
           {!loading && !buscandoLink && !buscandoLoja && produtos.length > 0 && (
             <>
-              <div style={{ fontSize: '0.82rem', color: '#6b7280', marginBottom: '12px' }}>
-                {total > 0 ? `${total.toLocaleString('pt-BR')} produtos encontrados — ` : ''} página {pagina}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '0.82rem', color: '#6b7280' }}>
+                  {total > 0 ? `${total.toLocaleString('pt-BR')} produtos — ` : ''}página {pagina}
+                </span>
+                <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  {!modoSelecao ? (
+                    <button onClick={() => setModoSelecao(true)}
+                      style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer' }}>
+                      ☑️ Selecionar em massa
+                    </button>
+                  ) : (
+                    <>
+                      <span style={{ fontSize: '0.78rem', color: '#374151', fontWeight: 600 }}>
+                        {selecionados.size} selecionados
+                      </span>
+                      <button onClick={selecionarTodos}
+                        style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#fff', color: '#374151', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer' }}>
+                        Selecionar todos
+                      </button>
+                      <button onClick={limparSelecao}
+                        style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#fff', color: '#374151', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer' }}>
+                        Limpar
+                      </button>
+                      {selecionados.size > 0 && (
+                        <button onClick={() => setModalMassa(true)} disabled={pinandoMassa}
+                          style={{ padding: '5px 14px', borderRadius: '6px', border: 'none', backgroundColor: '#2563eb', color: '#fff', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer' }}>
+                          {pinandoMassa ? '⏳ Pinando...' : `📌 Pinar ${selecionados.size}`}
+                        </button>
+                      )}
+                      <button onClick={() => { setModoSelecao(false); limparSelecao(); }}
+                        style={{ padding: '5px 10px', borderRadius: '6px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#9ca3af', fontSize: '0.78rem', cursor: 'pointer' }}>
+                        ✕
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px', marginBottom: '20px' }}>
                 {produtos.map(p => (
-                  <div key={p.id} style={{ backgroundColor: '#fff', borderRadius: '12px', border: `2px solid ${isPinado(p.id) ? '#047857' : '#e5e7eb'}`, overflow: 'hidden', boxShadow: '0 2px 6px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column' }}>
+                                   <div key={p.id} onClick={() => modoSelecao && !isPinado(p.id) && toggleSelecionado(p.id)}
+                    style={{ backgroundColor: '#fff', borderRadius: '12px', border: `2px solid ${selecionados.has(p.id) ? '#2563eb' : isPinado(p.id) ? '#047857' : '#e5e7eb'}`, cursor: modoSelecao && !isPinado(p.id) ? 'pointer' : 'default',overflow: 'hidden', boxShadow: '0 2px 6px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column' }}>
                     <div style={{ height: '160px', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', position: 'relative' }}>
                       {p.imagem && <img src={p.imagem} alt={p.nome} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />}
                       {p.desconto > 0 && (
@@ -760,7 +859,12 @@ export default function BuscarProdutosPage() {
                           -{p.desconto}%
                         </span>
                       )}
-                      {isPinado(p.id) && (
+                                            {modoSelecao && !isPinado(p.id) && (
+                        <span style={{ position: 'absolute', top: '8px', right: '8px', width: '20px', height: '20px', borderRadius: '4px', border: `2px solid ${selecionados.has(p.id) ? '#2563eb' : '#d1d5db'}`, backgroundColor: selecionados.has(p.id) ? '#2563eb' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', color: '#fff', fontWeight: 700 }}>
+                          {selecionados.has(p.id) ? '✓' : ''}
+                        </span>
+                      )}
+                      {!modoSelecao && isPinado(p.id) && (
                         <span style={{ position: 'absolute', top: '8px', right: '8px', backgroundColor: '#047857', color: '#fff', fontSize: '0.7rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px' }}>
                           📌 Pinado
                         </span>
