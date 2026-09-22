@@ -179,7 +179,7 @@ export default function BuscarProdutosPage() {
   const [excluirShopee, setExcluirShopee] = useState(true);
   const [modalProduto, setModalProduto] = useState<Produto | null>(null);
   const [destaqueHomeId, setDestaqueHomeId] = useState<string | null>(null);
-  const [modoBusca, setModoBusca] = useState<'palavra' | 'link' | 'awin' | 'spicy' | 'centauro' | 'loja' | 'loja-awin'>('palavra');
+  const [modoBusca, setModoBusca] = useState<'palavra' | 'link' | 'awin' | 'spicy' | 'centauro' | 'carrefour' |'loja' | 'loja-awin'>('palavra');
   const [urlLojaAwin, setUrlLojaAwin] = useState('');
   const [awinAnunciante, setAwinAnunciante] = useState('');
   const [lojaAwin, setLojaAwin] = useState('arno');
@@ -699,6 +699,10 @@ export default function BuscarProdutosPage() {
             <button onClick={() => { setModoBusca('centauro'); setLojaAwin('centauro'); handleBuscarAwin('', 'centauro'); }} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'centauro' ? '#e65c00' : '#fff', color: modoBusca === 'centauro' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               🏃 Centauro (Awin)
             </button>
+            <button onClick={() => { setModoBusca('carrefour'); setLojaAwin('carrefour'); handleBuscarAwin('', 'carrefour'); }} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'carrefour' ? '#e65c00' : '#fff', color: modoBusca === 'carrefour' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+              🏃 Carrefour (Awin)
+            </button>
+
           </div>
 
           <div style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '20px', marginBottom: '20px' }}>
@@ -726,7 +730,7 @@ export default function BuscarProdutosPage() {
             )}
 
             {/* Awin — Arno / Spicy (acesso rápido) */}
-               {(modoBusca === 'awin' || modoBusca === 'spicy' || modoBusca === 'centauro') && (
+               {(modoBusca === 'awin' || modoBusca === 'spicy' || modoBusca === 'centauro' || modoBusca === 'carrefour') && (
               <div>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <input

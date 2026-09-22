@@ -11,6 +11,7 @@ const FEEDS: Record<string, string> = {
   arno: process.env.AWIN_FEED_ARNO || 'arno-feed.csv',
   spicy: process.env.AWIN_FEED_SPICY || 'spicy-feed.csv',
   centauro: process.env.AWIN_FEED_CENTAURO || 'centauro-feed.csv',
+  carrefour: process.env.AWIN_FEED_CARREFOUR || 'carrefour-feed.csv',
   // adicione novos aqui
 };
 
