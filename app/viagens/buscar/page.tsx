@@ -112,14 +112,16 @@ function DestinoAutocomplete({ value, onChange }: {
     if (value) { setQuery(value.nome); setAberto(false); return; }
     if (query.length < 2) { setOpcoes([]); setAberto(false); return; }
     if (timer.current) clearTimeout(timer.current);
+    setOpcoes([]);
+    setAberto(false);
     timer.current = setTimeout(async () => {
       setCarregando(true);
       try {
         const res = await fetch(`/api/viator/destinations?q=${encodeURIComponent(query)}`);
         const json = await res.json();
         setOpcoes(json.destinations || []);
-        setAberto(true);
-      } catch { setOpcoes([]); }
+        setAberto(json.destinations?.length > 0);
+      } catch { setOpcoes([]); setAberto(false); }
       finally { setCarregando(false); }
     }, 300);
   }, [query, value]);
