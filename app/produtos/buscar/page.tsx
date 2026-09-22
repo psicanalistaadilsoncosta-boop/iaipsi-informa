@@ -170,7 +170,7 @@ export default function BuscarProdutosPage() {
   const [excluirShopee, setExcluirShopee] = useState(true);
   const [modalProduto, setModalProduto] = useState<Produto | null>(null);
   const [destaqueHomeId, setDestaqueHomeId] = useState<string | null>(null);
-  const [modoBusca, setModoBusca] = useState<'palavra' | 'link' | 'awin' | 'spicy' | 'loja' | 'loja-awin'>('palavra');
+  const [modoBusca, setModoBusca] = useState<'palavra' | 'link' | 'awin' | 'spicy' | 'centauro' | 'loja' | 'loja-awin'>('palavra');
   const [urlLojaAwin, setUrlLojaAwin] = useState('');
   const [awinAnunciante, setAwinAnunciante] = useState('');
   const [lojaAwin, setLojaAwin] = useState('arno');
@@ -679,8 +679,11 @@ export default function BuscarProdutosPage() {
             <button onClick={() => { setModoBusca('awin'); setLojaAwin('arno'); handleBuscarAwin('', 'arno'); }} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'awin' ? '#00AE98' : '#fff', color: modoBusca === 'awin' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               🏠 Arno (Awin)
             </button>
-            <button onClick={() => { setModoBusca('spicy'); setLojaAwin('spicy'); handleBuscarAwin('', 'spicy'); }} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'spicy' ? '#dc2626' : '#fff', color: modoBusca === 'spicy' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                        <button onClick={() => { setModoBusca('spicy'); setLojaAwin('spicy'); handleBuscarAwin('', 'spicy'); }} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'spicy' ? '#dc2626' : '#fff', color: modoBusca === 'spicy' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               🌶 Spicy (Awin)
+            </button>
+            <button onClick={() => { setModoBusca('centauro'); setLojaAwin('centauro'); handleBuscarAwin('', 'centauro'); }} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'centauro' ? '#e65c00' : '#fff', color: modoBusca === 'centauro' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+              🏃 Centauro (Awin)
             </button>
           </div>
 
@@ -709,7 +712,7 @@ export default function BuscarProdutosPage() {
             )}
 
             {/* Awin — Arno / Spicy (acesso rápido) */}
-            {(modoBusca === 'awin' || modoBusca === 'spicy') && (
+               {(modoBusca === 'awin' || modoBusca === 'spicy' || modoBusca === 'centauro') && (
               <div>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <input
@@ -718,7 +721,7 @@ export default function BuscarProdutosPage() {
                     style={{ flex: 1, padding: '9px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.88rem', boxSizing: 'border-box' }} />
                 </div>
                 <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: '6px 0 0' }}>
-                  Produtos da {modoBusca === 'awin' ? 'Arno' : 'Spicy'} via Awin — links de afiliado já inclusos.
+                 Produtos da {modoBusca === 'awin' ? 'Arno' : modoBusca === 'spicy' ? 'Spicy' : 'Centauro'} via Awin — links de afiliado já inclusos.
                 </p>
               </div>
             )}
