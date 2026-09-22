@@ -2,18 +2,10 @@
 
 import { useState, useEffect } from 'react';
 
-interface LojaCron {
-  ativo: boolean;
-  frequencia: 'diario' | '2dias' | 'semanal';
-  destino: string;
-  ultimaAtualizacao: string | null;
-}
-
 interface LojaLomadee {
   tipo: 'lomadee';
   nome: string;
   url: string;
-  cron?: LojaCron;
 }
 
 interface LojaAwin {
@@ -22,17 +14,9 @@ interface LojaAwin {
   url: string;
   anuncianteId: string;
   moedaUSD?: boolean;
-  cron?: LojaCron;
 }
 
 type Loja = LojaLomadee | LojaAwin;
-
-const DESTINO_LABELS: Record<string, string> = {
-  'ofertas-selecionadas': '⭐ Ofertas Selecionadas',
-  'oferta-do-dia': '🔥 Oferta do Dia',
-  'parcelado': '💳 Parcelado',
-  'mix': '📰 Entre Notícias',
-};
 
 function LoginScreen({ onLogin }: { onLogin: () => void }) {
   const [password, setPassword] = useState('');
@@ -69,107 +53,6 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
         </form>
       </div>
     </main>
-  );
-}
-
-function CronPanel({ loja, onSave }: { loja: Loja; onSave: (cron: LojaCron | null) => void }) {
-  const cronAtual = loja.cron;
-  const [ativo, setAtivo] = useState(cronAtual?.ativo ?? false);
-  const [frequencia, setFrequencia] = useState<LojaCron['frequencia']>(cronAtual?.frequencia ?? 'semanal');
-  const [destino, setDestino] = useState(cronAtual?.destino ?? 'ofertas-selecionadas');
-  const [expandido, setExpandido] = useState(false);
-  const [salvando, setSalvando] = useState(false);
-
-  async function handleSalvar() {
-    setSalvando(true);
-    await onSave({ ativo, frequencia, destino, ultimaAtualizacao: cronAtual?.ultimaAtualizacao ?? null });
-    setSalvando(false);
-    setExpandido(false);
-  }
-
-  async function handleDesativar() {
-    setSalvando(true);
-    await onSave(null);
-    setAtivo(false);
-    setSalvando(false);
-    setExpandido(false);
-  }
-
-  const selectSmall: React.CSSProperties = {
-    padding: '5px 8px', borderRadius: '6px', border: '1px solid #d1d5db',
-    fontSize: '0.78rem', backgroundColor: '#fff', cursor: 'pointer',
-  };
-
-  if (!expandido) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        {cronAtual?.ativo ? (
-          <span style={{ fontSize: '0.72rem', color: '#047857', fontWeight: 600, backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', padding: '2px 8px', borderRadius: '20px' }}>
-            🔁 Auto {cronAtual.frequencia === 'diario' ? 'diária' : cronAtual.frequencia === '2dias' ? 'a cada 2 dias' : 'semanal'}
-          </span>
-        ) : (
-          <span style={{ fontSize: '0.72rem', color: '#9ca3af' }}>Sem automação</span>
-        )}
-        <button onClick={() => setExpandido(true)}
-          style={{ padding: '3px 10px', borderRadius: '6px', border: '1px solid #e5e7eb', backgroundColor: '#f9fafb', color: '#374151', fontWeight: 600, fontSize: '0.72rem', cursor: 'pointer' }}>
-          ⚙️ Configurar
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '12px', marginTop: '8px' }}>
-      <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#374151', marginBottom: '10px' }}>⚙️ Automação de atualização</div>
-      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '10px' }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
-          <input type="checkbox" checked={ativo} onChange={e => setAtivo(e.target.checked)}
-            style={{ width: '15px', height: '15px', accentColor: '#7c3aed', cursor: 'pointer' }} />
-          Ativar automação
-        </label>
-        {ativo && (
-          <>
-            <div>
-              <span style={{ fontSize: '0.72rem', color: '#6b7280', marginRight: '4px' }}>Frequência:</span>
-              <select value={frequencia} onChange={e => setFrequencia(e.target.value as LojaCron['frequencia'])} style={selectSmall}>
-                <option value="diario">Diária</option>
-                <option value="2dias">A cada 2 dias</option>
-                <option value="semanal">Semanal</option>
-              </select>
-            </div>
-            <div>
-              <span style={{ fontSize: '0.72rem', color: '#6b7280', marginRight: '4px' }}>Destino:</span>
-              <select value={destino} onChange={e => setDestino(e.target.value)} style={selectSmall}>
-                {Object.entries(DESTINO_LABELS).map(([id, label]) => (
-                  <option key={id} value={id}>{label}</option>
-                ))}
-              </select>
-            </div>
-          </>
-        )}
-      </div>
-      {cronAtual?.ultimaAtualizacao && (
-        <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginBottom: '8px' }}>
-          Última atualização: {new Date(cronAtual.ultimaAtualizacao).toLocaleString('pt-BR')}
-        </div>
-      )}
-      <div style={{ display: 'flex', gap: '8px' }}>
-        <button onClick={handleSalvar} disabled={salvando}
-          style={{ padding: '5px 14px', borderRadius: '6px', border: 'none', backgroundColor: '#7c3aed', color: '#fff', fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer' }}>
-          {salvando ? '⏳' : '✅ Salvar'}
-        </button>
-        {cronAtual?.ativo && (
-          <button onClick={handleDesativar} disabled={salvando}
-            style={{ padding: '5px 14px', borderRadius: '6px', border: '1px solid #fca5a5', backgroundColor: '#fff', color: '#dc2626', fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer' }}>
-            🗑 Desativar
-          </button>
-        )}
-        <button onClick={() => setExpandido(false)}
-          style={{ padding: '5px 14px', borderRadius: '6px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#6b7280', fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer' }}>
-          Cancelar
-        </button>
-      </div>
-    </div>
   );
 }
 
@@ -231,13 +114,6 @@ export default function CadastraLojasPage() {
     await carregarLojas();
   }
 
-  async function atualizarCron(loja: Loja, cron: LojaCron | null) {
-    const atualizada: Loja = cron
-      ? { ...loja, cron }
-      : { ...loja, cron: undefined };
-    await salvarLoja(atualizada);
-  }
-
   async function handleAdicionarLomadee(e: React.FormEvent) {
     e.preventDefault();
     if (!nomeL.trim() || !urlL.trim()) return;
@@ -284,11 +160,6 @@ export default function CadastraLojasPage() {
           </div>
         </div>
       </header>
-
-      {/* Info cron */}
-      <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '10px', padding: '12px 16px', marginBottom: '20px', fontSize: '0.82rem', color: '#1e40af' }}>
-        🔁 <strong>Automação:</strong> O cron da Vercel roda diariamente às 6h UTC. Para cada loja com automação ativa, ele scrapa os produtos, remove os pinados antigos dessa loja e pina os novos no destino configurado.
-      </div>
 
       {/* Abas */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
@@ -371,31 +242,24 @@ export default function CadastraLojasPage() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {lojasFiltradas.map((loja, i) => (
-            <div key={i} style={{ backgroundColor: '#fff', borderRadius: '10px', border: '1px solid #e5e7eb', padding: '14px 16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                <div style={{ flex: 1, minWidth: '200px' }}>
-                  <div style={{ fontWeight: 700, color: '#111827', fontSize: '0.95rem' }}>{loja.nome}</div>
-                  <div style={{ fontSize: '0.78rem', color: '#6b7280', marginTop: '2px' }}>{loja.url}</div>
-                  {loja.tipo === 'awin' && (
-                    <div style={{ fontSize: '0.72rem', color: '#f59e0b', fontWeight: 600, marginTop: '2px' }}>
-                      Awin ID: {(loja as LojaAwin).anuncianteId}
-                      {(loja as LojaAwin).moedaUSD && <span style={{ marginLeft: '8px', color: '#92400e', backgroundColor: '#fef3c7', padding: '1px 5px', borderRadius: '3px' }}>💵 USD</span>}
-                    </div>
-                  )}
-                  {loja.tipo === 'lomadee' && (
-                    <div style={{ fontSize: '0.72rem', color: '#be185d', fontWeight: 600, marginTop: '2px' }}>Lomadee</div>
-                  )}
-                </div>
-                <button onClick={() => removerLoja(loja.url, loja.tipo)}
-                  style={{ padding: '6px 14px', borderRadius: '6px', border: '1px solid #fca5a5', backgroundColor: '#fff', color: '#dc2626', fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                  🗑 Remover
-                </button>
+            <div key={i} style={{ backgroundColor: '#fff', borderRadius: '10px', border: '1px solid #e5e7eb', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, minWidth: '200px' }}>
+                <div style={{ fontWeight: 700, color: '#111827', fontSize: '0.95rem' }}>{loja.nome}</div>
+                <div style={{ fontSize: '0.78rem', color: '#6b7280', marginTop: '2px' }}>{loja.url}</div>
+                {loja.tipo === 'awin' && (
+                  <div style={{ fontSize: '0.72rem', color: '#f59e0b', fontWeight: 600, marginTop: '2px' }}>
+                    Awin ID: {(loja as LojaAwin).anuncianteId}
+                    {(loja as LojaAwin).moedaUSD && <span style={{ marginLeft: '8px', color: '#92400e', backgroundColor: '#fef3c7', padding: '1px 5px', borderRadius: '3px' }}>💵 USD</span>}
+                  </div>
+                )}
+                {loja.tipo === 'lomadee' && (
+                  <div style={{ fontSize: '0.72rem', color: '#be185d', fontWeight: 600, marginTop: '2px' }}>Lomadee</div>
+                )}
               </div>
-
-              {/* Painel de automação cron */}
-              <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #f3f4f6' }}>
-                <CronPanel loja={loja} onSave={(cron) => atualizarCron(loja, cron)} />
-              </div>
+              <button onClick={() => removerLoja(loja.url, loja.tipo)}
+                style={{ padding: '6px 14px', borderRadius: '6px', border: '1px solid #fca5a5', backgroundColor: '#fff', color: '#dc2626', fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                🗑 Remover
+              </button>
             </div>
           ))}
         </div>

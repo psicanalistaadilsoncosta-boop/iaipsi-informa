@@ -16,22 +16,34 @@ interface ProdutoPinado {
   loja?: string;
 }
 
-async function getProdutos(): Promise<ProdutoPinado[]> {
+const POR_PAGINA = 30;
+
+async function getTodos(): Promise<ProdutoPinado[]> {
   try {
     const data = await kv.get<ProdutoPinado[]>('produtos:pinados');
-    const all = data || [];
-    return all.filter(p => p.destinos?.includes('selecionadas')).slice(0, 20);
+    return (data || []).filter(p => p.destinos?.includes('ofertas-selecionadas'));
   } catch {}
   try {
     const filePath = path.join(process.cwd(), 'public', 'produtos-pinados.json');
     const raw = await fs.readFile(filePath, 'utf-8');
-    const all: ProdutoPinado[] = JSON.parse(raw);
-    return all.filter(p => p.destinos?.includes('selecionadas')).slice(0, 20);
+    return (JSON.parse(raw) as ProdutoPinado[]).filter(p => p.destinos?.includes('ofertas-selecionadas'));
   } catch { return []; }
 }
 
-export default async function OfertasSelecionadasPage() {
-  const produtos = await getProdutos();
+async function getProdutos(pagina = 1, loja = ''): Promise<{ produtos: ProdutoPinado[]; total: number; lojas: string[] }> {
+  const todos = await getTodos();
+  const lojas = Array.from(new Set(todos.map(p => p.loja || '').filter(Boolean))).sort();
+  const filtrados = loja ? todos.filter(p => p.loja === loja) : todos;
+  const total = filtrados.length;
+  const produtos = filtrados.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
+  return { produtos, total, lojas };
+}
+export default async function OfertasSelecionadasPage({ searchParams }: { searchParams: Promise<{ pagina?: string; loja?: string }> }) {
+  const params = await searchParams;
+  const pagina = Math.max(1, parseInt(params.pagina || '1'));
+  const lojaFiltro = params.loja || '';
+  const { produtos, total, lojas } = await getProdutos(pagina, lojaFiltro);
+  const totalPaginas = Math.ceil(total / POR_PAGINA);
 
   return (
     <main style={{ maxWidth: '1060px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
@@ -52,6 +64,25 @@ export default async function OfertasSelecionadasPage() {
           <strong>Atenção:</strong> Preços, parcelas e disponibilidade são de responsabilidade do anunciante e podem ser alterados a qualquer momento. Confira sempre as condições atuais no site da loja antes de finalizar a compra.
         </p>
       </div>
+
+      {lojas.length > 1 && (
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
+          <a href="?pagina=1"
+            style={{ padding: '6px 16px', borderRadius: '999px', border: `2px solid ${!lojaFiltro ? '#2563eb' : '#e5e7eb'}`, backgroundColor: !lojaFiltro ? '#2563eb' : '#fff', color: !lojaFiltro ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.82rem', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+            Todas ({total || 0})
+          </a>
+          {lojas.map(l => {
+            const ativa = lojaFiltro === l;
+            return (
+              <a key={l} href={`?loja=${encodeURIComponent(l)}&pagina=1`}
+                style={{ padding: '6px 16px', borderRadius: '999px', border: `2px solid ${ativa ? '#2563eb' : '#e5e7eb'}`, backgroundColor: ativa ? '#2563eb' : '#fff', color: ativa ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.82rem', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                🏪 {l}
+              </a>
+            );
+          })}
+        </div>
+      )}
+
       {produtos.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>
           Nenhuma oferta selecionada no momento. Volte em breve!
@@ -119,7 +150,23 @@ export default async function OfertasSelecionadasPage() {
           })}
         </div>
       )}
-
+      {totalPaginas > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginTop: '32px' }}>
+          {pagina > 1 && (
+                       <a href={`?${lojaFiltro ? `loja=${encodeURIComponent(lojaFiltro)}&` : ''}pagina=${pagina - 1}`} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, textDecoration: 'none', fontSize: '0.9rem' }}>
+              ← Anterior
+            </a>
+          )}
+          <span style={{ color: '#6b7280', fontSize: '0.88rem' }}>
+            Página {pagina} de {totalPaginas} · {total} ofertas
+          </span>
+          {pagina < totalPaginas && (
+            <a href={`?${lojaFiltro ? `loja=${encodeURIComponent(lojaFiltro)}&` : ''}pagina=${pagina + 1}`} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, textDecoration: 'none', fontSize: '0.9rem' }}>
+              Próxima →
+            </a>
+          )}
+        </div>
+      )}
       <footer style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #e5e7eb', textAlign: 'center' }}>
         <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: 0, lineHeight: 1.6 }}>
           Links de afiliado — ao comprar através deles você apoia o IAIPSI Informa sem custo adicional.<br />
