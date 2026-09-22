@@ -58,6 +58,7 @@ interface LojaAwin {
   anuncianteId: string;
   moedaUSD?: boolean;
   cron?: LojaCron;
+}
 
 type Loja = LojaLomadee | LojaAwin;
 
