@@ -69,7 +69,7 @@ export default async function ViagensSelecionadasPage({ searchParams }: { search
            {lojas.length > 1 && (
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '24px' }}>
           
-            href="?"
+            <a href="?"
             style={{ padding: '6px 16px', borderRadius: '20px', fontSize: '0.82rem', fontWeight: 600, textDecoration: 'none', backgroundColor: !lojaFiltro ? '#0f766e' : '#fff', color: !lojaFiltro ? '#fff' : '#374151', border: '1px solid #e5e7eb' }}
           >
             Todas
