@@ -740,7 +740,7 @@ export default function BuscarProdutosPage() {
                     style={{ flex: 1, padding: '9px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.88rem', boxSizing: 'border-box' }} />
                 </div>
                 <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: '6px 0 0' }}>
-                 Produtos da {modoBusca === 'awin' ? 'Arno' : modoBusca === 'spicy' ? 'Spicy' : 'Centauro'} via Awin — links de afiliado já inclusos.
+                 Produtos da {modoBusca === 'awin' ? 'Arno' : modoBusca === 'spicy' ? 'Spicy' : modoBusca === 'centauro' ? 'Centauro' : 'Carrefour'} via Awin — links de afiliado já inclusos.
                 </p>
               </div>
             )}
