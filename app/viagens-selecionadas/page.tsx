@@ -20,16 +20,30 @@ interface PasseioPinado {
   reviewCount?: number;
 }
 
-async function getViagens(): Promise<PasseioPinado[]> {
+const POR_PAGINA = 30;
+
+async function getTodos(): Promise<PasseioPinado[]> {
   try {
     const data = await kv.get<PasseioPinado[]>('artigos:viagens');
-    const all = data || [];
-    return all.filter(v => v.destinos?.includes('viagens-selecionadas')).slice(0, 20);
+    return (data || []).filter(v => v.destinos?.includes('viagens-selecionadas'));
   } catch { return []; }
 }
 
-export default async function ViagensSelecionadasPage() {
-  const viagens = await getViagens();
+async function getViagens(pagina = 1, loja = ''): Promise<{ viagens: PasseioPinado[]; total: number; lojas: string[] }> {
+  const todos = await getTodos();
+  const lojas = Array.from(new Set(todos.map(v => v.loja || '').filter(Boolean))).sort();
+  const filtrados = loja ? todos.filter(v => v.loja === loja) : todos;
+  const total = filtrados.length;
+  const viagens = filtrados.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
+  return { viagens, total, lojas };
+}
+
+export default async function ViagensSelecionadasPage({ searchParams }: { searchParams: Promise<{ pagina?: string; loja?: string }> }) {
+  const params = await searchParams;
+  const pagina = Math.max(1, parseInt(params.pagina || '1'));
+  const lojaFiltro = params.loja || '';
+  const { viagens, total, lojas } = await getViagens(pagina, lojaFiltro);
+  const totalPaginas = Math.ceil(total / POR_PAGINA);
 
   return (
     <main style={{ maxWidth: '1060px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
@@ -51,6 +65,26 @@ export default async function ViagensSelecionadasPage() {
           <strong>Atenção:</strong> Preços, disponibilidade e itinerários são de responsabilidade do operador e podem ser alterados a qualquer momento. Confira sempre as condições atuais na Viator antes de reservar.
         </p>
       </div>
+
+           {lojas.length > 1 && (
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '24px' }}>
+          
+            href="?"
+            style={{ padding: '6px 16px', borderRadius: '20px', fontSize: '0.82rem', fontWeight: 600, textDecoration: 'none', backgroundColor: !lojaFiltro ? '#0f766e' : '#fff', color: !lojaFiltro ? '#fff' : '#374151', border: '1px solid #e5e7eb' }}
+          >
+            Todas
+          </a>
+          {lojas.map(l => (
+            
+              key={l}
+              href={`?loja=${encodeURIComponent(l)}`}
+              style={{ padding: '6px 16px', borderRadius: '20px', fontSize: '0.82rem', fontWeight: 600, textDecoration: 'none', backgroundColor: lojaFiltro === l ? '#0f766e' : '#fff', color: lojaFiltro === l ? '#fff' : '#374151', border: '1px solid #e5e7eb' }}
+            >
+              {l}
+            </a>
+          ))}
+        </div>
+      )}
 
       {viagens.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>
@@ -136,6 +170,24 @@ export default async function ViagensSelecionadasPage() {
               </a>
             );
           })}
+        </div>
+      )}
+
+           {totalPaginas > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginTop: '32px' }}>
+          {pagina > 1 && (
+            <a href={`?${lojaFiltro ? `loja=${encodeURIComponent(lojaFiltro)}&` : ''}pagina=${pagina - 1}`} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, textDecoration: 'none', fontSize: '0.9rem' }}>
+              ← Anterior
+            </a>
+          )}
+          <span style={{ color: '#6b7280', fontSize: '0.88rem' }}>
+            Página {pagina} de {totalPaginas} · {total} viagens
+          </span>
+          {pagina < totalPaginas && (
+            <a href={`?${lojaFiltro ? `loja=${encodeURIComponent(lojaFiltro)}&` : ''}pagina=${pagina + 1}`} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, textDecoration: 'none', fontSize: '0.9rem' }}>
+              Próxima →
+            </a>
+          )}
         </div>
       )}
 
