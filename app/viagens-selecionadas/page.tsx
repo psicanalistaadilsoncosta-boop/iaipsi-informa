@@ -75,12 +75,8 @@ export default async function ViagensSelecionadasPage({ searchParams }: { search
           >
             Todas
           </a>
-          {lojas.map(l => (
-            
-              key={l}
-              href={`?loja=${encodeURIComponent(l)}`}
-              style={{ padding: '6px 16px', borderRadius: '20px', fontSize: '0.82rem', fontWeight: 600, textDecoration: 'none', backgroundColor: lojaFiltro === l ? '#0f766e' : '#fff', color: lojaFiltro === l ? '#fff' : '#374151', border: '1px solid #e5e7eb' }}
-            >
+                   {lojas.map(l => (
+            <a key={l} href={`?loja=${encodeURIComponent(l)}`} style={{ padding: '6px 16px', borderRadius: '20px', fontSize: '0.82rem', fontWeight: 600, textDecoration: 'none', backgroundColor: lojaFiltro === l ? '#0f766e' : '#fff', color: lojaFiltro === l ? '#fff' : '#374151', border: '1px solid #e5e7eb' }}>
               {l}
             </a>
           ))}
