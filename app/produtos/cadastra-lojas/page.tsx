@@ -7,6 +7,7 @@ interface LojaCron {
   frequencia: 'diario' | '2dias' | 'semanal';
   destino: string;
   ultimaAtualizacao: string | null;
+  limite?: number;
 }
 
 interface LojaLomadee {
@@ -76,13 +77,14 @@ function CronPanel({ loja, onSave }: { loja: Loja; onSave: (cron: LojaCron | nul
   const cronAtual = loja.cron;
   const [ativo, setAtivo] = useState(cronAtual?.ativo ?? false);
   const [frequencia, setFrequencia] = useState<LojaCron['frequencia']>(cronAtual?.frequencia ?? 'semanal');
-  const [destino, setDestino] = useState(cronAtual?.destino ?? 'ofertas-selecionadas');
+   const [destino, setDestino] = useState(cronAtual?.destino ?? 'ofertas-selecionadas');
+  const [limite, setLimite] = useState(cronAtual?.limite ?? 50);
   const [expandido, setExpandido] = useState(false);
   const [salvando, setSalvando] = useState(false);
 
   async function handleSalvar() {
     setSalvando(true);
-    await onSave({ ativo, frequencia, destino, ultimaAtualizacao: cronAtual?.ultimaAtualizacao ?? null });
+    await onSave({ ativo, frequencia, destino, limite, ultimaAtualizacao: cronAtual?.ultimaAtualizacao ?? null });
     setSalvando(false);
     setExpandido(false);
   }
@@ -137,12 +139,22 @@ function CronPanel({ loja, onSave }: { loja: Loja; onSave: (cron: LojaCron | nul
                 <option value="semanal">Semanal</option>
               </select>
             </div>
-            <div>
+                        <div>
               <span style={{ fontSize: '0.72rem', color: '#6b7280', marginRight: '4px' }}>Destino:</span>
               <select value={destino} onChange={e => setDestino(e.target.value)} style={selectSmall}>
                 {Object.entries(DESTINO_LABELS).map(([id, label]) => (
                   <option key={id} value={id}>{label}</option>
                 ))}
+              </select>
+            </div>
+            <div>
+              <span style={{ fontSize: '0.72rem', color: '#6b7280', marginRight: '4px' }}>Qtd. produtos:</span>
+              <select value={limite} onChange={e => setLimite(parseInt(e.target.value))} style={selectSmall}>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={80}>80</option>
+                <option value={100}>100</option>
+                <option value={150}>150</option>
               </select>
             </div>
           </>

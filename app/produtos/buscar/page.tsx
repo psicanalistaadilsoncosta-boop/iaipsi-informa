@@ -175,6 +175,7 @@ export default function BuscarProdutosPage() {
   const [awinAnunciante, setAwinAnunciante] = useState('');
   const [lojaAwin, setLojaAwin] = useState('arno');
   const [urlLoja, setUrlLoja] = useState('');
+  const [limiteBusca, setLimiteBusca] = useState(50);
   const [buscandoLoja, setBuscandoLoja] = useState(false);
   const [linkLoja, setLinkLoja] = useState('');
   const [buscandoLink, setBuscandoLink] = useState(false);
@@ -263,7 +264,7 @@ export default function BuscarProdutosPage() {
     setBuscandoLoja(true);
     setProdutos([]);
     try {
-      const params = new URLSearchParams({ url: urlLojaAwin, limit: '50', orgId: awinAnunciante });
+      const params = new URLSearchParams({ url: urlLojaAwin, limit: String(limiteBusca), orgId: awinAnunciante });
       const res = await fetch(`/api/scrape?${params}`);
       const json = await res.json();
       if (json.error) { alert(`Erro: ${json.error}`); return; }
@@ -291,7 +292,7 @@ export default function BuscarProdutosPage() {
         orgId = marca?.id || '';
       } catch {}
 
-      const params = new URLSearchParams({ url: urlLoja, limit: '50' });
+      const params = new URLSearchParams({ url: urlLoja, limit: String(limiteBusca) });
       if (orgId) params.set('orgId', orgId);
       if (q) params.set('q', q);
       const res = await fetch(`/api/scrape?${params}`);
@@ -764,6 +765,17 @@ export default function BuscarProdutosPage() {
                       style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.85rem', boxSizing: 'border-box' }} />
                   </div>
                 )}
+                               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6b7280', whiteSpace: 'nowrap' }}>Qtd. produtos:</label>
+                  <select value={limiteBusca} onChange={e => setLimiteBusca(parseInt(e.target.value))}
+                    style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.85rem' }}>
+                    <option value={20}>20</option>
+                    <option value={50}>50 (padrão)</option>
+                    <option value={80}>80</option>
+                    <option value={100}>100</option>
+                    <option value={150}>150</option>
+                  </select>
+                </div>
                 <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: '6px 0 0' }}>
                   Detecta automaticamente Shopify, VTEX, Nuvemshop, MiBrasil…{' '}
                   {lojasLomadee.length === 0 && (
@@ -827,6 +839,17 @@ export default function BuscarProdutosPage() {
                     </div>
                   ) : null;
                 })()}
+                               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6b7280', whiteSpace: 'nowrap' }}>Qtd. produtos:</label>
+                  <select value={limiteBusca} onChange={e => setLimiteBusca(parseInt(e.target.value))}
+                    style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.85rem' }}>
+                    <option value={20}>20</option>
+                    <option value={50}>50 (padrão)</option>
+                    <option value={80}>80</option>
+                    <option value={100}>100</option>
+                    <option value={150}>150</option>
+                  </select>
+                </div>
                 <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: 0 }}>
                   Produtos com link de afiliado Awin gerado automaticamente.{' '}
                   {lojasAwin.length === 0 && (

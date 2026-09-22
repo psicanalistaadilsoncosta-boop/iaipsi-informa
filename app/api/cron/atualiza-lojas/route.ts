@@ -14,6 +14,7 @@ interface LojaCron {
   ativo: boolean;
   frequencia: 'diario' | '2dias' | 'semanal';
   destino: string;
+  limite?: number;
   ultimaAtualizacao: string | null;
 }
 
@@ -72,7 +73,7 @@ function precisaAtualizar(cron: LojaCron): boolean {
   return false;
 }
 
-async function scrapeLojaLomadee(loja: LojaLomadee): Promise<any[]> {
+async function scrapeLojaLomadee(loja: LojaLomadee, limite = 20): Promise<any[]> {
   try {
     // Tenta identificar orgId da loja via brands-categoria
     let orgId = '';
@@ -86,7 +87,7 @@ async function scrapeLojaLomadee(loja: LojaLomadee): Promise<any[]> {
       orgId = marca?.id || '';
     } catch {}
 
-    const params = new URLSearchParams({ url: loja.url, limit: '20' });
+    const params = new URLSearchParams({ url: loja.url, limit: String(limite) });
     if (orgId) params.set('orgId', orgId);
     const res = await fetch(`${BASE_URL}/api/scrape?${params}`);
     const json = await res.json();
@@ -96,9 +97,9 @@ async function scrapeLojaLomadee(loja: LojaLomadee): Promise<any[]> {
   }
 }
 
-async function scrapeLojaAwin(loja: LojaAwin): Promise<any[]> {
+async function scrapeLojaAwin(loja: LojaAwin, limite = 20): Promise<any[]> {
   try {
-    const params = new URLSearchParams({ url: loja.url, limit: '20', orgId: loja.anuncianteId });
+    const params = new URLSearchParams({ url: loja.url, limit: String(limite), orgId: loja.anuncianteId });
     const res = await fetch(`${BASE_URL}/api/scrape?${params}`);
     const json = await res.json();
     return json.data || [];
@@ -145,11 +146,12 @@ export async function GET(req: NextRequest) {
       const cron = loja.cron!;
 
       // 1. Scrape produtos
+      const limiteConfigured = cron.limite || 20;
       let produtos: any[] = [];
       if (loja.tipo === 'lomadee') {
-        produtos = await scrapeLojaLomadee(loja as LojaLomadee);
+        produtos = await scrapeLojaLomadee(loja as LojaLomadee, limiteConfigured);
       } else {
-        produtos = await scrapeLojaAwin(loja as LojaAwin);
+        produtos = await scrapeLojaAwin(loja as LojaAwin, limiteConfigured);
       }
 
       if (produtos.length === 0) {
@@ -177,7 +179,7 @@ export async function GET(req: NextRequest) {
 
       // 3. Pina novos produtos (limite de 8 por loja para não lotar)
       const novos: ProdutoPinado[] = [];
-      const limite = Math.min(produtos.length, 8);
+      const limite = Math.min(produtos.length, limiteConfigured);
       for (let i = 0; i < limite; i++) {
         const produto = produtos[i];
         const linkAfiliado = await gerarLinkAfiliado(produto);
