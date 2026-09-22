@@ -129,6 +129,16 @@ function CronPanel({ loja, onSave }: { loja: Loja; onSave: (cron: LojaCron | nul
             style={{ width: '15px', height: '15px', accentColor: '#7c3aed', cursor: 'pointer' }} />
           Ativar automação
         </label>
+                <div>
+          <span style={{ fontSize: '0.72rem', color: '#6b7280', marginRight: '4px' }}>Qtd. produtos:</span>
+          <select value={limite} onChange={e => setLimite(parseInt(e.target.value))} style={selectSmall}>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+            <option value={80}>80</option>
+            <option value={100}>100</option>
+            <option value={150}>150</option>
+          </select>
+        </div>
         {ativo && (
           <>
             <div>
@@ -139,22 +149,12 @@ function CronPanel({ loja, onSave }: { loja: Loja; onSave: (cron: LojaCron | nul
                 <option value="semanal">Semanal</option>
               </select>
             </div>
-                        <div>
+            <div>
               <span style={{ fontSize: '0.72rem', color: '#6b7280', marginRight: '4px' }}>Destino:</span>
               <select value={destino} onChange={e => setDestino(e.target.value)} style={selectSmall}>
                 {Object.entries(DESTINO_LABELS).map(([id, label]) => (
                   <option key={id} value={id}>{label}</option>
                 ))}
-              </select>
-            </div>
-            <div>
-              <span style={{ fontSize: '0.72rem', color: '#6b7280', marginRight: '4px' }}>Qtd. produtos:</span>
-              <select value={limite} onChange={e => setLimite(parseInt(e.target.value))} style={selectSmall}>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-                <option value={80}>80</option>
-                <option value={100}>100</option>
-                <option value={150}>150</option>
               </select>
             </div>
           </>

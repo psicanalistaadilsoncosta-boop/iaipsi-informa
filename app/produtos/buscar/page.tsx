@@ -215,16 +215,21 @@ export default function BuscarProdutosPage() {
     }
   }, [auth]);
 
-  useEffect(() => {
-    if (lojaLomadeeSelect) setUrlLoja(lojaLomadeeSelect);
-  }, [lojaLomadeeSelect]);
+    useEffect(() => {
+    if (lojaLomadeeSelect) {
+      setUrlLoja(lojaLomadeeSelect);
+      const loja = lojasLomadee.find(l => l.url === lojaLomadeeSelect);
+      if (loja?.cron?.limite) setLimiteBusca(loja.cron.limite);
+    }
+  }, [lojaLomadeeSelect, lojasLomadee]);
 
-  useEffect(() => {
+    useEffect(() => {
     if (lojaAwinSelect) {
       const loja = lojasAwin.find(l => l.url === lojaAwinSelect);
       if (loja) {
         setUrlLojaAwin(loja.url);
         setAwinAnunciante(loja.anuncianteId);
+        if (loja.cron?.limite) setLimiteBusca(loja.cron.limite);
       }
     }
   }, [lojaAwinSelect, lojasAwin]);
