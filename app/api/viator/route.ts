@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
       const body = {
         filtering: { destination: destCode },
         sorting: { sort: 'TRAVELER_RATING', order: 'DESCENDING' },
-        pagination: { start: 1, count: 20 },
+        pagination: { start: 1, count: 50 },
         currency: 'BRL',
       };
       const res = await fetch(`${BASE_URL}/products/search`, {
@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
         searchTerm: keyword,
         searchTypes: [{
           searchType: 'PRODUCTS',
-          pagination: { start: 1, count: 20 },
+         pagination: { start: 1, count: 50 },
           sorting: { sort: 'TRAVELER_RATING', order: 'DESCENDING' },
         }],
         currency: 'BRL',
