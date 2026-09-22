@@ -14,7 +14,7 @@ interface ProdutoRaw {
   valorParcela?: string;
 }
 
-export async function fetchMiBrasil(url: string, limit = 20): Promise<ProdutoRaw[]> {
+export async function fetchMiBrasil(url: string, limit = 200): Promise<ProdutoRaw[]> {
    const res = await fetch(url, {
     headers: {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',

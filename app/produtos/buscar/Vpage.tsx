@@ -36,23 +36,6 @@ interface ProdutoPinado extends Produto {
   loja?: string;
 }
 
-// Tipos de loja vindos do KV
-interface LojaLomadee {
-  tipo: 'lomadee';
-  nome: string;
-  url: string;
-}
-
-interface LojaAwin {
-  tipo: 'awin';
-  nome: string;
-  url: string;
-  anuncianteId: string;
-  moedaUSD?: boolean;
-}
-
-type Loja = LojaLomadee | LojaAwin;
-
 function LoginScreen({ onLogin }: { onLogin: () => void }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -173,20 +156,12 @@ export default function BuscarProdutosPage() {
   const [destaqueHomeId, setDestaqueHomeId] = useState<string | null>(null);
   const [modoBusca, setModoBusca] = useState<'palavra' | 'link' | 'awin' | 'spicy' | 'loja' | 'loja-awin'>('palavra');
   const [urlLojaAwin, setUrlLojaAwin] = useState('');
-  const [awinAnunciante, setAwinAnunciante] = useState('');
+  const [awinAnunciante, setAwinAnunciante] = useState('awin-arno');
   const [lojaAwin, setLojaAwin] = useState('arno');
   const [urlLoja, setUrlLoja] = useState('');
   const [buscandoLoja, setBuscandoLoja] = useState(false);
   const [linkLoja, setLinkLoja] = useState('');
   const [buscandoLink, setBuscandoLink] = useState(false);
-
-  // Lojas do KV
-  const [lojasKV, setLojasKV] = useState<Loja[]>([]);
-  const [lojaLomadeeSelect, setLojaLomadeeSelect] = useState('');
-  const [lojaAwinSelect, setLojaAwinSelect] = useState('');
-
-  const lojasLomadee = lojasKV.filter(l => l.tipo === 'lomadee') as LojaLomadee[];
-  const lojasAwin = lojasKV.filter(l => l.tipo === 'awin') as LojaAwin[];
 
   useEffect(() => {
     fetch('/api/editorial/auth/check').then(r => r.json()).then(d => setAuth(d.ok)).catch(() => setAuth(false));
@@ -198,31 +173,8 @@ export default function BuscarProdutosPage() {
       fetch('/api/produtos/save?tipo=destaque-home')
         .then(r => r.json())
         .then(d => setDestaqueHomeId(d.id || null));
-      // Carrega lojas do KV
-      fetch('/api/produtos/lojas')
-        .then(r => r.json())
-        .then(d => {
-          if (Array.isArray(d)) setLojasKV(d);
-        })
-        .catch(() => {});
     }
   }, [auth]);
-
-  // Quando muda seleção de loja Lomadee, atualiza urlLoja
-  useEffect(() => {
-    if (lojaLomadeeSelect) setUrlLoja(lojaLomadeeSelect);
-  }, [lojaLomadeeSelect]);
-
-  // Quando muda seleção de loja Awin, atualiza url e anuncianteId
-  useEffect(() => {
-    if (lojaAwinSelect) {
-      const loja = lojasAwin.find(l => l.url === lojaAwinSelect);
-      if (loja) {
-        setUrlLojaAwin(loja.url);
-        setAwinAnunciante(loja.anuncianteId);
-      }
-    }
-  }, [lojaAwinSelect]);
 
    async function loadPinados() {
     try {
@@ -253,7 +205,7 @@ export default function BuscarProdutosPage() {
     setBuscandoLoja(true);
     setProdutos([]);
     try {
-      const params = new URLSearchParams({ url: urlLojaAwin, limit: '400', orgId: awinAnunciante });
+      const params = new URLSearchParams({ url: urlLojaAwin, limit: '40', orgId: awinAnunciante });
       const res = await fetch(`/api/scrape?${params}`);
       const json = await res.json();
       if (json.error) { alert(`Erro: ${json.error}`); return; }
@@ -265,11 +217,13 @@ export default function BuscarProdutosPage() {
     } finally { setBuscandoLoja(false); }
   }
 
+
   async function handleBuscarLoja(q = '') {
     if (!urlLoja.trim()) return;
     setBuscandoLoja(true);
     setProdutos([]);
     try {
+         // Busca o organizationId da loja no Lomadee pelo domínio
       let orgId = '';
       try {
         const brandsRes = await fetch('/api/lomadee?tipo=brands-categoria');
@@ -281,7 +235,7 @@ export default function BuscarProdutosPage() {
         orgId = marca?.id || '';
       } catch {}
 
-      const params = new URLSearchParams({ url: urlLoja, limit: '500' });
+      const params = new URLSearchParams({ url: urlLoja, limit: '50' });
       if (orgId) params.set('orgId', orgId);
       if (q) params.set('q', q);
       const res = await fetch(`/api/scrape?${params}`);
@@ -294,7 +248,7 @@ export default function BuscarProdutosPage() {
     } finally { setBuscandoLoja(false); }
   }
 
-  async function handleBuscarAwin(q = '', loja = 'arno') {
+   async function handleBuscarAwin(q = '', loja = 'arno') {
     setLoading(true);
     setProdutos([]);
     try {
@@ -309,11 +263,13 @@ export default function BuscarProdutosPage() {
     } finally { setLoading(false); }
   }
 
+
   async function handleBuscarPorLink() {
     if (!linkLoja.trim()) return;
     setBuscandoLink(true);
     setProdutos([]);
     try {
+      // Resolve o redirect e pega domínio + organizationId
       const resolveRes = await fetch('/api/resolve-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -322,6 +278,7 @@ export default function BuscarProdutosPage() {
       const resolveData = await resolveRes.json();
       let orgId = resolveData.organizationId || '';
 
+      // Se não achou no utm_campaign, busca pelo domínio nas marcas
       if (!orgId && resolveData.dominio) {
         const brandsRes = await fetch('/api/lomadee?tipo=brands-categoria');
         const brandsJson = await brandsRes.json();
@@ -353,10 +310,11 @@ export default function BuscarProdutosPage() {
     } finally { setBuscandoLink(false); }
   }
 
-  async function handleConfirmarPinar(produto: Produto, destinos: string[], parcelas: string, valorParcela: string) {
+    async function handleConfirmarPinar(produto: Produto, destinos: string[], parcelas: string, valorParcela: string) {
     setModalProduto(null);
     setGerando(produto.id);
     try {
+      // Gera link de afiliado
       const shortRes = await fetch('/api/produtos/shorten', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -365,6 +323,7 @@ export default function BuscarProdutosPage() {
       const shortData = await shortRes.json();
       const linkAfiliado = shortData.shortUrl || produto.link;
 
+      // Se não tem parcelas e é VTEX, busca via simulação
       let parcelasFinal = parcelas;
       let valorParcelaFinal = valorParcela;
 
@@ -400,7 +359,7 @@ export default function BuscarProdutosPage() {
     } finally { setGerando(null); }
   }
 
-  async function handleAtualizarDestinos(pinado: ProdutoPinado, novosDestinos: string[]) {
+   async function handleAtualizarDestinos(pinado: ProdutoPinado, novosDestinos: string[]) {
     await fetch('/api/produtos/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -409,9 +368,10 @@ export default function BuscarProdutosPage() {
     await loadPinados();
   }
 
-  async function handleDestacarHome(pinado: ProdutoPinado) {
+   async function handleDestacarHome(pinado: ProdutoPinado) {
     setGerando(pinado.id);
     try {
+      // Gera frase editorial via IA
       const fraseRes = await fetch('/api/oferta-frase', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -420,12 +380,14 @@ export default function BuscarProdutosPage() {
       const fraseData = await fraseRes.json();
       const fraseGerada = fraseData.frase || '';
 
+      // Pede confirmação/edição
       const fraseEditada = window.prompt(
         '🔹 Frase editorial gerada pela IA — edite se quiser:',
         fraseGerada
       );
-      if (fraseEditada === null) return;
+      if (fraseEditada === null) return; // cancelou
 
+      // Salva destaque + frase no KV
       await fetch('/api/produtos/save', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -469,9 +431,6 @@ export default function BuscarProdutosPage() {
 
   if (!auth) return <LoginScreen onLogin={() => setAuth(true)} />;
 
-  const selectStyle: React.CSSProperties = { width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.88rem', boxSizing: 'border-box', backgroundColor: '#fff' };
-  const labelStyle: React.CSSProperties = { fontSize: '0.75rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '4px' };
-
   return (
     <main style={{ maxWidth: '1060px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
 
@@ -496,9 +455,6 @@ export default function BuscarProdutosPage() {
                 {d.label.split(' ')[0]} Ver
               </a>
             ))}
-            <a href="/produtos/cadastra-lojas" style={{ backgroundColor: '#7c3aed', color: '#fff', padding: '6px 12px', borderRadius: '6px', textDecoration: 'none', fontSize: '0.78rem', fontWeight: 600 }}>
-              🏪 Lojas
-            </a>
             <a href="/" style={{ backgroundColor: '#f3f4f6', color: '#374151', padding: '6px 12px', borderRadius: '6px', textDecoration: 'none', fontSize: '0.78rem', fontWeight: 600 }}>← Site</a>
           </div>
         </div>
@@ -518,23 +474,23 @@ export default function BuscarProdutosPage() {
       {aba === 'buscar' && (
         <div>
           {/* Toggle modo */}
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
             <button onClick={() => setModoBusca('palavra')} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'palavra' ? '#2563eb' : '#fff', color: modoBusca === 'palavra' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               🔍 Por palavra-chave
             </button>
-            <button onClick={() => setModoBusca('link')} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'link' ? '#2563eb' : '#fff', color: modoBusca === 'link' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                      <button onClick={() => setModoBusca('link')} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'link' ? '#2563eb' : '#fff', color: modoBusca === 'link' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               🔗 Por link da loja
             </button>
-            <button onClick={() => setModoBusca('loja')} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'loja' ? '#be185d' : '#fff', color: modoBusca === 'loja' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                       <button onClick={() => setModoBusca('loja')} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'loja' ? '#be185d' : '#fff', color: modoBusca === 'loja' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               🌐 Por site (Lomadee)
             </button>
             <button onClick={() => setModoBusca('loja-awin')} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'loja-awin' ? '#f59e0b' : '#fff', color: modoBusca === 'loja-awin' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               🏷 Por site (Awin)
             </button>
-            <button onClick={() => { setModoBusca('awin'); setLojaAwin('arno'); handleBuscarAwin('', 'arno'); }} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'awin' ? '#00AE98' : '#fff', color: modoBusca === 'awin' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+             <button onClick={() => { setModoBusca('awin'); setLojaAwin('arno'); handleBuscarAwin('', 'arno'); }} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'awin' ? '#00AE98' : '#fff', color: modoBusca === 'awin' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               🏠 Arno (Awin)
             </button>
-            <button onClick={() => { setModoBusca('spicy'); setLojaAwin('spicy'); handleBuscarAwin('', 'spicy'); }} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'spicy' ? '#dc2626' : '#fff', color: modoBusca === 'spicy' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+             <button onClick={() => { setModoBusca('spicy'); setLojaAwin('spicy'); handleBuscarAwin('', 'spicy'); }} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'spicy' ? '#dc2626' : '#fff', color: modoBusca === 'spicy' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               🌶 Spicy (Awin)
             </button>
           </div>
@@ -544,7 +500,7 @@ export default function BuscarProdutosPage() {
             {/* Busca por link */}
             {modoBusca === 'link' && (
               <div>
-                <label style={{ ...labelStyle, marginBottom: '8px' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '8px' }}>
                   Cole o link de afiliado da loja
                 </label>
                 <div style={{ display: 'flex', gap: '8px' }}>
@@ -563,8 +519,8 @@ export default function BuscarProdutosPage() {
               </div>
             )}
 
-            {/* Awin — Arno / Spicy (acesso rápido) */}
-            {(modoBusca === 'awin' || modoBusca === 'spicy') && (
+            {/* Awin — Arno */}
+                      {(modoBusca === 'awin' || modoBusca === 'spicy') && (
               <div>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <input
@@ -573,134 +529,64 @@ export default function BuscarProdutosPage() {
                     style={{ flex: 1, padding: '9px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.88rem', boxSizing: 'border-box' }} />
                 </div>
                 <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: '6px 0 0' }}>
-                  Produtos da {modoBusca === 'awin' ? 'Arno' : 'Spicy'} via Awin — links de afiliado já inclusos.
+                  Produtos da Arno via Awin — links de afiliado já inclusos.
                 </p>
               </div>
             )}
 
-            {/* Busca por site — Lomadee (select dinâmico do KV) */}
+            {/* Busca por site — VTEX/Shopify */}
             {modoBusca === 'loja' && (
               <div>
-                {lojasLomadee.length > 0 ? (
-                  <div style={{ marginBottom: '10px' }}>
-                    <label style={labelStyle}>Selecionar loja cadastrada</label>
-                    <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                                            <>
-                        <input
-                          list="lista-lomadee"
-                          placeholder="Digite para filtrar..."
-                          defaultValue=""
-                          onChange={e => {
-                            const match = lojasLomadee.find(l => `${l.nome} (${l.url.replace('https://','').replace('www.','').split('/')[0]})` === e.target.value);
-                            if (match) setLojaLomadeeSelect(match.url);
-                          }}
-                          style={selectStyle}
-                        />
-                        <datalist id="lista-lomadee">
-                          {lojasLomadee.map(l => (
-                            <option key={l.url} value={`${l.nome} (${l.url.replace('https://','').replace('www.','').split('/')[0]})`} />
-                          ))}
-                        </datalist>
-                      </>
-                      <button onClick={() => handleBuscarLoja()} disabled={buscandoLoja || !urlLoja.trim()}
-                        style={{ padding: '9px 20px', borderRadius: '8px', border: 'none', backgroundColor: '#be185d', color: '#fff', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                        {buscandoLoja ? '⏳' : '🔍 Buscar'}
-                      </button>
-                    </div>
-                    <input placeholder="Filtrar por nome (ex: malbec, ventilador...)"
-                      onChange={e => handleBuscarLoja(e.target.value)}
-                      style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.85rem', boxSizing: 'border-box' }} />
-                  </div>
-                ) : (
-                  <div>
-                    <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                      <input value={urlLoja} onChange={e => setUrlLoja(e.target.value)}
-                        placeholder="https://www.vivavinho.com.br"
-                        style={{ flex: 1, padding: '9px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.88rem', boxSizing: 'border-box' }} />
-                      <button onClick={() => handleBuscarLoja()} disabled={buscandoLoja || !urlLoja.trim()}
-                        style={{ padding: '9px 20px', borderRadius: '8px', border: 'none', backgroundColor: '#be185d', color: '#fff', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                        {buscandoLoja ? '⏳' : '🔍 Buscar'}
-                      </button>
-                    </div>
-                    <input placeholder="Filtrar por nome (ex: malbec, ventilador...)"
-                      onChange={e => handleBuscarLoja(e.target.value)}
-                      style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.85rem', boxSizing: 'border-box' }} />
-                  </div>
-                )}
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                  <input value={urlLoja} onChange={e => setUrlLoja(e.target.value)}
+                    placeholder="https://www.vivavinho.com.br"
+                    style={{ flex: 1, padding: '9px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.88rem', boxSizing: 'border-box' }} />
+                  <button onClick={() => handleBuscarLoja()} disabled={buscandoLoja || !urlLoja.trim()}
+                    style={{ padding: '9px 20px', borderRadius: '8px', border: 'none', backgroundColor: '#be185d', color: '#fff', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    {buscandoLoja ? '⏳' : '🔍 Buscar'}
+                  </button>
+                </div>
+                <input placeholder="Filtrar por nome (ex: malbec, ventilador...)"
+                  onChange={e => handleBuscarLoja(e.target.value)}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.85rem', boxSizing: 'border-box' }} />
                 <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: '6px 0 0' }}>
-                  Detecta automaticamente Shopify, VTEX, Nuvemshop, MiBrasil…{' '}
-                  {lojasLomadee.length === 0 && (
-                    <a href="/produtos/cadastra-lojas" style={{ color: '#be185d', fontWeight: 600 }}>Cadastrar lojas</a>
-                  )}
+                  Detecta automaticamente Shopify e VTEX (Vivavinho, Arno, etc.)
                 </p>
               </div>
             )}
 
-            {/* Busca por site Awin (select dinâmico do KV) */}
+            {/* Busca por site Awin */}
             {modoBusca === 'loja-awin' && (
               <div>
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
                   <div style={{ flex: 2, minWidth: '200px' }}>
-                    <label style={labelStyle}>Selecionar loja Awin</label>
-                    {lojasAwin.length > 0 ? (
-                                           <>
-                        <input
-                          list="lista-awin"
-                          placeholder="Digite para filtrar..."
-                          defaultValue=""
-                          onChange={e => {
-                            const match = lojasAwin.find(l => `${l.nome}${l.moedaUSD ? ' 💵' : ''} (${l.anuncianteId})` === e.target.value);
-                            if (match) setLojaAwinSelect(match.url);
-                          }}
-                          style={selectStyle}
-                        />
-                        <datalist id="lista-awin">
-                          {lojasAwin.map(l => (
-                            <option key={l.url} value={`${l.nome}${l.moedaUSD ? ' 💵' : ''} (${l.anuncianteId})`} />
-                          ))}
-                        </datalist>
-                      </>
-                    ) : (
-                      <input value={urlLojaAwin} onChange={e => setUrlLojaAwin(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && handleBuscarLojaAwin()}
-                        placeholder="https://www.arno.com.br"
-                        style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.88rem', boxSizing: 'border-box' }} />
-                    )}
+                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '4px' }}>URL do site</label>
+                    <input value={urlLojaAwin} onChange={e => setUrlLojaAwin(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleBuscarLojaAwin()}
+                      placeholder="https://www.arno.com.br"
+                      style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.88rem', boxSizing: 'border-box' }} />
                   </div>
-                  {lojasAwin.length === 0 && (
-                    <div style={{ flex: 1, minWidth: '160px' }}>
-                      <label style={labelStyle}>Anunciante Awin</label>
-                      <select value={awinAnunciante} onChange={e => setAwinAnunciante(e.target.value)}
-                        style={selectStyle}>
-                        <option value="awin-arno">Arno (108626)</option>
-                        <option value="awin-spicy">Spicy (30615)</option>
-                        <option value="awin-italist">Italist (127855)</option>
-                      </select>
-                    </div>
-                  )}
+                  <div style={{ flex: 1, minWidth: '160px' }}>
+                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '4px' }}>Anunciante Awin</label>
+                    <select value={awinAnunciante} onChange={e => setAwinAnunciante(e.target.value)}
+                      style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.88rem', boxSizing: 'border-box', backgroundColor: '#fff' }}>
+                      <option value="awin-arno">Arno (108626)</option>
+                      <option value="awin-spicy">Spicy (30615)</option>
+                      <option value="awin-italist">Italist (127855)</option>
+
+
+
+                    </select>
+                  </div>
                   <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-                    <button onClick={handleBuscarLojaAwin} disabled={buscandoLoja || (!urlLojaAwin.trim() && !lojaAwinSelect)}
+                    <button onClick={handleBuscarLojaAwin} disabled={buscandoLoja || !urlLojaAwin.trim()}
                       style={{ padding: '9px 20px', borderRadius: '8px', border: 'none', backgroundColor: '#f59e0b', color: '#fff', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                       {buscandoLoja ? '⏳' : '🔍 Buscar'}
                     </button>
                   </div>
                 </div>
-                {/* Mostra info da loja selecionada */}
-                {lojaAwinSelect && (() => {
-                  const loja = lojasAwin.find(l => l.url === lojaAwinSelect);
-                  return loja ? (
-                    <div style={{ fontSize: '0.72rem', color: '#6b7280', marginBottom: '6px' }}>
-                      URL: <code style={{ backgroundColor: '#f3f4f6', padding: '1px 4px', borderRadius: '3px' }}>{loja.url}</code>
-                      {' · '}ID: <code style={{ backgroundColor: '#f3f4f6', padding: '1px 4px', borderRadius: '3px' }}>{loja.anuncianteId}</code>
-                      {loja.moedaUSD && <span style={{ marginLeft: '6px', color: '#92400e', backgroundColor: '#fef3c7', padding: '1px 5px', borderRadius: '3px', fontWeight: 600 }}>💵 USD</span>}
-                    </div>
-                  ) : null;
-                })()}
                 <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: 0 }}>
-                  Produtos com link de afiliado Awin gerado automaticamente.{' '}
-                  {lojasAwin.length === 0 && (
-                    <a href="/produtos/cadastra-lojas" style={{ color: '#f59e0b', fontWeight: 600 }}>Cadastrar lojas Awin</a>
-                  )}
+                  Produtos encontrados terão link de afiliado Awin gerado automaticamente.
                 </p>
               </div>
             )}
@@ -709,19 +595,19 @@ export default function BuscarProdutosPage() {
             {modoBusca === 'palavra' && (
               <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
                 <div style={{ flex: 2, minWidth: '200px' }}>
-                  <label style={{ ...labelStyle, marginBottom: '4px' }}>Busca</label>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '4px' }}>Busca</label>
                   <input value={busca} onChange={e => setBusca(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleBuscar(1)}
                     placeholder="ex: smartwatch, notebook, vinho..."
                     style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }} />
                 </div>
                 <div style={{ flex: 1, minWidth: '120px' }}>
-                  <label style={{ ...labelStyle, marginBottom: '4px' }}>Preço mín (R$)</label>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '4px' }}>Preço mín (R$)</label>
                   <input value={precoMin} onChange={e => setPrecoMin(e.target.value)} placeholder="ex: 100"
                     style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }} />
                 </div>
                 <div style={{ flex: 1, minWidth: '120px' }}>
-                  <label style={{ ...labelStyle, marginBottom: '4px' }}>Preço máx (R$)</label>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '4px' }}>Preço máx (R$)</label>
                   <input value={precoMax} onChange={e => setPrecoMax(e.target.value)} placeholder="ex: 500"
                     style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }} />
                 </div>
@@ -741,11 +627,11 @@ export default function BuscarProdutosPage() {
           </div>
 
           {/* Resultados */}
-          {(loading || buscandoLink || buscandoLoja) && (
+          {(loading || buscandoLink) && (
             <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>⏳ Buscando produtos...</div>
           )}
 
-          {!loading && !buscandoLink && !buscandoLoja && produtos.length > 0 && (
+          {!loading && !buscandoLink && produtos.length > 0 && (
             <>
               <div style={{ fontSize: '0.82rem', color: '#6b7280', marginBottom: '12px' }}>
                 {total > 0 ? `${total.toLocaleString('pt-BR')} produtos encontrados — ` : ''} página {pagina}
@@ -770,12 +656,12 @@ export default function BuscarProdutosPage() {
                       <h3 style={{ fontSize: '0.82rem', fontWeight: 600, color: '#111827', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                         {p.nome}
                       </h3>
-                      <div style={{ fontSize: '0.7rem', color: p.loja === 'Shopee' ? '#ea580c' : '#047857', fontWeight: 600 }}>
+                                           <div style={{ fontSize: '0.7rem', color: p.loja === 'Shopee' ? '#ea580c' : '#047857', fontWeight: 600 }}>
                         🏪 {p.loja}
                       </div>
                       {(p as any).moedaOriginal === 'USD' && (
                         <div style={{ fontSize: '0.68rem', color: '#92400e', fontWeight: 600, backgroundColor: '#fef3c7', padding: '2px 6px', borderRadius: '4px' }}>
-                          💵 Preço convertido de USD para R$ · cotação do dia: R$ {((p as any).cotacaoUsada || 5.7).toFixed(2).replace('.', ',')}
+                         💵 Preço convertido de USD para R$ · cotação do dia utilizada: R$ {((p as any).cotacaoUsada || 5.7).toFixed(2).replace('.', ',')}
                         </div>
                       )}
                       {(p as any).ean && (
@@ -822,7 +708,7 @@ export default function BuscarProdutosPage() {
             </>
           )}
 
-          {!loading && !buscandoLink && !buscandoLoja && produtos.length === 0 && (busca || linkLoja) && (
+          {!loading && !buscandoLink && produtos.length === 0 && (busca || linkLoja) && (
             <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>
               Nenhum produto encontrado. Tente outros termos.
             </div>
@@ -889,13 +775,13 @@ export default function BuscarProdutosPage() {
                     <small style={{ color: '#9ca3af', fontSize: '0.7rem' }}>
                       Pinado em {new Date(p.pinedAt).toLocaleDateString('pt-BR')}
                     </small>
-                    {p.destinos?.includes('oferta-do-dia') && (
+                                         {p.destinos?.includes('oferta-do-dia') && (
                       <button onClick={() => handleAtivarOfertaDia(p)} style={{ padding: '6px', borderRadius: '6px', border: 'none', backgroundColor: p.ativo ? '#dc2626' : '#f3f4f6', color: p.ativo ? '#fff' : '#374151', fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer', marginBottom: '4px', width: '100%' }}>
                         {p.ativo ? '🔥 Ativa agora' : '🔥 Ativar como Oferta do Dia'}
                       </button>
                     )}
                     {p.destinos?.includes('oferta-do-dia') && (
-                      <button onClick={() => handleDestacarHome(p)} style={{ padding: '6px', borderRadius: '6px', border: 'none', backgroundColor: destaqueHomeId === p.id ? '#b45309' : '#f3f4f6', color: destaqueHomeId === p.id ? '#fff' : '#374151', fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer', marginBottom: '4px', width: '100%' }}>
+                    <button onClick={() => handleDestacarHome(p)} style={{ padding: '6px', borderRadius: '6px', border: 'none', backgroundColor: destaqueHomeId === p.id ? '#b45309' : '#f3f4f6', color: destaqueHomeId === p.id ? '#fff' : '#374151', fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer', marginBottom: '4px', width: '100%' }}>
                         {destaqueHomeId === p.id ? '⭐ Destacado na Home' : '⭐ Destacar na Home'}
                       </button>
                     )}

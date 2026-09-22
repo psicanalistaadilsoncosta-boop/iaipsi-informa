@@ -94,7 +94,7 @@ export async function extractNuvemshopProduct(url: string): Promise<NuvemshopPro
 // 3. Orquestra (com lotes e delay)
 export async function fetchNuvemshop(
   baseUrl: string,
-  limit = 50
+  limit = 500
 ): Promise<NuvemshopProduct[]> {
   const urls = await getNuvemshopProductUrls(baseUrl);
   const targets = urls.slice(0, limit);

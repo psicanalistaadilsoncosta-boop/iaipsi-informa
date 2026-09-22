@@ -5,7 +5,7 @@ import { fetchNuvemshop, getNuvemshopProductUrls } from './nuvemshop';
 
 const LOJAS_USD = ['italist.com'];
 
-export async function detectAndFetch(url: string, limit = 100) {
+export async function detectAndFetch(url: string, limit = 500) {
  const base = url.replace(/\/$/, '');
 
    if (base.includes('mibrasil.com.br')) {

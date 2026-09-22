@@ -10,7 +10,7 @@ async function getCotacaoUSD(): Promise<number> {
   }
 }
 
-export async function fetchShopify(baseUrl: string, limit = 100, isUSD = false) {
+export async function fetchShopify(baseUrl: string, limit = 400, isUSD = false) {
   const url = baseUrl.replace(/\/$/, '');
   const apiUrl = `${url}/products.json?limit=${limit}`;
   const res = await fetch(apiUrl, {

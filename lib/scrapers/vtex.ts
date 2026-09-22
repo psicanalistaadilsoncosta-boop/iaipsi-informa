@@ -1,4 +1,4 @@
-export async function fetchVtex(baseUrl: string, limit = 20) {
+export async function fetchVtex(baseUrl: string, limit = 400) {
   const url = baseUrl.replace(/\/$/, '');
   const apiUrl = `${url}/api/catalog_system/pub/products/search?_from=0&_to=${limit - 1}`;
 
