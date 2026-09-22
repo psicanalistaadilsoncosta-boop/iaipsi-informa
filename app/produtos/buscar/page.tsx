@@ -263,7 +263,7 @@ export default function BuscarProdutosPage() {
     setBuscandoLoja(true);
     setProdutos([]);
     try {
-      const params = new URLSearchParams({ url: urlLojaAwin, limit: '40', orgId: awinAnunciante });
+      const params = new URLSearchParams({ url: urlLojaAwin, limit: '150', orgId: awinAnunciante });
       const res = await fetch(`/api/scrape?${params}`);
       const json = await res.json();
       if (json.error) { alert(`Erro: ${json.error}`); return; }
@@ -291,7 +291,7 @@ export default function BuscarProdutosPage() {
         orgId = marca?.id || '';
       } catch {}
 
-      const params = new URLSearchParams({ url: urlLoja, limit: '50' });
+      const params = new URLSearchParams({ url: urlLoja, limit: '150' });
       if (orgId) params.set('orgId', orgId);
       if (q) params.set('q', q);
       const res = await fetch(`/api/scrape?${params}`);
@@ -308,7 +308,7 @@ export default function BuscarProdutosPage() {
     setLoading(true);
     setProdutos([]);
     try {
-      const params = new URLSearchParams({ limit: '400', loja });
+      const params = new URLSearchParams({ limit: '150', loja });
       if (q) params.set('q', q);
       const res = await fetch(`/api/awin?${params}`);
       const json = await res.json();
