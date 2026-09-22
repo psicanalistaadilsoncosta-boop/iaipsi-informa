@@ -242,9 +242,11 @@ export default function BuscarViagensPage() {
   const [passeios, setPasseios] = useState<Passeio[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Pinados
+    // Pinados
   const [pinados, setPinados] = useState<PasseioPinado[]>([]);
   const [filtroDestino, setFiltroDestino] = useState('todos');
+  const [selecionadosPinados, setSelecionadosPinados] = useState<Set<string>>(new Set());
+  const [removendoMassa, setRemovendoMassa] = useState(false);
 
    // Modal
   const [modalPasseio, setModalPasseio] = useState<Passeio | null>(null);
@@ -376,7 +378,7 @@ export default function BuscarViagensPage() {
 
   // ── Despinar ─────────────────────────────────────────────────────────────────
 
-  async function handleDespinar(id: string) {
+   async function handleDespinar(id: string) {
     if (!confirm('Remover este passeio?')) return;
     await fetch('/api/viagens/save', {
       method: 'DELETE',
@@ -384,6 +386,31 @@ export default function BuscarViagensPage() {
       body: JSON.stringify({ id }),
     });
     await loadPinados();
+  }
+
+  async function handleRemoverMassa() {
+    if (!confirm(`Remover ${selecionadosPinados.size} passeio(s)?`)) return;
+    setRemovendoMassa(true);
+    for (const id of selecionadosPinados) {
+      try {
+        await fetch('/api/viagens/save', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id }),
+        });
+      } catch {}
+    }
+    await loadPinados();
+    setSelecionadosPinados(new Set());
+    setRemovendoMassa(false);
+  }
+
+  function toggleSelecaoPinado(id: string) {
+    setSelecionadosPinados(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
   }
 
   const isPinado = (code: string) => pinados.some(p => p.id === code);
@@ -671,7 +698,8 @@ export default function BuscarViagensPage() {
       {/* ── ABA: PINADOS ─────────────────────────────────────────────────────── */}
       {aba === 'pinados' && (
         <div>
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <button onClick={() => setFiltroDestino('todos')}
               style={{ padding: '6px 14px', borderRadius: '999px', border: `2px solid ${filtroDestino === 'todos' ? '#0f766e' : '#e5e7eb'}`, backgroundColor: filtroDestino === 'todos' ? '#0f766e' : '#fff', color: filtroDestino === 'todos' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer' }}>
               Todos ({pinados.length})
@@ -686,6 +714,29 @@ export default function BuscarViagensPage() {
                 </button>
               );
             })}
+                     </div>
+
+            {/* Toolbar remoção em massa */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              {selecionadosPinados.size === 0 ? (
+                <button onClick={() => setSelecionadosPinados(new Set(pinadosFiltrados.map(p => p.id)))}
+                  style={{ padding: '6px 14px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer' }}>
+                  ☑️ Selecionar todos
+                </button>
+              ) : (
+                <>
+                  <span style={{ fontSize: '0.82rem', color: '#374151', fontWeight: 600 }}>{selecionadosPinados.size} selecionado(s)</span>
+                  <button onClick={() => setSelecionadosPinados(new Set())}
+                    style={{ padding: '5px 10px', borderRadius: '6px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontSize: '0.78rem', cursor: 'pointer' }}>
+                    Limpar
+                  </button>
+                  <button onClick={handleRemoverMassa} disabled={removendoMassa}
+                    style={{ padding: '6px 14px', borderRadius: '8px', border: 'none', backgroundColor: '#dc2626', color: '#fff', fontWeight: 700, fontSize: '0.82rem', cursor: removendoMassa ? 'not-allowed' : 'pointer', opacity: removendoMassa ? 0.6 : 1 }}>
+                    {removendoMassa ? '⏳ Removendo...' : `🗑 Remover ${selecionadosPinados.size}`}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
 
           {pinadosFiltrados.length === 0 ? (
@@ -695,18 +746,23 @@ export default function BuscarViagensPage() {
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
               {pinadosFiltrados.map(p => (
-                <div key={p.id} style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 2px 6px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column' }}>
+                                <div key={p.id}
+                  onClick={() => toggleSelecaoPinado(p.id)}
+                  style={{ backgroundColor: '#fff', borderRadius: '12px', border: `2px solid ${selecionadosPinados.has(p.id) ? '#dc2626' : '#e5e7eb'}`, overflow: 'hidden', boxShadow: '0 2px 6px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', cursor: 'pointer' }}>
                   <div style={{ height: '140px', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
                     {p.imagem
                       ? <img src={p.imagem} alt={p.titulo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       : <span style={{ fontSize: '3rem' }}>🌍</span>
                     }
+                                        <span style={{ position: 'absolute', top: '8px', right: '8px', width: '20px', height: '20px', borderRadius: '50%', border: `2px solid ${selecionadosPinados.has(p.id) ? '#dc2626' : '#d1d5db'}`, backgroundColor: selecionadosPinados.has(p.id) ? '#dc2626' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.72rem', color: '#fff', fontWeight: 700 }}>
+                      {selecionadosPinados.has(p.id) ? '✓' : ''}
+                    </span>
                     {p.publicado && (
                       <span style={{ position: 'absolute', top: '8px', left: '8px', backgroundColor: '#0f766e', color: '#fff', fontSize: '0.68rem', fontWeight: 700, padding: '2px 8px', borderRadius: '4px' }}>
                         ✅ Publicado
                       </span>
                     )}
-                    {p.destino && (
+                     {p.destino && (
                       <span style={{ position: 'absolute', bottom: '8px', left: '8px', backgroundColor: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: '0.65rem', fontWeight: 600, padding: '2px 7px', borderRadius: '20px' }}>
                         📍 {p.destino}
                       </span>
