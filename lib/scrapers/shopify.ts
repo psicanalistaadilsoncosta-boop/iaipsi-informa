@@ -1,13 +1,24 @@
 async function getCotacaoUSD(): Promise<number> {
-  try {
-    const res = await fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL', {
-      signal: AbortSignal.timeout(5000),
-    });
-    const data = await res.json();
-    return parseFloat(data.USDBRL?.bid) || 5.7;
-  } catch {
-    return 5.7;
+  const fontes = [
+    async () => {
+      const res = await fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL', { signal: AbortSignal.timeout(5000) });
+      const data = await res.json();
+      const val = parseFloat(data.USDBRL?.bid);
+      if (val > 3 && val < 10) return val;
+      throw new Error('fora do range');
+    },
+    async () => {
+      const res = await fetch('https://open.er-api.com/v6/latest/USD', { signal: AbortSignal.timeout(5000) });
+      const data = await res.json();
+      const val = parseFloat(data.rates?.BRL);
+      if (val > 3 && val < 10) return val;
+      throw new Error('fora do range');
+    },
+  ];
+  for (const fonte of fontes) {
+    try { return await fonte(); } catch {}
   }
+  return 5.15; // fallback — atualizar se necessário
 }
 
 export async function fetchShopify(baseUrl: string, limit = 400, isUSD = false) {
