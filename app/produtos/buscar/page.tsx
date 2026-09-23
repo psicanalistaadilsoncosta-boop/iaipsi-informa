@@ -279,8 +279,10 @@ export default function BuscarProdutosPage() {
     setBuscandoLoja(true);
     setProdutos([]);
     try {
-      const params = new URLSearchParams({ url: urlLojaAwin, limit: String(limiteBusca), orgId: awinAnunciante });
-      const res = await fetch(`/api/scrape?${params}`);
+        const lojaAtual = lojasAwin.find(l => l.url === urlLojaAwin);
+        const params = new URLSearchParams({ url: urlLojaAwin, limit: String(limiteBusca), orgId: awinAnunciante });
+        if (lojaAtual?.moedaUSD) params.set('moedaUSD', 'true');
+        const res = await fetch(`/api/scrape?${params}`);
       const json = await res.json();
       if (json.error) { alert(`Erro: ${json.error}`); return; }
       setProdutos(json.data || []);
