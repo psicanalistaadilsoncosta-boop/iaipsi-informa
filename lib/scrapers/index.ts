@@ -1,6 +1,7 @@
 import { fetchVtex } from './vtex';
 import { fetchShopify } from './shopify';
 import { fetchMiBrasil } from './mibrasil';
+import { fetchEfacil } from './efacil';
 import { fetchNuvemshop, getNuvemshopProductUrls } from './nuvemshop';
 
 const LOJAS_USD = ['italist.com'];
@@ -8,9 +9,14 @@ const LOJAS_USD = ['italist.com'];
 export async function detectAndFetch(url: string, limit = 500, isUSD = false) {
 const base = url.replace(/\/$/, '');
 
-   if (base.includes('mibrasil.com.br')) {
+    if (base.includes('mibrasil.com.br')) {
     const produtos = await fetchMiBrasil(url, limit);
     return { produtos, plataforma: 'mibrasil' };
+  }
+
+  if (base.includes('efacil.com.br')) {
+    const produtos = await fetchEfacil(url, limit);
+    return { produtos, plataforma: 'efacil' };
   }
    isUSD = isUSD || LOJAS_USD.some(d => base.includes(d));
 

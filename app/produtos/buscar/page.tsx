@@ -1114,7 +1114,7 @@ export default function BuscarProdutosPage() {
             })}
           </div>
           {lojasUnicas.length > 0 && (
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
               <span style={{ fontSize: '0.78rem', color: '#6b7280', fontWeight: 600 }}>🏪 Loja:</span>
               <button onClick={() => setFiltroLoja('')} style={{ padding: '4px 12px', borderRadius: '999px', border: `2px solid ${filtroLoja === '' ? '#7c3aed' : '#e5e7eb'}`, backgroundColor: filtroLoja === '' ? '#7c3aed' : '#fff', color: filtroLoja === '' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer' }}>
                 Todas
