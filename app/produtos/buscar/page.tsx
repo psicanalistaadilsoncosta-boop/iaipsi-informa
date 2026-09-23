@@ -1026,7 +1026,7 @@ export default function BuscarProdutosPage() {
                         </div>
                         {(p as any).moedaOriginal === 'USD' && (
                           <div style={{ fontSize: '0.68rem', color: '#92400e', fontWeight: 600, backgroundColor: '#fef3c7', padding: '2px 6px', borderRadius: '4px' }}>
-                            💵 Preço convertido de USD para R$ · cotação do dia: R$ {((p as any).cotacaoUsada || 5.7).toFixed(2).replace('.', ',')}
+                            💵 Preço convertido de USD para R$ (*sujeito a impostos) · cotação do dia: R$ {((p as any).cotacaoUsada || 5.1).toFixed(2).replace('.', ',')}
                           </div>
                         )}
                         {(p as any).ean && (
