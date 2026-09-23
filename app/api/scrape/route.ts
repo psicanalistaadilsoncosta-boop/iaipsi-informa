@@ -42,10 +42,10 @@ export async function GET(request: NextRequest) {
       link: isAwin && p.link
         ? `https://www.awin1.com/cread.php?awinmid=${organizationId}&awinaffid=${awinAffid}&ued=${encodeURIComponent(p.link)}`
         : p.link,
-      preco: moedaUSD ? parseFloat((p.preco * cotacao).toFixed(2)) : p.preco,
-      precoOriginal: moedaUSD ? parseFloat((p.precoOriginal * cotacao).toFixed(2)) : p.precoOriginal,
+      preco: p.preco,
+      precoOriginal: p.precoOriginal,
       moedaOriginal: moedaUSD ? 'USD' : p.moedaOriginal,
-      cotacaoUsada: moedaUSD ? cotacao : p.cotacaoUsada,
+      cotacaoUsada: moedaUSD ? (p.cotacaoUsada || cotacao) : p.cotacaoUsada,
     }));
 
     return NextResponse.json({
