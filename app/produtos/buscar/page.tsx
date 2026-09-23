@@ -48,6 +48,7 @@ interface LojaLomadee {
   tipo: 'lomadee';
   nome: string;
   url: string;
+  moedaUSD?: boolean;
   cron?: LojaCron;
 }
 
@@ -309,8 +310,10 @@ export default function BuscarProdutosPage() {
         orgId = marca?.id || '';
       } catch {}
 
+      const lojaAtual = lojasLomadee.find(l => l.url === urlLoja);
       const params = new URLSearchParams({ url: urlLoja, limit: String(limiteBusca) });
       if (orgId) params.set('orgId', orgId);
+      if (lojaAtual?.moedaUSD) params.set('moedaUSD', 'true');
       if (q) params.set('q', q);
       const res = await fetch(`/api/scrape?${params}`);
       const json = await res.json();

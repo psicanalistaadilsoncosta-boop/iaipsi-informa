@@ -14,6 +14,7 @@ interface LojaLomadee {
   tipo: 'lomadee';
   nome: string;
   url: string;
+  moedaUSD?: boolean;
   cron?: LojaCron;
 }
 
@@ -195,6 +196,7 @@ export default function CadastraLojasPage() {
   // Form Lomadee
   const [nomeL, setNomeL] = useState('');
   const [urlL, setUrlL] = useState('');
+  const [moedaUSDL, setMoedaUSDL] = useState(false);
 
   // Form Awin
   const [nomeA, setNomeA] = useState('');
@@ -255,8 +257,8 @@ export default function CadastraLojasPage() {
     if (!nomeL.trim() || !urlL.trim()) return;
     let url = urlL.trim();
     if (!url.startsWith('http')) url = 'https://' + url;
-    await salvarLoja({ tipo: 'lomadee', nome: nomeL.trim(), url });
-    setNomeL(''); setUrlL('');
+    await salvarLoja({ tipo: 'lomadee', nome: nomeL.trim(), url, moedaUSD: moedaUSDL });
+    setNomeL(''); setUrlL(''); setMoedaUSDL(false);
   }
 
   async function handleAdicionarAwin(e: React.FormEvent) {
@@ -326,6 +328,13 @@ export default function CadastraLojasPage() {
                 <label style={labelStyle}>URL do site</label>
                 <input value={urlL} onChange={e => setUrlL(e.target.value)} placeholder="https://www.vivavinho.com.br" style={inputStyle} required />
               </div>
+                          </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap', marginTop: '12px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.88rem', fontWeight: 600, color: '#374151' }}>
+                <input type="checkbox" checked={moedaUSDL} onChange={e => setMoedaUSDL(e.target.checked)}
+                  style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#be185d' }} />
+                💵 Preços em USD (converte para R$)
+              </label>
               <button type="submit" disabled={salvando} style={{ padding: '9px 20px', borderRadius: '8px', border: 'none', backgroundColor: '#be185d', color: '#fff', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                 {salvando ? '⏳' : '✅ Adicionar'}
               </button>
@@ -394,8 +403,11 @@ export default function CadastraLojasPage() {
                       {(loja as LojaAwin).moedaUSD && <span style={{ marginLeft: '8px', color: '#92400e', backgroundColor: '#fef3c7', padding: '1px 5px', borderRadius: '3px' }}>💵 USD</span>}
                     </div>
                   )}
-                  {loja.tipo === 'lomadee' && (
-                    <div style={{ fontSize: '0.72rem', color: '#be185d', fontWeight: 600, marginTop: '2px' }}>Lomadee</div>
+                                   {loja.tipo === 'lomadee' && (
+                    <div style={{ fontSize: '0.72rem', color: '#be185d', fontWeight: 600, marginTop: '2px' }}>
+                      Lomadee
+                      {(loja as LojaLomadee).moedaUSD && <span style={{ marginLeft: '8px', color: '#92400e', backgroundColor: '#fef3c7', padding: '1px 5px', borderRadius: '3px' }}>💵 USD</span>}
+                    </div>
                   )}
                 </div>
                 <button onClick={() => removerLoja(loja.url, loja.tipo)}
