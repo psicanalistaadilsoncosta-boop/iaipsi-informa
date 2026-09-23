@@ -43,22 +43,20 @@ export async function fetchEfacil(baseUrl: string, limit = 50): Promise<any[]> {
       for (const prod of itens) {
         if (produtos.length >= limit) break;
 
-        const preco = parseFloat(
-          (prod.preco?.precoPor ?? prod.preco?.precoPorText ?? '0')
-            .toString()
-            .replace('R$', '')
-            .replace(/\./g, '')
-            .replace(',', '.')
-            .trim()
-        );
-        const precoOriginal = parseFloat(
-          (prod.preco?.precoDe ?? prod.preco?.precoDeText ?? prod.preco?.precoPor ?? '0')
-            .toString()
-            .replace('R$', '')
-            .replace(/\./g, '')
-            .replace(',', '.')
-            .trim()
-        );
+                    function parsePrecoEfacil(val: any): number {
+          if (!val || val === '') return 0;
+          const n = typeof val === 'number' ? val : parseFloat(String(val).replace('R$','').replace(/\./g,'').replace(',','.').trim());
+          return isNaN(n) ? 0 : n;
+        }
+
+        const preco = parsePrecoEfacil(prod.preco?.precoPor ?? prod.preco?.precoPorText);
+        const precoOriginal = parsePrecoEfacil(prod.preco?.precoDe || prod.preco?.precoPor);
+          // fallback
+          return parseFloat(s.replace(/\./g, '').replace(',', '.')) || 0;
+        }
+
+        const preco = parsePrecoEfacil(prod.preco?.precoPor ?? prod.preco?.precoPorText ?? '0');
+        const precoOriginal = parsePrecoEfacil(prod.preco?.precoDe ?? prod.preco?.precoDeText ?? prod.preco?.precoPor ?? '0');
 
         const desconto =
           precoOriginal > preco && preco > 0
