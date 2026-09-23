@@ -19,6 +19,9 @@ interface ProdutoPinado {
   categoria?: string;
   ativo?: boolean;
   destinos: string[];
+  moedaOriginal?: string;
+  cotacaoUsada?: number;
+
 }
 
 function Countdown({ endAt }: { endAt: string }) {
@@ -105,6 +108,7 @@ function CardOferta({ p }: { p: ProdutoPinado }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           {p.loja && <span style={{ fontSize: '0.78rem', color: '#6b7280', fontWeight: 500 }}>🏪 {p.loja}</span>}
           {p.categoria && <span style={{ fontSize: '0.65rem', color: '#9ca3af', backgroundColor: '#f3f4f6', padding: '2px 8px', borderRadius: '20px' }}>{p.categoria}</span>}
+
         </div>
 
         {/* Título */}
@@ -145,6 +149,13 @@ function CardOferta({ p }: { p: ProdutoPinado }) {
             style={{ width: '100%', backgroundColor: copiado ? '#047857' : '#f5f3ff', color: copiado ? '#fff' : '#7c3aed', border: '2px dashed #7c3aed', borderRadius: '8px', padding: '8px', fontWeight: 800, fontSize: '1rem', cursor: 'pointer', letterSpacing: '1px', textAlign: 'center' }}>
             {copiado ? '✅ Copiado!' : p.cupom}
           </button>
+        )}
+
+                {/* Aviso moeda */}
+               {(p as any).moedaOriginal === 'USD' && (p as any).cotacaoUsada && (
+          <div style={{ backgroundColor: '#eff6ff', border: '1px solid #93c5fd', borderRadius: '8px', padding: '8px 12px', fontSize: '0.72rem', color: '#1e40af' }}>
+            💱 Preço convertido de USD para BRL (cotação R$ {Number((p as any).cotacaoUsada).toFixed(2)} usada no momento da busca). Confira o valor final no site. (*sujeito a tributação)
+          </div>
         )}
 
         {/* Aviso */}
