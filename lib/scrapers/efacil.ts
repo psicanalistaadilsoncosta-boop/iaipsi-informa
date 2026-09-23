@@ -80,7 +80,9 @@ export async function fetchEfacil(baseUrl: string, limit = 50): Promise<any[]> {
           categoria: prod.categoria || categoria,
           plataforma: 'efacil',
           skuId: sku,
-          estoque: prod.disponivel === false ? 0 : 999,
+                   estoque: prod.disponivel === false ? 0 : 999,
+          parcelas: prod.preco?.parcelas?.numeroParcelas ? String(prod.preco.parcelas.numeroParcelas) : '',
+          valorParcela: prod.preco?.parcelas?.valorParcela ? prod.preco.parcelas.valorParcela : '',
         });
       }
 
