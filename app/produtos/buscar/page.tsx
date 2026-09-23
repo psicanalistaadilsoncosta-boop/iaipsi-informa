@@ -1024,8 +1024,11 @@ export default function BuscarProdutosPage() {
                         <h3 style={{ fontSize: '0.82rem', fontWeight: 600, color: '#111827', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                           {p.nome}
                         </h3>
-                        <div style={{ fontSize: '0.7rem', color: p.loja === 'Shopee' ? '#ea580c' : '#047857', fontWeight: 600 }}>
+                                                <div style={{ fontSize: '0.7rem', color: p.loja === 'Shopee' ? '#ea580c' : '#047857', fontWeight: 600 }}>
                           🏪 {p.loja}
+                          {(p as any).plataforma === 'vtex' && (
+                            <span style={{ marginLeft: '6px', fontSize: '0.65rem', color: '#7c3aed', backgroundColor: '#f3f4f6', padding: '1px 5px', borderRadius: '3px', fontWeight: 600 }}>VTEX</span>
+                          )}
                         </div>
                         {(p as any).moedaOriginal === 'USD' && (
                           <div style={{ fontSize: '0.68rem', color: '#92400e', fontWeight: 600, backgroundColor: '#fef3c7', padding: '2px 6px', borderRadius: '4px' }}>
