@@ -621,7 +621,7 @@ export default function BuscarProdutosPage() {
   return (
     <main style={{ maxWidth: '1060px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
 
-      {/* Modal pinar em massa */}
+      {/* Modal pinar  em  massa */}
       {modalMassa && (
         <ModalDestinos
           produto={produtosMassaFake}
