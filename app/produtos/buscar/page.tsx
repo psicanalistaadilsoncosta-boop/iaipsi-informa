@@ -176,6 +176,7 @@ export default function BuscarProdutosPage() {
   const [gerando, setGerando] = useState<string | null>(null);
   const [aba, setAba] = useState<'buscar' | 'pinados'>('buscar');
   const [filtroDestino, setFiltroDestino] = useState('todos');
+  const [filtroLoja, setFiltroLoja] = useState('');
   const [pagina, setPagina] = useState(1);
   const [total, setTotal] = useState(0);
   const [excluirShopee, setExcluirShopee] = useState(true);
@@ -596,7 +597,10 @@ export default function BuscarProdutosPage() {
   }
 
   const isPinado = (id: string) => pinados.some(p => p.id === id);
-  const pinadosFiltrados = filtroDestino === 'todos' ? pinados : pinados.filter(p => p.destinos?.includes(filtroDestino));
+    const pinadosFiltrados = pinados
+    .filter(p => filtroDestino === 'todos' || p.destinos?.includes(filtroDestino))
+    .filter(p => filtroLoja === '' || p.loja === filtroLoja);
+  const lojasUnicas = [...new Set(pinados.map(p => p.loja).filter(Boolean))].sort();
   const naoSelecionadosDaLoja = selecionados.size > 0;
   const produtosMassaFake: Produto = {
     id: '__massa__',
@@ -1095,7 +1099,7 @@ export default function BuscarProdutosPage() {
       {/* Aba pinados */}
       {aba === 'pinados' && (
         <div>
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
             <button onClick={() => setFiltroDestino('todos')} style={{ padding: '6px 14px', borderRadius: '999px', border: `2px solid ${filtroDestino === 'todos' ? '#2563eb' : '#e5e7eb'}`, backgroundColor: filtroDestino === 'todos' ? '#2563eb' : '#fff', color: filtroDestino === 'todos' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer' }}>
               Todos ({pinados.length})
             </button>
@@ -1109,6 +1113,19 @@ export default function BuscarProdutosPage() {
               );
             })}
           </div>
+          {lojasUnicas.length > 0 && (
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.78rem', color: '#6b7280', fontWeight: 600 }}>🏪 Loja:</span>
+              <button onClick={() => setFiltroLoja('')} style={{ padding: '4px 12px', borderRadius: '999px', border: `2px solid ${filtroLoja === '' ? '#7c3aed' : '#e5e7eb'}`, backgroundColor: filtroLoja === '' ? '#7c3aed' : '#fff', color: filtroLoja === '' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer' }}>
+                Todas
+              </button>
+              {lojasUnicas.map(loja => (
+                <button key={loja} onClick={() => setFiltroLoja(loja === filtroLoja ? '' : loja!)} style={{ padding: '4px 12px', borderRadius: '999px', border: `2px solid ${filtroLoja === loja ? '#7c3aed' : '#e5e7eb'}`, backgroundColor: filtroLoja === loja ? '#7c3aed' : '#fff', color: filtroLoja === loja ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer' }}>
+                  {loja} ({pinados.filter(p => p.loja === loja).length})
+                </button>
+              ))}
+            </div>
+          )}
 
           {pinadosFiltrados.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>
