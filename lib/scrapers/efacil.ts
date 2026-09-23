@@ -1,3 +1,9 @@
+function parsePrecoEfacil(val: any): number {
+  if (!val || val === '') return 0;
+  const n = typeof val === 'number' ? val : parseFloat(String(val).replace('R$', '').replace(/\./g, '').replace(',', '.').trim());
+  return isNaN(n) ? 0 : n;
+}
+
 export async function fetchEfacil(baseUrl: string, limit = 50): Promise<any[]> {
   const headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -43,20 +49,8 @@ export async function fetchEfacil(baseUrl: string, limit = 50): Promise<any[]> {
       for (const prod of itens) {
         if (produtos.length >= limit) break;
 
-                    function parsePrecoEfacil(val: any): number {
-          if (!val || val === '') return 0;
-          const n = typeof val === 'number' ? val : parseFloat(String(val).replace('R$','').replace(/\./g,'').replace(',','.').trim());
-          return isNaN(n) ? 0 : n;
-        }
-
         const preco = parsePrecoEfacil(prod.preco?.precoPor ?? prod.preco?.precoPorText);
         const precoOriginal = parsePrecoEfacil(prod.preco?.precoDe || prod.preco?.precoPor);
-          // fallback
-          return parseFloat(s.replace(/\./g, '').replace(',', '.')) || 0;
-        }
-
-        const preco = parsePrecoEfacil(prod.preco?.precoPor ?? prod.preco?.precoPorText ?? '0');
-        const precoOriginal = parsePrecoEfacil(prod.preco?.precoDe ?? prod.preco?.precoDeText ?? prod.preco?.precoPor ?? '0');
 
         const desconto =
           precoOriginal > preco && preco > 0
@@ -64,14 +58,14 @@ export async function fetchEfacil(baseUrl: string, limit = 50): Promise<any[]> {
             : 0;
 
         const sku = prod.sku || prod.id || '';
-        const slug = prod.slug || prod.url || '';
+        const slug = prod.url || '';
 
         produtos.push({
           id: `efacil-${sku}`,
           nome: prod.nome || '',
-          imagem: prod.imagem || prod.imagemUrl || '',
-          link: slug ? `https://www.efacil.com.br/loja/produto/${slug}` : baseUrl,
-          linkOriginal: slug ? `https://www.efacil.com.br/loja/produto/${slug}` : baseUrl,
+          imagem: prod.thumbnail || prod.imagem || '',
+          link: slug ? `https:${slug}` : baseUrl,
+          linkOriginal: slug ? `https:${slug}` : baseUrl,
           preco,
           precoOriginal: precoOriginal || preco,
           desconto,
@@ -80,7 +74,7 @@ export async function fetchEfacil(baseUrl: string, limit = 50): Promise<any[]> {
           categoria: prod.categoria || categoria,
           plataforma: 'efacil',
           skuId: sku,
-                   estoque: prod.disponivel === false ? 0 : 999,
+          estoque: prod.disponivel === false ? 0 : 999,
           parcelas: prod.preco?.parcelas?.numeroParcelas ? String(prod.preco.parcelas.numeroParcelas) : '',
           valorParcela: prod.preco?.parcelas?.valorParcela ? prod.preco.parcelas.valorParcela : '',
         });
