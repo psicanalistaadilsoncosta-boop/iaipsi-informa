@@ -400,6 +400,11 @@ export default function BuscarProdutosPage() {
       let parcelasFinal = parcelas;
       let valorParcelaFinal = valorParcela;
 
+           if (!parcelasFinal && (produto as any).plataforma === 'efacil') {
+        parcelasFinal = String((produto as any).parcelas || '');
+        valorParcelaFinal = String((produto as any).valorParcela || '');
+      }
+
       if (!parcelasFinal && (produto as any).plataforma === 'vtex' && (produto as any).skuId) {
         try {
           const lojaUrl = new URL((produto as any).linkOriginal || produto.link).origin;
