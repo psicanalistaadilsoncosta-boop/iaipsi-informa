@@ -659,7 +659,7 @@ export default function BuscarProdutosPage() {
               </a>
             ))}
             <a href="/produtos/cadastra-lojas" style={{ backgroundColor: '#7c3aed', color: '#fff', padding: '6px 12px', borderRadius: '6px', textDecoration: 'none', fontSize: '0.78rem', fontWeight: 600 }}>
-              🏪 Lojas
+              🏪 Cadastra Lojas
             </a>
             <a href="/" style={{ backgroundColor: '#f3f4f6', color: '#374151', padding: '6px 12px', borderRadius: '6px', textDecoration: 'none', fontSize: '0.78rem', fontWeight: 600 }}>← Site</a>
           </div>
@@ -674,6 +674,7 @@ export default function BuscarProdutosPage() {
         <button onClick={() => setAba('pinados')} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', backgroundColor: aba === 'pinados' ? '#2563eb' : '#fff', color: aba === 'pinados' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
           📌 Pinados ({pinados.length})
         </button>
+
       </div>
 
       {/* Aba buscar */}
