@@ -7,6 +7,7 @@ export async function GET(request: NextRequest) {
   const limit = parseInt(searchParams.get('limit') || '20');
   const q = searchParams.get('q') || '';
   const organizationId = searchParams.get('orgId') || '';
+  const moedaUSD = searchParams.get('moedaUSD') === 'true';
 
   if (!url) return NextResponse.json({ error: 'URL obrigatória' }, { status: 400 });
 
