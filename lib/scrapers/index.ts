@@ -5,14 +5,14 @@ import { fetchNuvemshop, getNuvemshopProductUrls } from './nuvemshop';
 
 const LOJAS_USD = ['italist.com'];
 
-export async function detectAndFetch(url: string, limit = 500) {
- const base = url.replace(/\/$/, '');
+export async function detectAndFetch(url: string, limit = 500, isUSD = false) {
+const base = url.replace(/\/$/, '');
 
    if (base.includes('mibrasil.com.br')) {
     const produtos = await fetchMiBrasil(url, limit);
     return { produtos, plataforma: 'mibrasil' };
   }
-  const isUSD = LOJAS_USD.some(d => base.includes(d));
+   isUSD = isUSD || LOJAS_USD.some(d => base.includes(d));
 
   // Tenta Shopify
   try {

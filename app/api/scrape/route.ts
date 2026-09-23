@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   if (!url) return NextResponse.json({ error: 'URL obrigatória' }, { status: 400 });
 
   try {
-    const { produtos, plataforma } = await detectAndFetch(url, limit);
+       const { produtos, plataforma } = await detectAndFetch(url, limit, moedaUSD);
 
     const filtrados = q
       ? produtos.filter((p: any) => p.nome.toLowerCase().includes(q.toLowerCase()))
