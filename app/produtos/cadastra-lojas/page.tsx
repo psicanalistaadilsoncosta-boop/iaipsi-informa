@@ -16,6 +16,10 @@ interface LojaLomadee {
   url: string;
   moedaUSD?: boolean;
   cron?: LojaCron;
+  ambiente?: string;
+  tipoAmbiente?: string;
+  momento?: string;
+  tipoMomento?: string;
 }
 
 interface LojaAwin {
@@ -25,6 +29,10 @@ interface LojaAwin {
   anuncianteId: string;
   moedaUSD?: boolean;
   cron?: LojaCron;
+  ambiente?: string;
+  tipoAmbiente?: string;
+  momento?: string;
+  tipoMomento?: string;
 }
 
 type Loja = LojaLomadee | LojaAwin;
