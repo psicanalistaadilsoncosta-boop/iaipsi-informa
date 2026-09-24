@@ -45,7 +45,15 @@ async function main() {
 
   let atualizados = 0;
 
-   const novos = produtos.map(p => {
+    // Categorias que são moda/roupa — não entram em momento
+  const CATEGORIAS_MODA = /roupa|vestuário|moda|calcinha|cueca|sutiã|lingerie|biquíni|calça|camiseta|vestido|saia|blusa|casaco|jaqueta|tênis|sapato|sandália|bolsa|infantil|masculino|feminino|kids/i;
+
+  const novos = produtos.map(p => {
+    // Se é produto de moda, remove momento e pula
+    if (CATEGORIAS_MODA.test(`${p.nome} ${p.categoria || ''}`)) {
+      const { momento, tipoMomento, ...resto } = p;
+      return resto;
+    }
     // reseta para re-categorizar tudo
     const texto = `${p.nome} ${p.categoria || ''}`;
     for (const r of REGRAS) {
