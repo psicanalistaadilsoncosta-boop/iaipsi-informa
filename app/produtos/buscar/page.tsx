@@ -205,6 +205,9 @@ export default function BuscarProdutosPage() {
   const [aba, setAba] = useState<'buscar' | 'pinados'>('buscar');
   const [filtroDestino, setFiltroDestino] = useState('todos');
   const [filtroLoja, setFiltroLoja] = useState('');
+  const [editandoAmbiente, setEditandoAmbiente] = useState<ProdutoPinado | null>(null);
+  const [editAmb, setEditAmb] = useState('');
+  const [editTipo, setEditTipo] = useState('');
   const [pagina, setPagina] = useState(1);
   const [total, setTotal] = useState(0);
   const [excluirShopee, setExcluirShopee] = useState(true);
@@ -662,6 +665,57 @@ export default function BuscarProdutosPage() {
 
   return (
     <main style={{ maxWidth: '1060px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+
+      {/* Modal editar ambiente */}
+      {editandoAmbiente && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
+          <div style={{ backgroundColor: '#fff', borderRadius: '16px', padding: '28px', maxWidth: '380px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
+            <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#111827', margin: '0 0 6px' }}>🏠 Categorizar ambiente</h2>
+            <p style={{ fontSize: '0.82rem', color: '#6b7280', margin: '0 0 20px', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+              {editandoAmbiente.nome}
+            </p>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: '0.72rem', color: '#6b7280', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Ambiente</label>
+                <select value={editAmb || (editandoAmbiente as any).ambiente || ''} onChange={e => setEditAmb(e.target.value)}
+                  style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.85rem', boxSizing: 'border-box' }}>
+                  <option value="">— nenhum —</option>
+                  {AMBIENTES.map(a => <option key={a} value={a}>{a}</option>)}
+                </select>
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: '0.72rem', color: '#6b7280', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Tipo</label>
+                <select value={editTipo || (editandoAmbiente as any).tipoAmbiente || ''} onChange={e => setEditTipo(e.target.value)}
+                  style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.85rem', boxSizing: 'border-box' }}>
+                  <option value="">— nenhum —</option>
+                  {TIPOS_AMBIENTE.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={() => { setEditandoAmbiente(null); setEditAmb(''); setEditTipo(''); }}
+                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, cursor: 'pointer' }}>
+                Cancelar
+              </button>
+              <button onClick={async () => {
+                await fetch('/api/produtos/save', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    ...editandoAmbiente,
+                    ambiente: editAmb || (editandoAmbiente as any).ambiente || '',
+                    tipoAmbiente: editTipo || (editandoAmbiente as any).tipoAmbiente || '',
+                  }),
+                });
+                await loadPinados();
+                setEditandoAmbiente(null); setEditAmb(''); setEditTipo('');
+              }} style={{ flex: 2, padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: '#7c3aed', color: '#fff', fontWeight: 700, cursor: 'pointer' }}>
+                💾 Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal pinar  em  massa */}
       {modalMassa && (
@@ -1214,6 +1268,9 @@ export default function BuscarProdutosPage() {
                         {destaqueHomeId === p.id ? '⭐ Destacado na Home' : '⭐ Destacar na Home'}
                       </button>
                     )}
+                                        <button onClick={() => setEditandoAmbiente(p)} style={{ padding: '6px', borderRadius: '6px', border: '1px solid #ddd6fe', backgroundColor: '#fff', color: '#7c3aed', fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer', width: '100%' }}>
+                      🏠 {p.ambiente ? `${p.ambiente} · ${p.tipoAmbiente || '—'}` : 'Categorizar ambiente'}
+                    </button>
                     <button onClick={() => handleDespinar(p.id)} style={{ padding: '6px', borderRadius: '6px', border: '1px solid #fca5a5', backgroundColor: '#fff', color: '#dc2626', fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer' }}>
                       🗑 Remover
                     </button>
