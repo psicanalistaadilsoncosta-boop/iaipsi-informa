@@ -24,7 +24,7 @@ const REGRAS = [
 
   // Lareira
   { momento: 'Lareira', tipo: 'Eletro', regex: /lareira elétrica|aquecedor.*ambiente|estufa elétrica/i },
-  { momento: 'Lareira', tipo: 'Móveis', regex: /lareira|poltrona.*couro|sofá.*couro|puff/i },
+  { momento: 'Lareira', tipo: 'Móveis', regex: /lareira|poltrona.*couro|sofá.*couro/i },
   { momento: 'Lareira', tipo: 'Acessórios', regex: /vela|porta-vela|difusor|incenso|manta|xale|cobertor|almofada.*veludo/i },
 
   // Domingo relaxado
@@ -45,8 +45,8 @@ async function main() {
 
   let atualizados = 0;
 
-  const novos = produtos.map(p => {
-    if (p.momento) return p; // já categorizado
+   const novos = produtos.map(p => {
+    // reseta para re-categorizar tudo
     const texto = `${p.nome} ${p.categoria || ''}`;
     for (const r of REGRAS) {
       if (r.regex.test(texto)) {
