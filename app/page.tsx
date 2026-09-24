@@ -26,6 +26,8 @@ interface FeedConfig {
 }
 
 export const revalidate = 900;
+export const dynamic = 'force-dynamic';
+
 
 const parser = new Parser({
   customFields: {
