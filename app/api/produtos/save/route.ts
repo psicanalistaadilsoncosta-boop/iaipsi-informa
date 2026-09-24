@@ -10,12 +10,16 @@ export interface ProdutoPinado {
   preco: number;
   precoOriginal: number;
   desconto: number;
-  parcelas?: string;
+   parcelas?: string;
   valorParcela?: string;
   organizationId: string;
   destinos: string[];
   ativo?: boolean;
   pinedAt: string;
+  ambiente?: string;
+  tipoAmbiente?: string;
+  loja?: string;
+  categoria?: string;
 }
 
 const KEY = 'produtos:pinados';
