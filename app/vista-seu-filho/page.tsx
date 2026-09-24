@@ -72,13 +72,22 @@ export default function VistaSeuFilhoPage() {
       `• ${p.nome || p.name} — ${p.link}`
     ).join('\n');
 
-    await fetch('/api/ambientes/enviar', {
+   await fetch('/api/ambientes/enviar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email,
-        assunto: '👶 Lista do seu filho — links de oferta',
-        corpo: `Olá!\n\nVocê selecionou estes itens no Vista seu Filho:\n\n${linhas}\n\nBoas compras!`,
+        produtos: carrinho.map(p => ({
+          nome: p.nome || p.name || '',
+          preco: parseFloat(p.preco || p.price || '0') || 0,
+          precoOriginal: parseFloat(p.precoOriginal || '0') || undefined,
+          desconto: p.desconto || undefined,
+          parcelas: p.parcelas || undefined,
+          valorParcela: p.valorParcela || undefined,
+          link: p.link || '',
+          imagem: p.imagem || p.thumbnail || p.imageUrl || '',
+          loja: p.loja || p.storeName || p.nomeLoja || '',
+        })),
       }),
     });
 
