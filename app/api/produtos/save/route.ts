@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     if (idx >= 0) {
       existing[idx] = { ...existing[idx], ...produto, pinedAt: existing[idx].pinedAt };
     } else {
-      existing = [{ ...produto, pinedAt: new Date().toISOString() }, ...existing].slice(0, 1000);
+      existing = [{ ...produto, pinedAt: new Date().toISOString() }, ...existing].slice(0, 3000);
     }
 
     await kv.set(KEY, existing);
