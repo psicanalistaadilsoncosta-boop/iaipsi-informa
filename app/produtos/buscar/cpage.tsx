@@ -36,11 +36,20 @@ interface ProdutoPinado extends Produto {
   loja?: string;
 }
 
-// Tipos de loja vindos do KV
+interface LojaCron {
+  ativo: boolean;
+  frequencia: 'diario' | '2dias' | 'semanal';
+  destino: string;
+  limite?: number;
+  ultimaAtualizacao: string | null;
+}
+
 interface LojaLomadee {
   tipo: 'lomadee';
   nome: string;
   url: string;
+  moedaUSD?: boolean;
+  cron?: LojaCron;
 }
 
 interface LojaAwin {
@@ -49,6 +58,7 @@ interface LojaAwin {
   url: string;
   anuncianteId: string;
   moedaUSD?: boolean;
+  cron?: LojaCron;
 }
 
 type Loja = LojaLomadee | LojaAwin;
@@ -91,15 +101,19 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
   );
 }
 
+const AMBIENTES = ['Sala', 'Quarto', 'Escritório', 'Cozinha', 'Banheiro', 'Área externa'];
+const TIPOS_AMBIENTE = ['Iluminação', 'Climatização', 'Móveis', 'Decoração', 'Organização', 'Eletrônicos'];
+
 function ModalDestinos({ produto, onConfirm, onCancel }: {
   produto: Produto;
-  onConfirm: (destinos: string[], parcelas: string, valorParcela: string) => void;
+  onConfirm: (destinos: string[], parcelas: string, valorParcela: string, ambiente: string, tipoAmbiente: string) => void;
   onCancel: () => void;
 }) {
-  const [destinos, setDestinos] = useState<string[]>(['selecionadas']);
+  const [destinos, setDestinos] = useState<string[]>(['ofertas-selecionadas']);
   const [parcelas, setParcelas] = useState('');
   const [valorParcela, setValorParcela] = useState('');
-
+  const [ambiente, setAmbiente] = useState('');
+  const [tipoAmbiente, setTipoAmbiente] = useState('');
   function toggle(id: string) {
     setDestinos(prev => prev.includes(id) ? prev.filter(d => d !== id) : [...prev, id]);
   }
@@ -141,11 +155,35 @@ function ModalDestinos({ produto, onConfirm, onCancel }: {
             </div>
           </div>
         )}
+              <div style={{ backgroundColor: '#f5f3ff', borderRadius: '8px', padding: '14px', marginBottom: '16px', border: '1px solid #ddd6fe' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#7c3aed', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            🏠 Monte seu Ambiente (opcional)
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: '0.72rem', color: '#6b7280', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Ambiente</label>
+              <select value={ambiente} onChange={e => setAmbiente(e.target.value)}
+                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.85rem', boxSizing: 'border-box' }}>
+                <option value="">— nenhum —</option>
+                {AMBIENTES.map(a => <option key={a} value={a}>{a}</option>)}
+              </select>
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: '0.72rem', color: '#6b7280', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Tipo</label>
+              <select value={tipoAmbiente} onChange={e => setTipoAmbiente(e.target.value)}
+                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.85rem', boxSizing: 'border-box' }}>
+                <option value="">— nenhum —</option>
+                {TIPOS_AMBIENTE.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+          </div>
+        </div>
+
         <div style={{ display: 'flex', gap: '8px' }}>
           <button onClick={onCancel} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, cursor: 'pointer' }}>
             Cancelar
           </button>
-          <button onClick={() => onConfirm(destinos, parcelas, valorParcela)} disabled={destinos.length === 0}
+          <button onClick={() => onConfirm(destinos, parcelas, valorParcela, ambiente, tipoAmbiente)} disabled={destinos.length === 0}
             style={{ flex: 2, padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: '#2563eb', color: '#fff', fontWeight: 700, cursor: destinos.length === 0 ? 'not-allowed' : 'pointer', opacity: destinos.length === 0 ? 0.6 : 1 }}>
             📌 Confirmar e pinar
           </button>
@@ -166,33 +204,42 @@ export default function BuscarProdutosPage() {
   const [gerando, setGerando] = useState<string | null>(null);
   const [aba, setAba] = useState<'buscar' | 'pinados'>('buscar');
   const [filtroDestino, setFiltroDestino] = useState('todos');
+  const [filtroLoja, setFiltroLoja] = useState('');
+  const [editandoAmbiente, setEditandoAmbiente] = useState<ProdutoPinado | null>(null);
+  const [editAmb, setEditAmb] = useState('');
+  const [editTipo, setEditTipo] = useState('');
   const [pagina, setPagina] = useState(1);
   const [total, setTotal] = useState(0);
   const [excluirShopee, setExcluirShopee] = useState(true);
   const [modalProduto, setModalProduto] = useState<Produto | null>(null);
   const [destaqueHomeId, setDestaqueHomeId] = useState<string | null>(null);
-  const [modoBusca, setModoBusca] = useState<'palavra' | 'link' | 'awin' | 'spicy' | 'loja' | 'loja-awin'>('palavra');
+  const [modoBusca, setModoBusca] = useState<'palavra' | 'link' | 'awin' | 'spicy' | 'centauro' | 'carrefour' |'loja' | 'loja-awin'>('palavra');
   const [urlLojaAwin, setUrlLojaAwin] = useState('');
   const [awinAnunciante, setAwinAnunciante] = useState('');
   const [lojaAwin, setLojaAwin] = useState('arno');
   const [urlLoja, setUrlLoja] = useState('');
+  const [limiteBusca, setLimiteBusca] = useState(50);
   const [buscandoLoja, setBuscandoLoja] = useState(false);
   const [linkLoja, setLinkLoja] = useState('');
   const [buscandoLink, setBuscandoLink] = useState(false);
-
-   // Seleção em massa
-  const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
-  const [modoSelecao, setModoSelecao] = useState(false);
-  const [pinandoMassa, setPinandoMassa] = useState(false);
-  const [modalMassa, setModalMassa] = useState(false);
 
   // Lojas do KV
   const [lojasKV, setLojasKV] = useState<Loja[]>([]);
   const [lojaLomadeeSelect, setLojaLomadeeSelect] = useState('');
   const [lojaAwinSelect, setLojaAwinSelect] = useState('');
 
+  // Seleção em massa
+  const [modoSelecao, setModoSelecao] = useState(false);
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
+  const [modalMassa, setModalMassa] = useState<'pinar' | 'substituir' | null>(null);
+  const [pinandoMassa, setPinandoMassa] = useState(false);
+  const [substituindo, setSubstituindo] = useState(false);
+
   const lojasLomadee = lojasKV.filter(l => l.tipo === 'lomadee') as LojaLomadee[];
   const lojasAwin = lojasKV.filter(l => l.tipo === 'awin') as LojaAwin[];
+
+  // URL da loja atualmente buscada (para substituição)
+  const lojaAtualUrl = modoBusca === 'loja' ? urlLoja : modoBusca === 'loja-awin' ? urlLojaAwin : '';
 
   useEffect(() => {
     fetch('/api/editorial/auth/check').then(r => r.json()).then(d => setAuth(d.ok)).catch(() => setAuth(false));
@@ -204,33 +251,39 @@ export default function BuscarProdutosPage() {
       fetch('/api/produtos/save?tipo=destaque-home')
         .then(r => r.json())
         .then(d => setDestaqueHomeId(d.id || null));
-      // Carrega lojas do KV
       fetch('/api/produtos/lojas')
         .then(r => r.json())
-        .then(d => {
-          if (Array.isArray(d)) setLojasKV(d);
-        })
+        .then(d => { if (Array.isArray(d)) setLojasKV(d); })
         .catch(() => {});
     }
   }, [auth]);
 
-  // Quando muda seleção de loja Lomadee, atualiza urlLoja
-  useEffect(() => {
-    if (lojaLomadeeSelect) setUrlLoja(lojaLomadeeSelect);
-  }, [lojaLomadeeSelect]);
+    useEffect(() => {
+    if (lojaLomadeeSelect) {
+      setUrlLoja(lojaLomadeeSelect);
+      const loja = lojasLomadee.find(l => l.url === lojaLomadeeSelect);
+      if (loja?.cron?.limite) setLimiteBusca(loja.cron.limite);
+    }
+  }, [lojaLomadeeSelect, lojasLomadee]);
 
-  // Quando muda seleção de loja Awin, atualiza url e anuncianteId
-  useEffect(() => {
+    useEffect(() => {
     if (lojaAwinSelect) {
       const loja = lojasAwin.find(l => l.url === lojaAwinSelect);
       if (loja) {
         setUrlLojaAwin(loja.url);
         setAwinAnunciante(loja.anuncianteId);
+        if (loja.cron?.limite) setLimiteBusca(loja.cron.limite);
       }
     }
-  }, [lojaAwinSelect]);
+  }, [lojaAwinSelect, lojasAwin]);
 
-   async function loadPinados() {
+  // Resetar seleção ao mudar de busca
+  useEffect(() => {
+    setSelecionados(new Set());
+    setModoSelecao(false);
+  }, [produtos]);
+
+  async function loadPinados() {
     try {
       const res = await fetch('/api/produtos/save');
       const json = await res.json();
@@ -259,8 +312,10 @@ export default function BuscarProdutosPage() {
     setBuscandoLoja(true);
     setProdutos([]);
     try {
-      const params = new URLSearchParams({ url: urlLojaAwin, limit: '400', orgId: awinAnunciante });
-      const res = await fetch(`/api/scrape?${params}`);
+        const lojaAtual = lojasAwin.find(l => l.url === urlLojaAwin);
+        const params = new URLSearchParams({ url: urlLojaAwin, limit: String(limiteBusca), orgId: awinAnunciante });
+        if (lojaAtual?.moedaUSD) params.set('moedaUSD', 'true');
+        const res = await fetch(`/api/scrape?${params}`);
       const json = await res.json();
       if (json.error) { alert(`Erro: ${json.error}`); return; }
       setProdutos(json.data || []);
@@ -287,8 +342,10 @@ export default function BuscarProdutosPage() {
         orgId = marca?.id || '';
       } catch {}
 
-      const params = new URLSearchParams({ url: urlLoja, limit: '500' });
+      const lojaAtual = lojasLomadee.find(l => l.url === urlLoja);
+      const params = new URLSearchParams({ url: urlLoja, limit: String(limiteBusca) });
       if (orgId) params.set('orgId', orgId);
+      if (lojaAtual?.moedaUSD) params.set('moedaUSD', 'true');
       if (q) params.set('q', q);
       const res = await fetch(`/api/scrape?${params}`);
       const json = await res.json();
@@ -304,7 +361,7 @@ export default function BuscarProdutosPage() {
     setLoading(true);
     setProdutos([]);
     try {
-      const params = new URLSearchParams({ limit: '400', loja });
+      const params = new URLSearchParams({ limit: '50', loja });
       if (q) params.set('q', q);
       const res = await fetch(`/api/awin?${params}`);
       const json = await res.json();
@@ -359,7 +416,7 @@ export default function BuscarProdutosPage() {
     } finally { setBuscandoLink(false); }
   }
 
-  async function handleConfirmarPinar(produto: Produto, destinos: string[], parcelas: string, valorParcela: string) {
+    async function handleConfirmarPinar(produto: Produto, destinos: string[], parcelas: string, valorParcela: string, ambiente = '', tipoAmbiente = '') {
     setModalProduto(null);
     setGerando(produto.id);
     try {
@@ -373,6 +430,11 @@ export default function BuscarProdutosPage() {
 
       let parcelasFinal = parcelas;
       let valorParcelaFinal = valorParcela;
+
+           if (!parcelasFinal && (produto as any).plataforma === 'efacil') {
+        parcelasFinal = String((produto as any).parcelas || '');
+        valorParcelaFinal = String((produto as any).valorParcela || '');
+      }
 
       if (!parcelasFinal && (produto as any).plataforma === 'vtex' && (produto as any).skuId) {
         try {
@@ -391,19 +453,119 @@ export default function BuscarProdutosPage() {
       await fetch('/api/produtos/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+          body: JSON.stringify({
           ...produto,
           link: linkAfiliado,
           linkOriginal: produto.link,
           destinos,
           parcelas: parcelasFinal,
           valorParcela: valorParcelaFinal,
+          ambiente,
+          tipoAmbiente,
         }),
       });
       await loadPinados();
     } catch {
       alert('Erro ao pinar produto.');
     } finally { setGerando(null); }
+  }
+
+  // Pinar em massa (sem substituir)
+  async function handlePinarMassa(destinos: string[], parcelas: string, valorParcela: string) {
+    setModalMassa(null);
+    setPinandoMassa(true);
+    const lista = produtos.filter(p => selecionados.has(p.id) && !isPinado(p.id));
+    let ok = 0;
+    for (const produto of lista) {
+      try {
+        const shortRes = await fetch('/api/produtos/shorten', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: produto.link, organizationId: produto.organizationId }),
+        });
+        const shortData = await shortRes.json();
+        const linkAfiliado = shortData.shortUrl || produto.link;
+        await fetch('/api/produtos/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...produto,
+            link: linkAfiliado,
+            linkOriginal: produto.link,
+            destinos,
+            parcelas,
+            valorParcela,
+          }),
+        });
+        ok++;
+      } catch {}
+    }
+    await loadPinados();
+    setSelecionados(new Set());
+    setModoSelecao(false);
+    setPinandoMassa(false);
+    if (ok > 0) alert(`✅ ${ok} produto${ok > 1 ? 's' : ''} pinado${ok > 1 ? 's' : ''}!`);
+  }
+
+  // Substituir produtos da loja: remove todos os pinados da loja, pina os selecionados
+  async function handleSubstituirLoja(destinos: string[], parcelas: string, valorParcela: string) {
+    setModalMassa(null);
+    setSubstituindo(true);
+    try {
+      // Identifica pinados da loja atual pelo campo loja ou pelo domínio
+      const dominioAtual = lojaAtualUrl ? new URL(lojaAtualUrl).hostname.replace('www.', '') : '';
+      const pinadosDaLoja = pinados.filter(p => {
+        if (!dominioAtual) return false;
+        const lojaField = p.loja || '';
+        const link = p.linkOriginal || p.link || '';
+        try {
+          const d = new URL(link).hostname.replace('www.', '');
+          return d === dominioAtual || lojaField.toLowerCase().includes(dominioAtual.split('.')[0]);
+        } catch { return false; }
+      });
+
+      // Remove todos os pinados dessa loja
+      for (const p of pinadosDaLoja) {
+        await fetch('/api/produtos/save', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: p.id }),
+        });
+      }
+
+      // Pina os selecionados
+      const lista = produtos.filter(p => selecionados.has(p.id));
+      for (const produto of lista) {
+        try {
+          const shortRes = await fetch('/api/produtos/shorten', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: produto.link, organizationId: produto.organizationId }),
+          });
+          const shortData = await shortRes.json();
+          const linkAfiliado = shortData.shortUrl || produto.link;
+          await fetch('/api/produtos/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ...produto,
+              link: linkAfiliado,
+              linkOriginal: produto.link,
+              destinos,
+              parcelas,
+              valorParcela,
+            }),
+          });
+        } catch {}
+      }
+
+      await loadPinados();
+      setSelecionados(new Set());
+      setModoSelecao(false);
+      alert(`✅ Substituição concluída! ${pinadosDaLoja.length} removidos, ${lista.length} pinados.`);
+    } catch {
+      alert('Erro ao substituir produtos.');
+    } finally { setSubstituindo(false); }
   }
 
   async function handleAtualizarDestinos(pinado: ProdutoPinado, novosDestinos: string[]) {
@@ -464,58 +626,31 @@ export default function BuscarProdutosPage() {
     await loadPinados();
   }
 
-   function toggleSelecionado(id: string) {
+  function toggleSelecao(id: string) {
     setSelecionados(prev => {
-      const novo = new Set(prev);
-      novo.has(id) ? novo.delete(id) : novo.add(id);
-      return novo;
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
     });
   }
 
-  function selecionarTodos() {
-    const naoPin = produtos.filter(p => !isPinado(p.id));
-    setSelecionados(new Set(naoPin.map(p => p.id)));
-  }
-
-  function limparSelecao() {
-    setSelecionados(new Set());
-  }
-
-  async function handlePinarMassa(destinos: string[], parcelas: string, valorParcela: string) {
-    setModalMassa(false);
-    setPinandoMassa(true);
-    const lista = produtos.filter(p => selecionados.has(p.id) && !isPinado(p.id));
-    for (const produto of lista) {
-      try {
-        const shortRes = await fetch('/api/produtos/shorten', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: produto.link, organizationId: produto.organizationId }),
-        });
-        const shortData = await shortRes.json();
-        const linkAfiliado = shortData.shortUrl || produto.link;
-        await fetch('/api/produtos/save', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ...produto,
-            link: linkAfiliado,
-            linkOriginal: produto.link,
-            destinos,
-            parcelas,
-            valorParcela,
-          }),
-        });
-      } catch { /* continua pro próximo */ }
-    }
-    await loadPinados();
-    setSelecionados(new Set());
-    setModoSelecao(false);
-    setPinandoMassa(false);
-  }
-
   const isPinado = (id: string) => pinados.some(p => p.id === id);
-  const pinadosFiltrados = filtroDestino === 'todos' ? pinados : pinados.filter(p => p.destinos?.includes(filtroDestino));
+    const pinadosFiltrados = pinados
+    .filter(p => filtroDestino === 'todos' || p.destinos?.includes(filtroDestino))
+    .filter(p => filtroLoja === '' || p.loja === filtroLoja);
+  const lojasUnicas = [...new Set(pinados.map(p => p.loja).filter(Boolean))].sort();
+  const naoSelecionadosDaLoja = selecionados.size > 0;
+  const produtosMassaFake: Produto = {
+    id: '__massa__',
+    nome: `${selecionados.size} produto${selecionados.size > 1 ? 's' : ''} selecionado${selecionados.size > 1 ? 's' : ''}`,
+    imagem: '',
+    link: '',
+    preco: 0,
+    precoOriginal: 0,
+    desconto: 0,
+    organizationId: '',
+    estoque: 999,
+  };
 
   if (auth === null) return (
     <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f9fafb' }}>
@@ -531,19 +666,78 @@ export default function BuscarProdutosPage() {
   return (
     <main style={{ maxWidth: '1060px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
 
-      {modalProduto && (
+      {/* Modal editar ambiente */}
+      {editandoAmbiente && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
+          <div style={{ backgroundColor: '#fff', borderRadius: '16px', padding: '28px', maxWidth: '380px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
+            <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#111827', margin: '0 0 6px' }}>🏠 Categorizar ambiente</h2>
+            <p style={{ fontSize: '0.82rem', color: '#6b7280', margin: '0 0 20px', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+              {editandoAmbiente.nome}
+            </p>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: '0.72rem', color: '#6b7280', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Ambiente</label>
+                <select value={editAmb || (editandoAmbiente as any).ambiente || ''} onChange={e => setEditAmb(e.target.value)}
+                  style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.85rem', boxSizing: 'border-box' }}>
+                  <option value="">— nenhum —</option>
+                  {AMBIENTES.map(a => <option key={a} value={a}>{a}</option>)}
+                </select>
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: '0.72rem', color: '#6b7280', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Tipo</label>
+                <select value={editTipo || (editandoAmbiente as any).tipoAmbiente || ''} onChange={e => setEditTipo(e.target.value)}
+                  style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.85rem', boxSizing: 'border-box' }}>
+                  <option value="">— nenhum —</option>
+                  {TIPOS_AMBIENTE.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={() => { setEditandoAmbiente(null); setEditAmb(''); setEditTipo(''); }}
+                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, cursor: 'pointer' }}>
+                Cancelar
+              </button>
+              <button onClick={async () => {
+                await fetch('/api/produtos/save', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    ...editandoAmbiente,
+                    ambiente: editAmb || (editandoAmbiente as any).ambiente || '',
+                    tipoAmbiente: editTipo || (editandoAmbiente as any).tipoAmbiente || '',
+                  }),
+                });
+                await loadPinados();
+                setEditandoAmbiente(null); setEditAmb(''); setEditTipo('');
+              }} style={{ flex: 2, padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: '#7c3aed', color: '#fff', fontWeight: 700, cursor: 'pointer' }}>
+                💾 Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal pinar  em  massa */}
+      {modalMassa && (
         <ModalDestinos
-          produto={modalProduto}
-          onConfirm={(destinos, parcelas, valorParcela) => handleConfirmarPinar(modalProduto, destinos, parcelas, valorParcela)}
-          onCancel={() => setModalProduto(null)}
+          produto={produtosMassaFake}
+          onConfirm={(destinos, parcelas, valorParcela) => {
+            if (modalMassa === 'substituir') {
+              handleSubstituirLoja(destinos, parcelas, valorParcela);
+            } else {
+              handlePinarMassa(destinos, parcelas, valorParcela);
+            }
+          }}
+          onCancel={() => setModalMassa(null)}
         />
       )}
 
-            {modalMassa && (
+      {/* Modal pinar produto individual */}
+      {modalProduto && (
         <ModalDestinos
-          produto={{ id: '', nome: `${selecionados.size} produtos selecionados`, imagem: '', link: '', preco: 0, precoOriginal: 0, desconto: 0, organizationId: '', estoque: 0 }}
-          onConfirm={(destinos, parcelas, valorParcela) => handlePinarMassa(destinos, parcelas, valorParcela)}
-          onCancel={() => setModalMassa(false)}
+          produto={modalProduto}
+          onConfirm={(destinos, parcelas, valorParcela, ambiente, tipoAmbiente) => handleConfirmarPinar(modalProduto, destinos, parcelas, valorParcela, ambiente, tipoAmbiente)}
+          onCancel={() => setModalProduto(null)}
         />
       )}
 
@@ -561,7 +755,7 @@ export default function BuscarProdutosPage() {
               </a>
             ))}
             <a href="/produtos/cadastra-lojas" style={{ backgroundColor: '#7c3aed', color: '#fff', padding: '6px 12px', borderRadius: '6px', textDecoration: 'none', fontSize: '0.78rem', fontWeight: 600 }}>
-              🏪 Lojas
+              🏪 Cadastra Lojas
             </a>
             <a href="/" style={{ backgroundColor: '#f3f4f6', color: '#374151', padding: '6px 12px', borderRadius: '6px', textDecoration: 'none', fontSize: '0.78rem', fontWeight: 600 }}>← Site</a>
           </div>
@@ -576,6 +770,7 @@ export default function BuscarProdutosPage() {
         <button onClick={() => setAba('pinados')} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', backgroundColor: aba === 'pinados' ? '#2563eb' : '#fff', color: aba === 'pinados' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
           📌 Pinados ({pinados.length})
         </button>
+
       </div>
 
       {/* Aba buscar */}
@@ -598,9 +793,16 @@ export default function BuscarProdutosPage() {
             <button onClick={() => { setModoBusca('awin'); setLojaAwin('arno'); handleBuscarAwin('', 'arno'); }} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'awin' ? '#00AE98' : '#fff', color: modoBusca === 'awin' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               🏠 Arno (Awin)
             </button>
-            <button onClick={() => { setModoBusca('spicy'); setLojaAwin('spicy'); handleBuscarAwin('', 'spicy'); }} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'spicy' ? '#dc2626' : '#fff', color: modoBusca === 'spicy' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                        <button onClick={() => { setModoBusca('spicy'); setLojaAwin('spicy'); handleBuscarAwin('', 'spicy'); }} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'spicy' ? '#dc2626' : '#fff', color: modoBusca === 'spicy' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               🌶 Spicy (Awin)
             </button>
+            <button onClick={() => { setModoBusca('centauro'); setLojaAwin('centauro'); handleBuscarAwin('', 'centauro'); }} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'centauro' ? '#e65c00' : '#fff', color: modoBusca === 'centauro' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+              🏃 Centauro (Awin)
+            </button>
+            <button onClick={() => { setModoBusca('carrefour'); setLojaAwin('carrefour'); handleBuscarAwin('', 'carrefour'); }} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'carrefour' ? '#e65c00' : '#fff', color: modoBusca === 'carrefour' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+              🏃 Carrefour (Awin)
+            </button>
+
           </div>
 
           <div style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '20px', marginBottom: '20px' }}>
@@ -628,7 +830,7 @@ export default function BuscarProdutosPage() {
             )}
 
             {/* Awin — Arno / Spicy (acesso rápido) */}
-            {(modoBusca === 'awin' || modoBusca === 'spicy') && (
+               {(modoBusca === 'awin' || modoBusca === 'spicy' || modoBusca === 'centauro' || modoBusca === 'carrefour') && (
               <div>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <input
@@ -637,35 +839,28 @@ export default function BuscarProdutosPage() {
                     style={{ flex: 1, padding: '9px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.88rem', boxSizing: 'border-box' }} />
                 </div>
                 <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: '6px 0 0' }}>
-                  Produtos da {modoBusca === 'awin' ? 'Arno' : 'Spicy'} via Awin — links de afiliado já inclusos.
+                 Produtos da {modoBusca === 'awin' ? 'Arno' : modoBusca === 'spicy' ? 'Spicy' : modoBusca === 'centauro' ? 'Centauro' : 'Carrefour'} via Awin — links de afiliado já inclusos.
                 </p>
               </div>
             )}
 
-            {/* Busca por site — Lomadee (select dinâmico do KV) */}
+            {/* Busca por site — Lomadee */}
             {modoBusca === 'loja' && (
               <div>
                 {lojasLomadee.length > 0 ? (
                   <div style={{ marginBottom: '10px' }}>
                     <label style={labelStyle}>Selecionar loja cadastrada</label>
                     <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                                            <>
-                        <input
-                          list="lista-lomadee"
-                          placeholder="Digite para filtrar..."
-                          defaultValue=""
-                          onChange={e => {
-                            const match = lojasLomadee.find(l => `${l.nome} (${l.url.replace('https://','').replace('www.','').split('/')[0]})` === e.target.value);
-                            if (match) setLojaLomadeeSelect(match.url);
-                          }}
-                          style={selectStyle}
-                        />
-                        <datalist id="lista-lomadee">
-                          {lojasLomadee.map(l => (
-                            <option key={l.url} value={`${l.nome} (${l.url.replace('https://','').replace('www.','').split('/')[0]})`} />
-                          ))}
-                        </datalist>
-                      </>
+                      <select
+                        value={lojaLomadeeSelect}
+                        onChange={e => setLojaLomadeeSelect(e.target.value)}
+                        style={selectStyle}
+                      >
+                        <option value="">— Escolha uma loja —</option>
+                        {lojasLomadee.map(l => (
+                          <option key={l.url} value={l.url}>{l.nome} ({l.url.replace('https://','').replace('www.','').split('/')[0]})</option>
+                        ))}
+                      </select>
                       <button onClick={() => handleBuscarLoja()} disabled={buscandoLoja || !urlLoja.trim()}
                         style={{ padding: '9px 20px', borderRadius: '8px', border: 'none', backgroundColor: '#be185d', color: '#fff', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                         {buscandoLoja ? '⏳' : '🔍 Buscar'}
@@ -691,6 +886,17 @@ export default function BuscarProdutosPage() {
                       style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.85rem', boxSizing: 'border-box' }} />
                   </div>
                 )}
+                               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6b7280', whiteSpace: 'nowrap' }}>Qtd. produtos:</label>
+                  <select value={limiteBusca} onChange={e => setLimiteBusca(parseInt(e.target.value))}
+                    style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.85rem' }}>
+                    <option value={20}>20</option>
+                    <option value={50}>50 (padrão)</option>
+                    <option value={80}>80</option>
+                    <option value={100}>100</option>
+                    <option value={150}>150</option>
+                  </select>
+                </div>
                 <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: '6px 0 0' }}>
                   Detecta automaticamente Shopify, VTEX, Nuvemshop, MiBrasil…{' '}
                   {lojasLomadee.length === 0 && (
@@ -700,30 +906,25 @@ export default function BuscarProdutosPage() {
               </div>
             )}
 
-            {/* Busca por site Awin (select dinâmico do KV) */}
+            {/* Busca por site Awin */}
             {modoBusca === 'loja-awin' && (
               <div>
                 <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
                   <div style={{ flex: 2, minWidth: '200px' }}>
                     <label style={labelStyle}>Selecionar loja Awin</label>
                     {lojasAwin.length > 0 ? (
-                                           <>
-                        <input
-                          list="lista-awin"
-                          placeholder="Digite para filtrar..."
-                          defaultValue=""
-                          onChange={e => {
-                            const match = lojasAwin.find(l => `${l.nome}${l.moedaUSD ? ' 💵' : ''} (${l.anuncianteId})` === e.target.value);
-                            if (match) setLojaAwinSelect(match.url);
-                          }}
-                          style={selectStyle}
-                        />
-                        <datalist id="lista-awin">
-                          {lojasAwin.map(l => (
-                            <option key={l.url} value={`${l.nome}${l.moedaUSD ? ' 💵' : ''} (${l.anuncianteId})`} />
-                          ))}
-                        </datalist>
-                      </>
+                      <select
+                        value={lojaAwinSelect}
+                        onChange={e => setLojaAwinSelect(e.target.value)}
+                        style={selectStyle}
+                      >
+                        <option value="">— Escolha uma loja —</option>
+                        {lojasAwin.map(l => (
+                          <option key={l.url} value={l.url}>
+                            {l.nome}{l.moedaUSD ? ' 💵' : ''} ({l.anuncianteId})
+                          </option>
+                        ))}
+                      </select>
                     ) : (
                       <input value={urlLojaAwin} onChange={e => setUrlLojaAwin(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handleBuscarLojaAwin()}
@@ -749,7 +950,6 @@ export default function BuscarProdutosPage() {
                     </button>
                   </div>
                 </div>
-                {/* Mostra info da loja selecionada */}
                 {lojaAwinSelect && (() => {
                   const loja = lojasAwin.find(l => l.url === lojaAwinSelect);
                   return loja ? (
@@ -760,6 +960,17 @@ export default function BuscarProdutosPage() {
                     </div>
                   ) : null;
                 })()}
+                               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6b7280', whiteSpace: 'nowrap' }}>Qtd. produtos:</label>
+                  <select value={limiteBusca} onChange={e => setLimiteBusca(parseInt(e.target.value))}
+                    style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.85rem' }}>
+                    <option value={20}>20</option>
+                    <option value={50}>50 (padrão)</option>
+                    <option value={80}>80</option>
+                    <option value={100}>100</option>
+                    <option value={150}>150</option>
+                  </select>
+                </div>
                 <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: 0 }}>
                   Produtos com link de afiliado Awin gerado automaticamente.{' '}
                   {lojasAwin.length === 0 && (
@@ -811,110 +1022,150 @@ export default function BuscarProdutosPage() {
 
           {!loading && !buscandoLink && !buscandoLoja && produtos.length > 0 && (
             <>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '0.82rem', color: '#6b7280' }}>
-                  {total > 0 ? `${total.toLocaleString('pt-BR')} produtos — ` : ''}página {pagina}
-                </span>
-                <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                  {!modoSelecao ? (
-                    <button onClick={() => setModoSelecao(true)}
-                      style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer' }}>
-                      ☑️ Selecionar em massa
+              {/* Toolbar de seleção em massa */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                <div style={{ fontSize: '0.82rem', color: '#6b7280', flex: 1 }}>
+                  {total > 0 ? `${total.toLocaleString('pt-BR')} produtos — ` : ''} página {pagina}
+                </div>
+                {!modoSelecao ? (
+                  <button
+                    onClick={() => { setModoSelecao(true); setSelecionados(new Set()); }}
+                    style={{ padding: '6px 14px', borderRadius: '8px', border: '1px solid #d1d5db', backgroundColor: '#fff', color: '#374151', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer' }}>
+                    ☑️ Selecionar em massa
+                  </button>
+                ) : (
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '0.82rem', color: '#374151', fontWeight: 700 }}>
+                      {selecionados.size} selecionado{selecionados.size !== 1 ? 's' : ''}
+                    </span>
+                    <button
+                      onClick={() => setSelecionados(new Set(produtos.filter(p => !isPinado(p.id)).map(p => p.id)))}
+                      style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#fff', color: '#374151', fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer' }}>
+                      Selecionar todos
                     </button>
-                  ) : (
-                    <>
-                      <span style={{ fontSize: '0.78rem', color: '#374151', fontWeight: 600 }}>
-                        {selecionados.size} selecionados
-                      </span>
-                      <button onClick={selecionarTodos}
-                        style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#fff', color: '#374151', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer' }}>
-                        Selecionar todos
-                      </button>
-                      <button onClick={limparSelecao}
-                        style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#fff', color: '#374151', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer' }}>
-                        Limpar
-                      </button>
-                      {selecionados.size > 0 && (
-                        <button onClick={() => setModalMassa(true)} disabled={pinandoMassa}
-                          style={{ padding: '5px 14px', borderRadius: '6px', border: 'none', backgroundColor: '#2563eb', color: '#fff', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer' }}>
+                    <button
+                      onClick={() => setSelecionados(new Set())}
+                      style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#fff', color: '#374151', fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer' }}>
+                      Limpar
+                    </button>
+                    <button
+                      onClick={() => { setModoSelecao(false); setSelecionados(new Set()); }}
+                      style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#fff', color: '#6b7280', fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer' }}>
+                      Cancelar
+                    </button>
+                    {selecionados.size > 0 && (
+                      <>
+                        <button
+                          onClick={() => setModalMassa('pinar')}
+                          disabled={pinandoMassa || substituindo}
+                          style={{ padding: '6px 14px', borderRadius: '8px', border: 'none', backgroundColor: '#2563eb', color: '#fff', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>
                           {pinandoMassa ? '⏳ Pinando...' : `📌 Pinar ${selecionados.size}`}
                         </button>
-                      )}
-                      <button onClick={() => { setModoSelecao(false); limparSelecao(); }}
-                        style={{ padding: '5px 10px', borderRadius: '6px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#9ca3af', fontSize: '0.78rem', cursor: 'pointer' }}>
-                        ✕
-                      </button>
-                    </>
-                  )}
-                </div>
+                        {lojaAtualUrl && (
+                          <button
+                            onClick={() => setModalMassa('substituir')}
+                            disabled={pinandoMassa || substituindo}
+                            style={{ padding: '6px 14px', borderRadius: '8px', border: 'none', backgroundColor: '#ea580c', color: '#fff', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>
+                            {substituindo ? '⏳ Substituindo...' : `🔄 Substituir produtos desta loja`}
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px', marginBottom: '20px' }}>
-                {produtos.map(p => (
-                                   <div key={p.id} onClick={() => modoSelecao && !isPinado(p.id) && toggleSelecionado(p.id)}
-                    style={{ backgroundColor: '#fff', borderRadius: '12px', border: `2px solid ${selecionados.has(p.id) ? '#2563eb' : isPinado(p.id) ? '#047857' : '#e5e7eb'}`, cursor: modoSelecao && !isPinado(p.id) ? 'pointer' : 'default',overflow: 'hidden', boxShadow: '0 2px 6px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ height: '160px', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', position: 'relative' }}>
-                      {p.imagem && <img src={p.imagem} alt={p.nome} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />}
-                      {p.desconto > 0 && (
-                        <span style={{ position: 'absolute', top: '8px', left: '8px', backgroundColor: '#dc2626', color: '#fff', fontSize: '0.7rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px' }}>
-                          -{p.desconto}%
-                        </span>
-                      )}
-                                            {modoSelecao && !isPinado(p.id) && (
-                        <span style={{ position: 'absolute', top: '8px', right: '8px', width: '20px', height: '20px', borderRadius: '4px', border: `2px solid ${selecionados.has(p.id) ? '#2563eb' : '#d1d5db'}`, backgroundColor: selecionados.has(p.id) ? '#2563eb' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', color: '#fff', fontWeight: 700 }}>
-                          {selecionados.has(p.id) ? '✓' : ''}
-                        </span>
-                      )}
-                      {!modoSelecao && isPinado(p.id) && (
-                        <span style={{ position: 'absolute', top: '8px', right: '8px', backgroundColor: '#047857', color: '#fff', fontSize: '0.7rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px' }}>
-                          📌 Pinado
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', flexGrow: 1, gap: '6px' }}>
-                      <h3 style={{ fontSize: '0.82rem', fontWeight: 600, color: '#111827', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                        {p.nome}
-                      </h3>
-                      <div style={{ fontSize: '0.7rem', color: p.loja === 'Shopee' ? '#ea580c' : '#047857', fontWeight: 600 }}>
-                        🏪 {p.loja}
+                {produtos.map(p => {
+                  const pinado = isPinado(p.id);
+                  const sel = selecionados.has(p.id);
+                  return (
+                    <div
+                      key={p.id}
+                      onClick={() => modoSelecao && !pinado && toggleSelecao(p.id)}
+                      style={{
+                        backgroundColor: '#fff',
+                        borderRadius: '12px',
+                        border: `2px solid ${pinado ? '#047857' : sel ? '#2563eb' : '#e5e7eb'}`,
+                        overflow: 'hidden',
+                        boxShadow: sel ? '0 0 0 3px #2563eb30' : '0 2px 6px rgba(0,0,0,0.04)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        cursor: modoSelecao && !pinado ? 'pointer' : 'default',
+                        opacity: modoSelecao && pinado ? 0.6 : 1,
+                      }}>
+                      <div style={{ height: '160px', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', position: 'relative' }}>
+                        {p.imagem && <img src={p.imagem} alt={p.nome} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />}
+                        {p.desconto > 0 && (
+                          <span style={{ position: 'absolute', top: '8px', left: '8px', backgroundColor: '#dc2626', color: '#fff', fontSize: '0.7rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px' }}>
+                            -{p.desconto}%
+                          </span>
+                        )}
+                        {/* Badge selecionar / pinado */}
+                        {modoSelecao && !pinado && (
+                          <span style={{ position: 'absolute', top: '8px', right: '8px', width: '22px', height: '22px', borderRadius: '50%', border: `2px solid ${sel ? '#2563eb' : '#d1d5db'}`, backgroundColor: sel ? '#2563eb' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', color: '#fff', fontWeight: 700 }}>
+                            {sel ? '✓' : ''}
+                          </span>
+                        )}
+                        {pinado && (
+                          <span style={{ position: 'absolute', top: '8px', right: '8px', backgroundColor: '#047857', color: '#fff', fontSize: '0.7rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px' }}>
+                            📌 Pinado
+                          </span>
+                        )}
                       </div>
-                      {(p as any).moedaOriginal === 'USD' && (
-                        <div style={{ fontSize: '0.68rem', color: '#92400e', fontWeight: 600, backgroundColor: '#fef3c7', padding: '2px 6px', borderRadius: '4px' }}>
-                          💵 Preço convertido de USD para R$ · cotação do dia: R$ {((p as any).cotacaoUsada || 5.7).toFixed(2).replace('.', ',')}
+                      <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', flexGrow: 1, gap: '6px' }}>
+                        <h3 style={{ fontSize: '0.82rem', fontWeight: 600, color: '#111827', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                          {p.nome}
+                        </h3>
+                                                <div style={{ fontSize: '0.7rem', color: p.loja === 'Shopee' ? '#ea580c' : '#047857', fontWeight: 600 }}>
+                          🏪 {p.loja}
+                          {(p as any).plataforma === 'vtex' && (
+                            <span style={{ marginLeft: '6px', fontSize: '0.65rem', color: '#7c3aed', backgroundColor: '#f3f4f6', padding: '1px 5px', borderRadius: '3px', fontWeight: 600 }}>VTEX</span>
+                          )}
                         </div>
-                      )}
-                      {(p as any).ean && (
-                        <div style={{ fontSize: '0.68rem', color: '#9ca3af', fontWeight: 500 }}>
-                          EAN: {(p as any).ean}
-                        </div>
-                      )}
-                      {p.estoque !== undefined && p.estoque <= 5 && (
-                        <div style={{ fontSize: '0.72rem', color: p.estoque === 0 ? '#dc2626' : '#ea580c', fontWeight: 600 }}>
-                          {p.estoque === 0 ? '⚠️ Esgotado' : `⚠️ Últimas ${p.estoque} unidades`}
-                        </div>
-                      )}
-                      <div style={{ marginTop: 'auto' }}>
-                        {p.precoOriginal > p.preco && (
-                          <div style={{ fontSize: '0.72rem', color: '#9ca3af', textDecoration: 'line-through' }}>
-                            R$ {p.precoOriginal.toFixed(2).replace('.', ',')}
+                        {(p as any).moedaOriginal === 'USD' && (
+                          <div style={{ fontSize: '0.68rem', color: '#92400e', fontWeight: 600, backgroundColor: '#fef3c7', padding: '2px 6px', borderRadius: '4px' }}>
+                            💵 Preço convertido de USD para R$ (*sujeito a impostos) · cotação do dia: R$ {((p as any).cotacaoUsada || 5.1).toFixed(2).replace('.', ',')}
                           </div>
                         )}
-                        <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#dc2626' }}>
-                          R$ {p.preco.toFixed(2).replace('.', ',')}
+                        {(p as any).ean && (
+                          <div style={{ fontSize: '0.68rem', color: '#9ca3af', fontWeight: 500 }}>
+                            EAN: {(p as any).ean}
+                          </div>
+                        )}
+                        {p.estoque !== undefined && p.estoque <= 5 && (
+                          <div style={{ fontSize: '0.72rem', color: p.estoque === 0 ? '#dc2626' : '#ea580c', fontWeight: 600 }}>
+                            {p.estoque === 0 ? '⚠️ Esgotado' : `⚠️ Últimas ${p.estoque} unidades`}
+                          </div>
+                        )}
+                        <div style={{ marginTop: 'auto' }}>
+                          {p.precoOriginal > p.preco && (
+                            <div style={{ fontSize: '0.72rem', color: '#9ca3af', textDecoration: 'line-through' }}>
+                              R$ {p.precoOriginal.toFixed(2).replace('.', ',')}
+                            </div>
+                          )}
+                          <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#dc2626' }}>
+                            R$ {p.preco.toFixed(2).replace('.', ',')}
+                          </div>
                         </div>
+                        {!modoSelecao && (
+                          <>
+                            <a href={p.link} target="_blank" rel="noopener noreferrer"
+                              style={{ display: 'block', padding: '6px', borderRadius: '6px', border: '1px solid #e5e7eb', backgroundColor: '#f9fafb', color: '#374151', fontWeight: 600, fontSize: '0.78rem', textAlign: 'center', textDecoration: 'none' }}>
+                              🔗 Ver na loja
+                            </a>
+                            <button
+                              onClick={() => !pinado && gerando !== p.id && setModalProduto(p)}
+                              disabled={pinado || gerando === p.id}
+                              style={{ width: '100%', padding: '7px', borderRadius: '6px', border: 'none', backgroundColor: pinado ? '#f0fdf4' : '#2563eb', color: pinado ? '#047857' : '#fff', fontWeight: 700, fontSize: '0.8rem', cursor: pinado ? 'default' : 'pointer' }}>
+                              {gerando === p.id ? '⏳ Gerando link...' : pinado ? '✅ Já pinado' : '📌 Pinar produto'}
+                            </button>
+                          </>
+                        )}
                       </div>
-                      <a href={p.link} target="_blank" rel="noopener noreferrer"
-                        style={{ display: 'block', padding: '6px', borderRadius: '6px', border: '1px solid #e5e7eb', backgroundColor: '#f9fafb', color: '#374151', fontWeight: 600, fontSize: '0.78rem', textAlign: 'center', textDecoration: 'none' }}>
-                        🔗 Ver na loja
-                      </a>
-                      <button
-                        onClick={() => !isPinado(p.id) && gerando !== p.id && setModalProduto(p)}
-                        disabled={isPinado(p.id) || gerando === p.id}
-                        style={{ width: '100%', padding: '7px', borderRadius: '6px', border: 'none', backgroundColor: isPinado(p.id) ? '#f0fdf4' : '#2563eb', color: isPinado(p.id) ? '#047857' : '#fff', fontWeight: 700, fontSize: '0.8rem', cursor: isPinado(p.id) ? 'default' : 'pointer' }}>
-                        {gerando === p.id ? '⏳ Gerando link...' : isPinado(p.id) ? '✅ Já pinado' : '📌 Pinar produto'}
-                      </button>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               {modoBusca === 'palavra' && (
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
@@ -937,7 +1188,7 @@ export default function BuscarProdutosPage() {
       {/* Aba pinados */}
       {aba === 'pinados' && (
         <div>
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
             <button onClick={() => setFiltroDestino('todos')} style={{ padding: '6px 14px', borderRadius: '999px', border: `2px solid ${filtroDestino === 'todos' ? '#2563eb' : '#e5e7eb'}`, backgroundColor: filtroDestino === 'todos' ? '#2563eb' : '#fff', color: filtroDestino === 'todos' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer' }}>
               Todos ({pinados.length})
             </button>
@@ -951,6 +1202,19 @@ export default function BuscarProdutosPage() {
               );
             })}
           </div>
+          {lojasUnicas.length > 0 && (
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.78rem', color: '#6b7280', fontWeight: 600 }}>🏪 Loja:</span>
+              <button onClick={() => setFiltroLoja('')} style={{ padding: '4px 12px', borderRadius: '999px', border: `2px solid ${filtroLoja === '' ? '#7c3aed' : '#e5e7eb'}`, backgroundColor: filtroLoja === '' ? '#7c3aed' : '#fff', color: filtroLoja === '' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer' }}>
+                Todas
+              </button>
+              {lojasUnicas.map(loja => (
+                <button key={loja} onClick={() => setFiltroLoja(loja === filtroLoja ? '' : loja!)} style={{ padding: '4px 12px', borderRadius: '999px', border: `2px solid ${filtroLoja === loja ? '#7c3aed' : '#e5e7eb'}`, backgroundColor: filtroLoja === loja ? '#7c3aed' : '#fff', color: filtroLoja === loja ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer' }}>
+                  {loja} ({pinados.filter(p => p.loja === loja).length})
+                </button>
+              ))}
+            </div>
+          )}
 
           {pinadosFiltrados.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>
@@ -992,6 +1256,7 @@ export default function BuscarProdutosPage() {
                     )}
                     <small style={{ color: '#9ca3af', fontSize: '0.7rem' }}>
                       Pinado em {new Date(p.pinedAt).toLocaleDateString('pt-BR')}
+                      {p.loja && <span> · {p.loja}</span>}
                     </small>
                     {p.destinos?.includes('oferta-do-dia') && (
                       <button onClick={() => handleAtivarOfertaDia(p)} style={{ padding: '6px', borderRadius: '6px', border: 'none', backgroundColor: p.ativo ? '#dc2626' : '#f3f4f6', color: p.ativo ? '#fff' : '#374151', fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer', marginBottom: '4px', width: '100%' }}>
@@ -1003,6 +1268,9 @@ export default function BuscarProdutosPage() {
                         {destaqueHomeId === p.id ? '⭐ Destacado na Home' : '⭐ Destacar na Home'}
                       </button>
                     )}
+                                        <button onClick={() => setEditandoAmbiente(p)} style={{ padding: '6px', borderRadius: '6px', border: '1px solid #ddd6fe', backgroundColor: '#fff', color: '#7c3aed', fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer', width: '100%' }}>
+                      🏠 {p.ambiente ? `${p.ambiente} · ${p.tipoAmbiente || '—'}` : 'Categorizar ambiente'}
+                    </button>
                     <button onClick={() => handleDespinar(p.id)} style={{ padding: '6px', borderRadius: '6px', border: '1px solid #fca5a5', backgroundColor: '#fff', color: '#dc2626', fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer' }}>
                       🗑 Remover
                     </button>

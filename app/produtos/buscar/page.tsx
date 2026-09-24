@@ -34,6 +34,8 @@ interface ProdutoPinado extends Produto {
   ativo?: boolean;
   categoria?: string;
   loja?: string;
+  ambiente?: string;
+  tipoAmbiente?: string;
 }
 
 interface LojaCron {
