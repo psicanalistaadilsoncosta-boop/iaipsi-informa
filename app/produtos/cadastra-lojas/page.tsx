@@ -29,6 +29,11 @@ interface LojaAwin {
 
 type Loja = LojaLomadee | LojaAwin;
 
+const AMBIENTES = ['Sala', 'Quarto', 'Escritório', 'Cozinha', 'Banheiro', 'Área externa'];
+const TIPOS_AMBIENTE = ['Iluminação', 'Climatização', 'Móveis', 'Decoração', 'Organização', 'Eletrônicos'];
+const MOMENTOS = ['Café da manhã', 'Vinho', 'Churrasco', 'Lareira', 'Domingo relaxado', 'Festa em casa'];
+const TIPOS_MOMENTO = ['Eletro', 'Móveis', 'Acessórios', 'Alimentos'];
+
 const DESTINO_LABELS: Record<string, string> = {
   'ofertas-selecionadas': '⭐ Ofertas Selecionadas',
   'oferta-do-dia': '🔥 Oferta do Dia',
@@ -193,16 +198,24 @@ export default function CadastraLojasPage() {
   const [salvando, setSalvando] = useState(false);
   const [aba, setAba] = useState<'lomadee' | 'awin'>('lomadee');
 
-  // Form Lomadee
+   // Form Lomadee
   const [nomeL, setNomeL] = useState('');
   const [urlL, setUrlL] = useState('');
   const [moedaUSDL, setMoedaUSDL] = useState(false);
+  const [ambienteL, setAmbienteL] = useState('');
+  const [tipoAmbienteL, setTipoAmbienteL] = useState('');
+  const [momentoL, setMomentoL] = useState('');
+  const [tipoMomentoL, setTipoMomentoL] = useState('');
 
   // Form Awin
   const [nomeA, setNomeA] = useState('');
   const [urlA, setUrlA] = useState('');
   const [anuncianteId, setAnuncianteId] = useState('');
   const [moedaUSD, setMoedaUSD] = useState(false);
+  const [ambienteA, setAmbienteA] = useState('');
+  const [tipoAmbienteA, setTipoAmbienteA] = useState('');
+  const [momentoA, setMomentoA] = useState('');
+  const [tipoMomentoA, setTipoMomentoA] = useState('');
 
   useEffect(() => {
     fetch('/api/editorial/auth/check').then(r => r.json()).then(d => setAuth(d.ok)).catch(() => setAuth(false));
@@ -257,8 +270,8 @@ export default function CadastraLojasPage() {
     if (!nomeL.trim() || !urlL.trim()) return;
     let url = urlL.trim();
     if (!url.startsWith('http')) url = 'https://' + url;
-    await salvarLoja({ tipo: 'lomadee', nome: nomeL.trim(), url, moedaUSD: moedaUSDL });
-    setNomeL(''); setUrlL(''); setMoedaUSDL(false);
+    await salvarLoja({ tipo: 'lomadee', nome: nomeL.trim(), url, moedaUSD: moedaUSDL, ambiente: ambienteL || undefined, tipoAmbiente: tipoAmbienteL || undefined, momento: momentoL || undefined, tipoMomento: tipoMomentoL || undefined });
+    setNomeL(''); setUrlL(''); setMoedaUSDL(false); setAmbienteL(''); setTipoAmbienteL(''); setMomentoL(''); setTipoMomentoL('');
   }
 
   async function handleAdicionarAwin(e: React.FormEvent) {
@@ -266,8 +279,8 @@ export default function CadastraLojasPage() {
     if (!nomeA.trim() || !urlA.trim() || !anuncianteId.trim()) return;
     let url = urlA.trim();
     if (!url.startsWith('http')) url = 'https://' + url;
-    await salvarLoja({ tipo: 'awin', nome: nomeA.trim(), url, anuncianteId: anuncianteId.trim(), moedaUSD });
-    setNomeA(''); setUrlA(''); setAnuncianteId(''); setMoedaUSD(false);
+    await salvarLoja({ tipo: 'awin', nome: nomeA.trim(), url, anuncianteId: anuncianteId.trim(), moedaUSD, ambiente: ambienteA || undefined, tipoAmbiente: tipoAmbienteA || undefined, momento: momentoA || undefined, tipoMomento: tipoMomentoA || undefined });
+    setNomeA(''); setUrlA(''); setAnuncianteId(''); setMoedaUSD(false); setAmbienteA(''); setTipoAmbienteA(''); setMomentoA(''); setTipoMomentoA('');
   }
 
   const lojasFiltradas = lojas.filter(l => l.tipo === aba);
@@ -329,6 +342,40 @@ export default function CadastraLojasPage() {
                 <input value={urlL} onChange={e => setUrlL(e.target.value)} placeholder="https://www.vivavinho.com.br" style={inputStyle} required />
               </div>
                           </div>
+                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '12px', alignItems: 'flex-end' }}>
+              <div>
+                <label style={labelStyle}>🏠 Ambiente</label>
+                <select value={ambienteL} onChange={e => { setAmbienteL(e.target.value); setTipoAmbienteL(''); }} style={inputStyle}>
+                  <option value="">— Nenhum —</option>
+                  {AMBIENTES.map(a => <option key={a} value={a}>{a}</option>)}
+                </select>
+              </div>
+              {ambienteL && (
+                <div>
+                  <label style={labelStyle}>Tipo de ambiente</label>
+                  <select value={tipoAmbienteL} onChange={e => setTipoAmbienteL(e.target.value)} style={inputStyle}>
+                    <option value="">— Nenhum —</option>
+                    {TIPOS_AMBIENTE.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+              )}
+              <div>
+                <label style={labelStyle}>✨ Momento</label>
+                <select value={momentoL} onChange={e => { setMomentoL(e.target.value); setTipoMomentoL(''); }} style={inputStyle}>
+                  <option value="">— Nenhum —</option>
+                  {MOMENTOS.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+              {momentoL && (
+                <div>
+                  <label style={labelStyle}>Tipo de momento</label>
+                  <select value={tipoMomentoL} onChange={e => setTipoMomentoL(e.target.value)} style={inputStyle}>
+                    <option value="">— Nenhum —</option>
+                    {TIPOS_MOMENTO.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+              )}
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap', marginTop: '12px' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.88rem', fontWeight: 600, color: '#374151' }}>
                 <input type="checkbox" checked={moedaUSDL} onChange={e => setMoedaUSDL(e.target.checked)}
@@ -365,7 +412,41 @@ export default function CadastraLojasPage() {
                 <input value={anuncianteId} onChange={e => setAnuncianteId(e.target.value)} placeholder="ex: awin-arno" style={inputStyle} required />
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '12px', alignItems: 'flex-end' }}>
+              <div>
+                <label style={labelStyle}>🏠 Ambiente</label>
+                <select value={ambienteA} onChange={e => { setAmbienteA(e.target.value); setTipoAmbienteA(''); }} style={inputStyle}>
+                  <option value="">— Nenhum —</option>
+                  {AMBIENTES.map(a => <option key={a} value={a}>{a}</option>)}
+                </select>
+              </div>
+              {ambienteA && (
+                <div>
+                  <label style={labelStyle}>Tipo de ambiente</label>
+                  <select value={tipoAmbienteA} onChange={e => setTipoAmbienteA(e.target.value)} style={inputStyle}>
+                    <option value="">— Nenhum —</option>
+                    {TIPOS_AMBIENTE.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+              )}
+              <div>
+                <label style={labelStyle}>✨ Momento</label>
+                <select value={momentoA} onChange={e => { setMomentoA(e.target.value); setTipoMomentoA(''); }} style={inputStyle}>
+                  <option value="">— Nenhum —</option>
+                  {MOMENTOS.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+              {momentoA && (
+                <div>
+                  <label style={labelStyle}>Tipo de momento</label>
+                  <select value={tipoMomentoA} onChange={e => setTipoMomentoA(e.target.value)} style={inputStyle}>
+                    <option value="">— Nenhum —</option>
+                    {TIPOS_MOMENTO.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+              )}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap', marginTop: '12px' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.88rem', fontWeight: 600, color: '#374151' }}>
                 <input type="checkbox" checked={moedaUSD} onChange={e => setMoedaUSD(e.target.checked)}
                   style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#f59e0b' }} />
@@ -397,16 +478,20 @@ export default function CadastraLojasPage() {
                 <div style={{ flex: 1, minWidth: '200px' }}>
                   <div style={{ fontWeight: 700, color: '#111827', fontSize: '0.95rem' }}>{loja.nome}</div>
                   <div style={{ fontSize: '0.78rem', color: '#6b7280', marginTop: '2px' }}>{loja.url}</div>
-                  {loja.tipo === 'awin' && (
+                                    {loja.tipo === 'awin' && (
                     <div style={{ fontSize: '0.72rem', color: '#f59e0b', fontWeight: 600, marginTop: '2px' }}>
                       Awin ID: {(loja as LojaAwin).anuncianteId}
                       {(loja as LojaAwin).moedaUSD && <span style={{ marginLeft: '8px', color: '#92400e', backgroundColor: '#fef3c7', padding: '1px 5px', borderRadius: '3px' }}>💵 USD</span>}
+                      {loja.ambiente && <span style={{ marginLeft: '8px', color: '#7c3aed', backgroundColor: '#f5f3ff', padding: '1px 5px', borderRadius: '3px' }}>🏠 {loja.ambiente}{loja.tipoAmbiente ? ` · ${loja.tipoAmbiente}` : ''}</span>}
+                      {loja.momento && <span style={{ marginLeft: '8px', color: '#d97706', backgroundColor: '#fef3c7', padding: '1px 5px', borderRadius: '3px' }}>✨ {loja.momento}{loja.tipoMomento ? ` · ${loja.tipoMomento}` : ''}</span>}
                     </div>
                   )}
-                                   {loja.tipo === 'lomadee' && (
+                     {loja.tipo === 'lomadee' && (
                     <div style={{ fontSize: '0.72rem', color: '#be185d', fontWeight: 600, marginTop: '2px' }}>
                       Lomadee
                       {(loja as LojaLomadee).moedaUSD && <span style={{ marginLeft: '8px', color: '#92400e', backgroundColor: '#fef3c7', padding: '1px 5px', borderRadius: '3px' }}>💵 USD</span>}
+                      {loja.ambiente && <span style={{ marginLeft: '8px', color: '#7c3aed', backgroundColor: '#f5f3ff', padding: '1px 5px', borderRadius: '3px' }}>🏠 {loja.ambiente}{loja.tipoAmbiente ? ` · ${loja.tipoAmbiente}` : ''}</span>}
+                      {loja.momento && <span style={{ marginLeft: '8px', color: '#d97706', backgroundColor: '#fef3c7', padding: '1px 5px', borderRadius: '3px' }}>✨ {loja.momento}{loja.tipoMomento ? ` · ${loja.tipoMomento}` : ''}</span>}
                     </div>
                   )}
                 </div>

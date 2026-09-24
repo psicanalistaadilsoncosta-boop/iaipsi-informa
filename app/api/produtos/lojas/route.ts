@@ -7,15 +7,24 @@ const KV_KEY = 'lojas:cadastradas';
 export interface LojaLomadee {
   tipo: 'lomadee';
   nome: string;
-  url: string; // ex: https://www.vivavinho.com.br
+  url: string;
+  moedaUSD?: boolean;
+  ambiente?: string;
+  tipoAmbiente?: string;
+  momento?: string;
+  tipoMomento?: string;
 }
 
 export interface LojaAwin {
   tipo: 'awin';
   nome: string;
-  url: string; // ex: https://www.arno.com.br
-  anuncianteId: string; // ex: awin-arno
+  url: string;
+  anuncianteId: string;
   moedaUSD?: boolean;
+  ambiente?: string;
+  tipoAmbiente?: string;
+  momento?: string;
+  tipoMomento?: string;
 }
 
 export type Loja = LojaLomadee | LojaAwin;
