@@ -55,7 +55,7 @@ export default function VistaSePage() {
       `• ${p.nome || p.name} — ${p.link}`
     ).join('\n');
 
-  await fetch('/api/ambientes/enviar', {
+   const resEmail = await fetch('/api/ambientes/enviar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -74,7 +74,12 @@ export default function VistaSePage() {
       }),
     });
 
-    setEnviado(true);
+      if (resEmail.ok) {
+      setEnviado(true);
+    } else {
+      const err = await resEmail.json();
+      alert('Erro ao enviar: ' + JSON.stringify(err));
+    }
   }
 
   const total = carrinho.reduce((s, p) => s + (parseFloat(p.preco || p.price || '0') || 0), 0);
