@@ -2,15 +2,15 @@
 
 import { useEffect, useState } from 'react';
 
-const TIPOS = ['Roupas', 'Calçados', 'Acessórios'];
+const TIPOS = ['Perfumes', 'Skincare', 'Maquiagem', 'Cabelos', 'Massagem', 'Solar', 'Cuidados'];
 
-const COR = '#be185d'; // rosa escuro
-const COR_LIGHT = '#fdf2f8';
-const COR_BADGE = '#fbcfe8';
+const COR = '#9d174d'; // rosa escuro / vinho
+const COR_LIGHT = '#fff1f2';
+const COR_BADGE = '#fecdd3';
 
-export default function VistaSePage() {
+export default function BelezaPage() {
   const [dados, setDados] = useState<Record<string, any[]>>({});
-  const [tipoAtivo, setTipoAtivo] = useState('Roupas');
+  const [tipoAtivo, setTipoAtivo] = useState('');
   const [carrinho, setCarrinho] = useState<any[]>([]);
   const [email, setEmail] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -18,10 +18,13 @@ export default function VistaSePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/vista-se')
+    fetch('/api/beleza')
       .then(r => r.json())
       .then(d => {
-        setDados(d.adulto || {});
+        setDados(d);
+        // ativa primeiro tipo que tiver produtos
+        const primeiro = TIPOS.find(t => d[t]?.length > 0);
+        if (primeiro) setTipoAtivo(primeiro);
         setLoading(false);
       });
   }, []);
@@ -43,24 +46,18 @@ export default function VistaSePage() {
   async function enviarLista() {
     if (!email || carrinho.length === 0) return;
 
-    // salva lead
-    await fetch('/api/vista-se/lead', {
+    await fetch('/api/beleza/lead', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, tipo: 'adulto', itens: carrinho.map(p => p.nome || p.name) }),
+      body: JSON.stringify({ email, itens: carrinho.map(p => p.nome || p.name) }),
     });
-
-    // envia email
-    const linhas = carrinho.map(p =>
-      `• ${p.nome || p.name} — ${p.link}`
-    ).join('\n');
 
     await fetch('/api/ambientes/enviar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email,
-        produtos: carrinho.map(p => ({
+        produtos: carrinho.map((p: any) => ({
           nome: p.nome || p.name || '',
           preco: parseFloat(p.preco || p.price || '0') || 0,
           precoOriginal: parseFloat(p.precoOriginal || '0') || undefined,
@@ -74,25 +71,28 @@ export default function VistaSePage() {
       }),
     });
 
-          setEnviado(true);
+    setEnviado(true);
   }
 
   const total = carrinho.reduce((s, p) => s + (parseFloat(p.preco || p.price || '0') || 0), 0);
 
+  // Tipos que têm produtos
+  const tiposComProdutos = TIPOS.filter(t => dados[t]?.length > 0);
+
   return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: COR_LIGHT }}>
       {/* Header */}
-      <div style={{ background: COR, color: '#fff', padding: '2rem 1rem 1.5rem', textAlign: 'center' }}>
-        <div style={{ fontSize: '2rem' }}>👗</div>
-        <h1 style={{ margin: '0.5rem 0 0.25rem', fontSize: '1.8rem', fontWeight: 700 }}>Vista-se</h1>
+      <div style={{ background: `linear-gradient(135deg, ${COR} 0%, #db2777 100%)`, color: '#fff', padding: '2rem 1rem 1.5rem', textAlign: 'center' }}>
+        <div style={{ fontSize: '2rem' }}>💄</div>
+        <h1 style={{ margin: '0.5rem 0 0.25rem', fontSize: '1.8rem', fontWeight: 700 }}>Beleza & Cuidados</h1>
         <p style={{ margin: 0, opacity: 0.85, fontSize: '1rem' }}>
-          Escolha seu estilo, monte sua lista e receba os links no e-mail
+          Perfumes, skincare, maquiagem e mais — monte sua lista e receba os links
         </p>
       </div>
 
-      {/* Abas de tipo */}
+      {/* Abas */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', padding: '1rem', flexWrap: 'wrap', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
-        {TIPOS.map(t => (
+        {tiposComProdutos.map(t => (
           <button
             key={t}
             onClick={() => setTipoAtivo(t)}
@@ -108,7 +108,7 @@ export default function VistaSePage() {
               transition: 'all 0.2s',
             }}
           >
-            {t} {dados[t] ? `(${dados[t].length})` : ''}
+            {t} ({dados[t]?.length || 0})
           </button>
         ))}
       </div>
@@ -182,7 +182,7 @@ export default function VistaSePage() {
           minWidth: '220px', zIndex: 100,
         }}>
           <div style={{ fontWeight: 700, marginBottom: '0.5rem' }}>
-            👗 {carrinho.length} {carrinho.length === 1 ? 'item' : 'itens'}
+            💄 {carrinho.length} {carrinho.length === 1 ? 'item' : 'itens'}
           </div>
           {total > 0 && (
             <div style={{ fontSize: '0.85rem', marginBottom: '0.75rem', opacity: 0.9 }}>
@@ -215,7 +215,7 @@ export default function VistaSePage() {
           }}>
             {!enviado ? (
               <>
-                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>👗</div>
+                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💄</div>
                 <h2 style={{ margin: '0 0 0.5rem', color: '#1f2937' }}>Receber minha lista</h2>
                 <p style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '1rem' }}>
                   {carrinho.length} {carrinho.length === 1 ? 'item selecionado' : 'itens selecionados'}

@@ -82,7 +82,7 @@ function gerarHtml(produtos: ProdutoLista[]): string {
     <!-- Rodapé -->
     <div style="padding:20px 24px;background:#f9fafb;border-top:1px solid #e5e7eb;text-align:center">
       <p style="font-size:12px;color:#9ca3af;margin:0">
-        Lista gerada em <a href="https://iaipsi.com/monte-seu-ambiente" style="color:#7c3aed">iaipsi.com</a> · Os links são de afiliado e podem mudar de preço a qualquer momento.
+        Lista gerada em <a href="https://informa.iaipsi.com/monte-seu-ambiente" style="color:#7c3aed">iaipsi.com</a> · Os links são de afiliado e podem mudar de preço a qualquer momento.
       </p>
     </div>
 
