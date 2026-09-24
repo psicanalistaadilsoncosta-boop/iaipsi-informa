@@ -101,15 +101,19 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
   );
 }
 
+const AMBIENTES = ['Sala', 'Quarto', 'Escritório', 'Cozinha', 'Banheiro', 'Área externa'];
+const TIPOS_AMBIENTE = ['Iluminação', 'Climatização', 'Móveis', 'Decoração', 'Organização', 'Eletrônicos'];
+
 function ModalDestinos({ produto, onConfirm, onCancel }: {
   produto: Produto;
-  onConfirm: (destinos: string[], parcelas: string, valorParcela: string) => void;
+  onConfirm: (destinos: string[], parcelas: string, valorParcela: string, ambiente: string, tipoAmbiente: string) => void;
   onCancel: () => void;
 }) {
   const [destinos, setDestinos] = useState<string[]>(['ofertas-selecionadas']);
   const [parcelas, setParcelas] = useState('');
   const [valorParcela, setValorParcela] = useState('');
-
+  const [ambiente, setAmbiente] = useState('');
+  const [tipoAmbiente, setTipoAmbiente] = useState('');
   function toggle(id: string) {
     setDestinos(prev => prev.includes(id) ? prev.filter(d => d !== id) : [...prev, id]);
   }
@@ -151,11 +155,35 @@ function ModalDestinos({ produto, onConfirm, onCancel }: {
             </div>
           </div>
         )}
+              <div style={{ backgroundColor: '#f5f3ff', borderRadius: '8px', padding: '14px', marginBottom: '16px', border: '1px solid #ddd6fe' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#7c3aed', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            🏠 Monte seu Ambiente (opcional)
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: '0.72rem', color: '#6b7280', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Ambiente</label>
+              <select value={ambiente} onChange={e => setAmbiente(e.target.value)}
+                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.85rem', boxSizing: 'border-box' }}>
+                <option value="">— nenhum —</option>
+                {AMBIENTES.map(a => <option key={a} value={a}>{a}</option>)}
+              </select>
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: '0.72rem', color: '#6b7280', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Tipo</label>
+              <select value={tipoAmbiente} onChange={e => setTipoAmbiente(e.target.value)}
+                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.85rem', boxSizing: 'border-box' }}>
+                <option value="">— nenhum —</option>
+                {TIPOS_AMBIENTE.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+          </div>
+        </div>
+
         <div style={{ display: 'flex', gap: '8px' }}>
           <button onClick={onCancel} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, cursor: 'pointer' }}>
             Cancelar
           </button>
-          <button onClick={() => onConfirm(destinos, parcelas, valorParcela)} disabled={destinos.length === 0}
+          <button onClick={() => onConfirm(destinos, parcelas, valorParcela, ambiente, tipoAmbiente)} disabled={destinos.length === 0}
             style={{ flex: 2, padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: '#2563eb', color: '#fff', fontWeight: 700, cursor: destinos.length === 0 ? 'not-allowed' : 'pointer', opacity: destinos.length === 0 ? 0.6 : 1 }}>
             📌 Confirmar e pinar
           </button>
@@ -385,7 +413,7 @@ export default function BuscarProdutosPage() {
     } finally { setBuscandoLink(false); }
   }
 
-  async function handleConfirmarPinar(produto: Produto, destinos: string[], parcelas: string, valorParcela: string) {
+    async function handleConfirmarPinar(produto: Produto, destinos: string[], parcelas: string, valorParcela: string, ambiente = '', tipoAmbiente = '') {
     setModalProduto(null);
     setGerando(produto.id);
     try {
@@ -422,13 +450,15 @@ export default function BuscarProdutosPage() {
       await fetch('/api/produtos/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+          body: JSON.stringify({
           ...produto,
           link: linkAfiliado,
           linkOriginal: produto.link,
           destinos,
           parcelas: parcelasFinal,
           valorParcela: valorParcelaFinal,
+          ambiente,
+          tipoAmbiente,
         }),
       });
       await loadPinados();
@@ -652,7 +682,7 @@ export default function BuscarProdutosPage() {
       {modalProduto && (
         <ModalDestinos
           produto={modalProduto}
-          onConfirm={(destinos, parcelas, valorParcela) => handleConfirmarPinar(modalProduto, destinos, parcelas, valorParcela)}
+          onConfirm={(destinos, parcelas, valorParcela, ambiente, tipoAmbiente) => handleConfirmarPinar(modalProduto, destinos, parcelas, valorParcela, ambiente, tipoAmbiente)}
           onCancel={() => setModalProduto(null)}
         />
       )}
