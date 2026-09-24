@@ -1,9 +1,8 @@
-// Lê as vars do .env.local via --env-file
-const URL  = process.env.informa_KV_REST_API_URL;
+const URL   = process.env.informa_KV_REST_API_URL;
 const TOKEN = process.env.informa_KV_REST_API_TOKEN;
 
 if (!URL || !TOKEN) {
-  console.error('❌ Variáveis informa_KV_REST_API_URL ou informa_KV_REST_API_TOKEN não encontradas');
+  console.error('❌ Variáveis não encontradas');
   process.exit(1);
 }
 
@@ -12,14 +11,17 @@ async function kvGet(key) {
     headers: { Authorization: `Bearer ${TOKEN}` }
   });
   const json = await res.json();
-  return json.result ? JSON.parse(json.result) : null;
+  let result = json.result;
+  // desserializa duplo
+  while (typeof result === 'string') result = JSON.parse(result);
+  return result;
 }
 
 async function kvSet(key, value) {
   const res = await fetch(`${URL}/set/${key}`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(JSON.stringify(value))
+    body: JSON.stringify(value)  // sem JSON.stringify duplo
   });
   return res.json();
 }
