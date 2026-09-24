@@ -87,25 +87,32 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
   );
 }
 
-function CronPanel({ loja, onSave }: { loja: Loja; onSave: (cron: LojaCron | null) => void }) {
+function CronPanel({ loja, onSave }: { loja: Loja; onSave: (cron: LojaCron | null, cats: { ambiente?: string; tipoAmbiente?: string; momento?: string; tipoMomento?: string }) => void }) {
   const cronAtual = loja.cron;
   const [ativo, setAtivo] = useState(cronAtual?.ativo ?? false);
   const [frequencia, setFrequencia] = useState<LojaCron['frequencia']>(cronAtual?.frequencia ?? 'semanal');
-   const [destino, setDestino] = useState(cronAtual?.destino ?? 'ofertas-selecionadas');
+  const [destino, setDestino] = useState(cronAtual?.destino ?? 'ofertas-selecionadas');
   const [limite, setLimite] = useState(cronAtual?.limite ?? 50);
   const [expandido, setExpandido] = useState(false);
   const [salvando, setSalvando] = useState(false);
+  const [ambiente, setAmbiente] = useState(loja.ambiente ?? '');
+  const [tipoAmbiente, setTipoAmbiente] = useState(loja.tipoAmbiente ?? '');
+  const [momento, setMomento] = useState(loja.momento ?? '');
+  const [tipoMomento, setTipoMomento] = useState(loja.tipoMomento ?? '');
 
-  async function handleSalvar() {
+    async function handleSalvar() {
     setSalvando(true);
-    await onSave({ ativo, frequencia, destino, limite, ultimaAtualizacao: cronAtual?.ultimaAtualizacao ?? null });
+    await onSave(
+      { ativo, frequencia, destino, limite, ultimaAtualizacao: cronAtual?.ultimaAtualizacao ?? null },
+      { ambiente: ambiente || undefined, tipoAmbiente: tipoAmbiente || undefined, momento: momento || undefined, tipoMomento: tipoMomento || undefined }
+    );
     setSalvando(false);
     setExpandido(false);
   }
 
-  async function handleDesativar() {
+   async function handleDesativar() {
     setSalvando(true);
-    await onSave(null);
+    await onSave(null, { ambiente: ambiente || undefined, tipoAmbiente: tipoAmbiente || undefined, momento: momento || undefined, tipoMomento: tipoMomento || undefined });
     setAtivo(false);
     setSalvando(false);
     setExpandido(false);
@@ -136,7 +143,42 @@ function CronPanel({ loja, onSave }: { loja: Loja; onSave: (cron: LojaCron | nul
 
   return (
     <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '12px', marginTop: '8px' }}>
-      <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#374151', marginBottom: '10px' }}>⚙️ Automação de atualização</div>
+            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#374151', marginBottom: '10px' }}>⚙️ Configurar loja</div>
+      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '12px', alignItems: 'flex-end' }}>
+        <div>
+          <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#6b7280', marginBottom: '3px' }}>🏠 AMBIENTE</div>
+          <select value={ambiente} onChange={e => { setAmbiente(e.target.value); setTipoAmbiente(''); }} style={{ padding: '5px 8px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.78rem' }}>
+            <option value="">— Nenhum —</option>
+            {AMBIENTES.map(a => <option key={a} value={a}>{a}</option>)}
+          </select>
+        </div>
+        {ambiente && (
+          <div>
+            <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#6b7280', marginBottom: '3px' }}>TIPO AMBIENTE</div>
+            <select value={tipoAmbiente} onChange={e => setTipoAmbiente(e.target.value)} style={{ padding: '5px 8px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.78rem' }}>
+              <option value="">— Nenhum —</option>
+              {TIPOS_AMBIENTE.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+        )}
+        <div>
+          <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#6b7280', marginBottom: '3px' }}>✨ MOMENTO</div>
+          <select value={momento} onChange={e => { setMomento(e.target.value); setTipoMomento(''); }} style={{ padding: '5px 8px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.78rem' }}>
+            <option value="">— Nenhum —</option>
+            {MOMENTOS.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
+        </div>
+        {momento && (
+          <div>
+            <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#6b7280', marginBottom: '3px' }}>TIPO MOMENTO</div>
+            <select value={tipoMomento} onChange={e => setTipoMomento(e.target.value)} style={{ padding: '5px 8px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.78rem' }}>
+              <option value="">— Nenhum —</option>
+              {TIPOS_MOMENTO.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+        )}
+      </div>
+      <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#374151', marginBottom: '10px' }}>🔁 Automação de atualização</div>
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '10px' }}>
         <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
           <input type="checkbox" checked={ativo} onChange={e => setAtivo(e.target.checked)}
@@ -266,10 +308,15 @@ export default function CadastraLojasPage() {
     await carregarLojas();
   }
 
-  async function atualizarCron(loja: Loja, cron: LojaCron | null) {
-    const atualizada: Loja = cron
-      ? { ...loja, cron }
-      : { ...loja, cron: undefined };
+   async function atualizarCron(loja: Loja, cron: LojaCron | null, cats: { ambiente?: string; tipoAmbiente?: string; momento?: string; tipoMomento?: string }) {
+    const atualizada: Loja = {
+      ...loja,
+      cron: cron ?? undefined,
+      ambiente: cats.ambiente,
+      tipoAmbiente: cats.tipoAmbiente,
+      momento: cats.momento,
+      tipoMomento: cats.tipoMomento,
+    };
     await salvarLoja(atualizada);
   }
 
@@ -511,7 +558,7 @@ export default function CadastraLojasPage() {
 
               {/* Painel de automação cron */}
               <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #f3f4f6' }}>
-                <CronPanel loja={loja} onSave={(cron) => atualizarCron(loja, cron)} />
+              <CronPanel loja={loja} onSave={(cron, cats) => atualizarCron(loja, cron, cats)} />
               </div>
             </div>
           ))}
