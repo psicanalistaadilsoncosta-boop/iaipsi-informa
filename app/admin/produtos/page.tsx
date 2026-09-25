@@ -184,13 +184,12 @@ export default function AdminProdutosPage() {
     setProdutos(prev => prev.map(p => !selecionados.has(p.id) ? p : aplicarCategoria(p, novaCategoria, tipo, nomeAmb)));
 
     try {
-      await Promise.all([...selecionados].map(id =>
-        fetch('/api/admin/produtos', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, categoria: novaCategoria, nomeAmbiente: nomeAmb, tipoAmbiente: tipo, tipoMomento: tipo, tipoVistaSe: tipo, tipoBeleza: tipo }),
-        })
-      ));
+      // Um único PATCH com todos os ids — evita race condition no KV
+      await fetch('/api/admin/produtos', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: [...selecionados], categoria: novaCategoria, nomeAmbiente: nomeAmb, tipoAmbiente: tipo, tipoMomento: tipo, tipoVistaSe: tipo, tipoBeleza: tipo }),
+      });
       setSelecionados(new Set());
     } catch {
       await fetchProdutos();
