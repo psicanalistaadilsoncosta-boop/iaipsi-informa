@@ -14,6 +14,7 @@ const MOMENTO_EMOJI: Record<string, string> = {
 
 const TIPO_EMOJI: Record<string, string> = {
   'Eletro': '🔌', 'Móveis': '🪑', 'Acessórios': '✨', 'Alimentos': '🛒',
+  'Bebidas': '🍷', 'Vinho': '🍾',
 };
 
 interface Produto {
@@ -167,7 +168,7 @@ export default function MonteSeuMomentoPage() {
                       )}
                       {p.tipoMomento && (
                         <span style={{ position: 'absolute', top: '8px', left: '8px', backgroundColor: '#fef3c7', color: '#92400e', fontSize: '0.68rem', fontWeight: 700, padding: '2px 7px', borderRadius: '999px' }}>
-                          {TIPO_EMOJI[p.tipoMomento]} {p.tipoMomento}
+                        {TIPO_EMOJI[p.tipoMomento] ?? ''} {p.tipoMomento}
                         </span>
                       )}
                     </div>
