@@ -117,8 +117,27 @@ export default function VistaSePage() {
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '1.5rem 1rem' }}>
         {loading ? (
           <p style={{ textAlign: 'center', color: '#9ca3af' }}>Carregando...</p>
-        ) : produtos.length === 0 ? (
-          <p style={{ textAlign: 'center', color: '#9ca3af' }}>Nenhum produto nesta categoria ainda.</p>
+                ) : produtos.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+            {(tipoAtivo === 'Infantil' || tipoAtivo === 'Bebê') ? (
+              <>
+                <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>👶</div>
+                <p style={{ color: '#374151', fontWeight: 600, marginBottom: '0.5rem' }}>
+                  Esses produtos estão em Vista seu Filho
+                </p>
+                <p style={{ color: '#9ca3af', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
+                  Roupas, calçados e brinquedos infantis ficam numa seção dedicada.
+                </p>
+                <a href="/vista-seu-filho" style={{
+                  display: 'inline-block', padding: '0.6rem 1.5rem',
+                  background: '#0369a1', color: '#fff', borderRadius: '2rem',
+                  fontWeight: 700, textDecoration: 'none', fontSize: '0.95rem',
+                }}>Ir para Vista seu Filho →</a>
+              </>
+            ) : (
+              <p style={{ color: '#9ca3af' }}>Nenhum produto nesta categoria ainda.</p>
+            )}
+          </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
             {produtos.map((p: any) => {
@@ -161,7 +180,7 @@ export default function VistaSePage() {
                     </div>
                     {preco && (
                       <div style={{ fontSize: '0.95rem', fontWeight: 700, color: COR }}>
-                        R$ {parseFloat(preco).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        R$ {parseFloat(preco).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
                     )}
                   </div>
@@ -186,7 +205,7 @@ export default function VistaSePage() {
           </div>
           {total > 0 && (
             <div style={{ fontSize: '0.85rem', marginBottom: '0.75rem', opacity: 0.9 }}>
-              Total aprox: R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              Total aprox: R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
           )}
           <button

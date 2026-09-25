@@ -22,11 +22,16 @@ interface LojaLomadee {
   tipo: 'lomadee';
   nome: string;
   url: string;
+  moedaUSD?: boolean;
   cron?: LojaCron;
   ambiente?: string;
   tipoAmbiente?: string;
   momento?: string;
   tipoMomento?: string;
+  vistaSe?: boolean;
+  tipoVistaSe?: string;
+  beleza?: boolean;
+  tipoBeleza?: string;
 }
 
 interface LojaAwin {
@@ -40,7 +45,12 @@ interface LojaAwin {
   tipoAmbiente?: string;
   momento?: string;
   tipoMomento?: string;
+  vistaSe?: boolean;
+  tipoVistaSe?: string;
+  beleza?: boolean;
+  tipoBeleza?: string;
 }
+
 type Loja = LojaLomadee | LojaAwin;
 
 interface ProdutoPinado {
@@ -198,8 +208,13 @@ export async function GET(req: NextRequest) {
           pinedAt: new Date().toISOString(),
           ...(loja.ambiente ? { ambiente: loja.ambiente } : {}),
           ...(loja.tipoAmbiente ? { tipoAmbiente: loja.tipoAmbiente } : {}),
-          ...(loja.momento ? { momento: loja.momento } : {}),
+                    ...(loja.momento ? { momento: loja.momento } : {}),
           ...(loja.tipoMomento ? { tipoMomento: loja.tipoMomento } : {}),
+          ...(loja.vistaSe ? { vistaSe: loja.vistaSe } : {}),
+          ...(loja.tipoVistaSe ? { tipoVistaSe: loja.tipoVistaSe } : {}),
+          ...(loja.beleza ? { beleza: loja.beleza } : {}),
+          ...((loja as any).tipoBeleza ? { tipoBeleza: (loja as any).tipoBeleza } : {}),
+          ...(loja.moedaUSD ? { moedaUSD: true } : {}),
         });
       }
 

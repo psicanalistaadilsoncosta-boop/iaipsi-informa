@@ -161,7 +161,7 @@ export default function BelezaPage() {
                     </div>
                     {preco && (
                       <div style={{ fontSize: '0.95rem', fontWeight: 700, color: COR }}>
-                        R$ {parseFloat(preco).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        R$ {parseFloat(preco).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
                     )}
                   </div>
@@ -186,7 +186,7 @@ export default function BelezaPage() {
           </div>
           {total > 0 && (
             <div style={{ fontSize: '0.85rem', marginBottom: '0.75rem', opacity: 0.9 }}>
-              Total aprox: R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              Total aprox: R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
           )}
           <button
