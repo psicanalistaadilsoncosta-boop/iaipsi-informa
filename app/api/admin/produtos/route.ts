@@ -15,10 +15,10 @@ export async function GET(req: NextRequest) {
 }
 
 // PATCH — atualiza categoria de um produto pelo id
-// body: { id, categoria: 'ambiente'|'vistaSe'|'beleza'|'momento', tipoAmbiente?, tipoMomento?, tipoVistaSe? }
+// body: { id, categoria, nomeAmbiente?, tipoAmbiente?, tipoMomento?, tipoVistaSe?, tipoBeleza? }
 export async function PATCH(req: NextRequest) {
   if (!checkAuth(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
-  const { id, categoria, tipoAmbiente, tipoMomento, tipoVistaSe, tipoBeleza } = await req.json();
+  const { id, categoria, nomeAmbiente, tipoAmbiente, tipoMomento, tipoVistaSe, tipoBeleza } = await req.json();
   if (!id || !categoria) return NextResponse.json({ error: 'id e categoria obrigatórios' }, { status: 400 });
 
   const produtos: any[] = (await kv.get('produtos:pinados')) || [];
@@ -35,17 +35,17 @@ export async function PATCH(req: NextRequest) {
 
   // Aplica nova categoria
   if (categoria === 'ambiente') {
-    p.ambiente = tipoAmbiente || 'Sala';
-    p.tipoAmbiente = tipoAmbiente || 'Decoração';
+    p.ambiente = nomeAmbiente || 'Sala';
+    p.tipoAmbiente = tipoAmbiente || 'Organização';
   } else if (categoria === 'momento') {
     p.momento = tipoMomento || 'Café da manhã';
-    p.tipoMomento = tipoMomento || 'Acessórios';
+    p.tipoMomento = 'Acessórios';
   } else if (categoria === 'vistaSe') {
     p.vistaSe = true;
     p.tipoVistaSe = tipoVistaSe || 'Roupas';
   } else if (categoria === 'beleza') {
     p.beleza = true;
-    if (tipoBeleza) p.tipoBeleza = tipoBeleza;
+    p.tipoBeleza = tipoBeleza || 'Cuidados';
   }
 
   produtos[idx] = p;

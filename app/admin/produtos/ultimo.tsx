@@ -34,6 +34,13 @@ const CATEGORIA_LABELS: Record<string, string> = {
   momento: 'Momento',
 };
 
+const TIPOS_POR_CATEGORIA: Record<string, string[]> = {
+  ambiente: ['Sala', 'Quarto', 'Cozinha', 'Escritório', 'Banheiro', 'Área externa'],
+  vistaSe:  ['Roupas', 'Calçados', 'Acessórios', 'Infantil', 'Bebê'],
+  momento:  ['Café da manhã', 'Vinho', 'Churrasco', 'Lareira', 'Domingo relaxado', 'Festa em Casa'],
+  beleza:   ['Perfumes', 'Skincare', 'Maquiagem', 'Cabelos', 'Massagem', 'Solar', 'Cuidados'],
+};
+
 const MOVER_OPTIONS: { value: Categoria; label: string }[] = [
   { value: 'ambiente', label: 'Ambiente' },
   { value: 'vistaSe', label: 'Vista-se' },
@@ -68,8 +75,10 @@ export default function AdminProdutosPage() {
 
   const [savingId, setSavingId] = useState<string | null>(null);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [subCategoria, setSubCategoria] = useState<Categoria>(null); // qual cat está expandida no submenu
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
   const [movendoLote, setMovendoLote] = useState(false);
+  const [loteSubCategoria, setLoteSubCategoria] = useState<Categoria>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Fecha dropdown ao clicar fora
@@ -151,31 +160,24 @@ export default function AdminProdutosPage() {
     });
   }
 
-  async function moverLote(novaCategoria: Categoria) {
+  async function moverLote(novaCategoria: Categoria, tipo?: string) {
     if (!novaCategoria || selecionados.size === 0) return;
+    // Se tem subtipos e não escolheu, mostra submenu do lote
+    if (TIPOS_POR_CATEGORIA[novaCategoria].length > 0 && !tipo) {
+      setLoteSubCategoria(novaCategoria);
+      return;
+    }
     setMovendoLote(true);
+    setLoteSubCategoria(null);
 
-    // Optimistic UI
-    setProdutos(prev => prev.map(p => {
-      if (!selecionados.has(p.id)) return p;
-      const novo = { ...p };
-      delete novo.ambiente; delete novo.tipoAmbiente;
-      delete novo.momento; delete novo.tipoMomento;
-      delete novo.vistaSe; delete novo.tipoVistaSe;
-      delete novo.beleza;
-      if (novaCategoria === 'ambiente') { novo.ambiente = 'Sala'; novo.tipoAmbiente = 'Decoração'; }
-      else if (novaCategoria === 'momento') { novo.momento = 'Café da manhã'; novo.tipoMomento = 'Acessórios'; }
-      else if (novaCategoria === 'vistaSe') { novo.vistaSe = true; novo.tipoVistaSe = 'Roupas'; }
-      else if (novaCategoria === 'beleza') { novo.beleza = true; }
-      return novo;
-    }));
+    setProdutos(prev => prev.map(p => !selecionados.has(p.id) ? p : aplicarCategoria(p, novaCategoria, tipo)));
 
     try {
       await Promise.all([...selecionados].map(id =>
         fetch('/api/admin/produtos', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, categoria: novaCategoria }),
+          body: JSON.stringify({ id, categoria: novaCategoria, tipoAmbiente: tipo, tipoMomento: tipo, tipoVistaSe: tipo, tipoBeleza: tipo }),
         })
       ));
       setSelecionados(new Set());
@@ -186,36 +188,39 @@ export default function AdminProdutosPage() {
     }
   }
 
-  async function moverCategoria(produto: Produto, novaCategoria: Categoria) {
+  function aplicarCategoria(p: Produto, novaCategoria: Categoria, tipo?: string) {
+    const novo = { ...p };
+    delete novo.ambiente; delete novo.tipoAmbiente;
+    delete novo.momento; delete novo.tipoMomento;
+    delete novo.vistaSe; delete novo.tipoVistaSe;
+    delete novo.beleza; delete (novo as any).tipoBeleza;
+    if (novaCategoria === 'ambiente') { novo.ambiente = tipo || 'Sala'; novo.tipoAmbiente = tipo || 'Sala'; }
+    else if (novaCategoria === 'momento') { novo.momento = tipo || 'Café da manhã'; novo.tipoMomento = 'Acessórios'; }
+    else if (novaCategoria === 'vistaSe') { novo.vistaSe = true; novo.tipoVistaSe = tipo || 'Roupas'; }
+    else if (novaCategoria === 'beleza') { novo.beleza = true; if (tipo) (novo as any).tipoBeleza = tipo; }
+    return novo;
+  }
+
+  async function moverCategoria(produto: Produto, novaCategoria: Categoria, tipo?: string) {
     if (!novaCategoria) return;
+    // Se tem subtipos e não escolheu ainda, expande submenu
+    if (TIPOS_POR_CATEGORIA[novaCategoria].length > 0 && !tipo) {
+      setSubCategoria(novaCategoria);
+      return;
+    }
     setSavingId(produto.id);
     setOpenDropdown(null);
+    setSubCategoria(null);
 
-    // Optimistic UI
-    setProdutos(prev =>
-      prev.map(p => {
-        if (p.id !== produto.id) return p;
-        const novo = { ...p };
-        delete novo.ambiente; delete novo.tipoAmbiente;
-        delete novo.momento; delete novo.tipoMomento;
-        delete novo.vistaSe; delete novo.tipoVistaSe;
-        delete novo.beleza;
-        if (novaCategoria === 'ambiente') { novo.ambiente = 'Sala'; novo.tipoAmbiente = 'Decoração'; }
-        else if (novaCategoria === 'momento') { novo.momento = 'Café da manhã'; novo.tipoMomento = 'Acessórios'; }
-        else if (novaCategoria === 'vistaSe') { novo.vistaSe = true; novo.tipoVistaSe = 'Roupas'; }
-        else if (novaCategoria === 'beleza') { novo.beleza = true; }
-        return novo;
-      })
-    );
+    setProdutos(prev => prev.map(p => p.id !== produto.id ? p : aplicarCategoria(p, novaCategoria, tipo)));
 
     try {
       await fetch('/api/admin/produtos', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: produto.id, categoria: novaCategoria }),
+        body: JSON.stringify({ id: produto.id, categoria: novaCategoria, tipoAmbiente: tipo, tipoMomento: tipo, tipoVistaSe: tipo, tipoBeleza: tipo }),
       });
     } catch {
-      // Reverte se falhar
       await fetchProdutos();
     } finally {
       setSavingId(null);
@@ -298,39 +303,67 @@ export default function AdminProdutosPage() {
             borderRadius: 10,
             padding: '12px 20px',
             marginBottom: 12,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            flexWrap: 'wrap',
           }}>
-            <span style={{ fontSize: 14, fontWeight: 600 }}>{selecionados.size} selecionado{selecionados.size !== 1 ? 's' : ''}</span>
-            <span style={{ color: '#9ca3af', fontSize: 13 }}>Mover para:</span>
-            {MOVER_OPTIONS.map(opt => (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 14, fontWeight: 600 }}>{selecionados.size} selecionado{selecionados.size !== 1 ? 's' : ''}</span>
+              <span style={{ color: '#9ca3af', fontSize: 13 }}>Mover para:</span>
+              {MOVER_OPTIONS.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => moverLote(opt.value)}
+                  disabled={movendoLote}
+                  style={{
+                    padding: '5px 14px',
+                    borderRadius: 7,
+                    border: loteSubCategoria === opt.value ? '2px solid #fff' : 'none',
+                    background: BADGE_COLORS[opt.value!],
+                    color: '#fff',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: movendoLote ? 'not-allowed' : 'pointer',
+                    opacity: movendoLote ? 0.6 : 1,
+                  }}
+                >
+                  {opt.label} {TIPOS_POR_CATEGORIA[opt.value!].length > 0 ? '▾' : ''}
+                </button>
+              ))}
               <button
-                key={opt.value}
-                onClick={() => moverLote(opt.value)}
-                disabled={movendoLote}
-                style={{
-                  padding: '5px 14px',
-                  borderRadius: 7,
-                  border: 'none',
-                  background: BADGE_COLORS[opt.value!],
-                  color: '#fff',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: movendoLote ? 'not-allowed' : 'pointer',
-                  opacity: movendoLote ? 0.6 : 1,
-                }}
+                onClick={() => { setSelecionados(new Set()); setLoteSubCategoria(null); }}
+                style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', fontSize: 13 }}
               >
-                {opt.label}
+                Cancelar
               </button>
-            ))}
-            <button
-              onClick={() => setSelecionados(new Set())}
-              style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', fontSize: 13 }}
-            >
-              Cancelar
-            </button>
+            </div>
+            {/* Submenu de tipos do lote */}
+            {loteSubCategoria && TIPOS_POR_CATEGORIA[loteSubCategoria].length > 0 && (
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, paddingTop: 10, borderTop: '1px solid #333' }}>
+                <span style={{ color: '#9ca3af', fontSize: 13, alignSelf: 'center' }}>Tipo:</span>
+                {TIPOS_POR_CATEGORIA[loteSubCategoria].map(tipo => (
+                  <button
+                    key={tipo}
+                    onClick={() => moverLote(loteSubCategoria, tipo)}
+                    disabled={movendoLote}
+                    style={{
+                      padding: '4px 12px',
+                      borderRadius: 6,
+                      border: '1px solid #444',
+                      background: '#222',
+                      color: '#fff',
+                      fontSize: 13,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {tipo}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setLoteSubCategoria(null)}
+                  style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: 12 }}
+                >
+                  ✕
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -549,7 +582,7 @@ export default function AdminProdutosPage() {
                       {/* Botão mover */}
                       <div style={{ position: 'relative' }} ref={isOpen ? dropdownRef : undefined}>
                         <button
-                          onClick={() => setOpenDropdown(isOpen ? null : produto.id)}
+                          onClick={() => { setOpenDropdown(isOpen ? null : produto.id); setSubCategoria(null); }}
                           disabled={isSaving}
                           style={{
                             padding: '5px 12px',
@@ -594,10 +627,11 @@ export default function AdminProdutosPage() {
                             borderRadius: 9,
                             boxShadow: '0 4px 20px rgba(0,0,0,0.10)',
                             zIndex: 100,
-                            minWidth: 150,
+                            minWidth: 180,
                             overflow: 'hidden',
                           }}>
-                            {MOVER_OPTIONS.map(opt => (
+                            {/* Nível 1: categorias */}
+                            {!subCategoria && MOVER_OPTIONS.map(opt => (
                               <button
                                 key={opt.value}
                                 onClick={() => moverCategoria(produto, opt.value)}
@@ -614,24 +648,44 @@ export default function AdminProdutosPage() {
                                   color: '#111',
                                   cursor: 'pointer',
                                   textAlign: 'left',
-                                  transition: 'background 0.1s',
                                 }}
                                 onMouseEnter={e => (e.currentTarget.style.background = '#f3f4f6')}
                                 onMouseLeave={e => (e.currentTarget.style.background = cat === opt.value ? '#f9fafb' : '#fff')}
                               >
-                                <span style={{
-                                  width: 8,
-                                  height: 8,
-                                  borderRadius: '50%',
-                                  background: BADGE_COLORS[opt.value!],
-                                  flexShrink: 0,
-                                }} />
+                                <span style={{ width: 8, height: 8, borderRadius: '50%', background: BADGE_COLORS[opt.value!], flexShrink: 0 }} />
                                 {opt.label}
-                                {cat === opt.value && (
-                                  <span style={{ marginLeft: 'auto', color: BADGE_COLORS[opt.value!], fontSize: 12 }}>✓</span>
-                                )}
+                                {TIPOS_POR_CATEGORIA[opt.value!].length > 0 && <span style={{ marginLeft: 'auto', color: '#9ca3af', fontSize: 11 }}>▶</span>}
+                                {cat === opt.value && TIPOS_POR_CATEGORIA[opt.value!].length === 0 && <span style={{ marginLeft: 'auto', color: BADGE_COLORS[opt.value!], fontSize: 12 }}>✓</span>}
                               </button>
                             ))}
+                            {/* Nível 2: tipos */}
+                            {subCategoria && (
+                              <>
+                                <button
+                                  onClick={() => setSubCategoria(null)}
+                                  style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', padding: '8px 14px', background: '#f9fafb', border: 'none', borderBottom: '1px solid #e5e7eb', fontSize: 13, color: '#6b7280', cursor: 'pointer' }}
+                                >
+                                  ← {CATEGORIA_LABELS[subCategoria]}
+                                </button>
+                                {TIPOS_POR_CATEGORIA[subCategoria].map(tipo => (
+                                  <button
+                                    key={tipo}
+                                    onClick={() => moverCategoria(produto, subCategoria, tipo)}
+                                    style={{
+                                      display: 'flex', alignItems: 'center', gap: 8,
+                                      width: '100%', padding: '9px 14px',
+                                      background: '#fff', border: 'none',
+                                      borderBottom: '1px solid #f3f4f6',
+                                      fontSize: 14, color: '#111', cursor: 'pointer', textAlign: 'left',
+                                    }}
+                                    onMouseEnter={e => (e.currentTarget.style.background = '#f3f4f6')}
+                                    onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
+                                  >
+                                    {tipo}
+                                  </button>
+                                ))}
+                              </>
+                            )}
                           </div>
                         )}
                       </div>
