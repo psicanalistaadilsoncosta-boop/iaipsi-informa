@@ -41,7 +41,7 @@ const TIPOS_AMBIENTE = ['Iluminação', 'Climatização', 'Móveis', 'Decoraçã
 
 const TIPOS_POR_CATEGORIA: Record<string, string[]> = {
   ambiente: AMBIENTES,
-  vistaSe:  ['Roupas', 'Calçados', 'Acessórios', 'Infantil', 'Bebê'],
+  vistaSe:  ['Roupas', 'Calçados', 'Acessórios', 'Infantil', 'Bebê', 'Brinquedos'],
   momento:  ['Café da manhã', 'Vinho', 'Churrasco', 'Lareira', 'Domingo relaxado', 'Festa em Casa'],
   beleza:   ['Perfumes', 'Skincare', 'Maquiagem', 'Cabelos', 'Massagem', 'Solar', 'Cuidados'],
 };

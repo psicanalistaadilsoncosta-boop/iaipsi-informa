@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-const TIPOS = ['Roupas', 'Calçados', 'Acessórios', 'Infantil', 'Bebê'];
+const TIPOS = ['Roupas', 'Calçados', 'Acessórios'];
 
 const COR = '#be185d'; // rosa escuro
 const COR_LIGHT = '#fdf2f8';

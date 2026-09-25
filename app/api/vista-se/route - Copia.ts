@@ -12,7 +12,7 @@ export async function GET() {
   for (const p of produtos) {
     if (!p.vistaSe) continue;
     const tipo = p.tipoVistaSe || 'Roupas';
-    const ehInfantil = tipo === 'Infantil' || tipo === 'Bebê' || tipo === 'Brinquedos';
+    const ehInfantil = tipo === 'Infantil';
 
     if (ehInfantil) {
       if (!filho[tipo]) filho[tipo] = [];
