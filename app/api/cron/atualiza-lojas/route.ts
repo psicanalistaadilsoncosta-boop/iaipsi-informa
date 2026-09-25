@@ -70,6 +70,8 @@ interface ProdutoPinado {
   parcelas?: string;
   valorParcela?: string;
   ativo?: boolean;
+  aCatalogar?: boolean;
+  lojaNome?: string;
 }
 
 const LOJAS_KEY = 'lojas:cadastradas';
@@ -176,46 +178,85 @@ export async function GET(req: NextRequest) {
         continue;
       }
 
-      // 2. Identifica e remove pinados antigos desta loja
+        // 2. Separa: catalogados (têm categoria) vs a_catalogar desta loja
       const dominioLoja = new URL(loja.url).hostname.replace('www.', '');
-      const pinadosDaLoja = pinadosAtualizados.filter(p => {
-        const link = p.linkOriginal || p.link || '';
-        try {
-          const d = new URL(link).hostname.replace('www.', '');
-          return d === dominioLoja;
-        } catch { return false; }
-      });
 
-      pinadosAtualizados = pinadosAtualizados.filter(p => {
-        const link = p.linkOriginal || p.link || '';
-        try {
-          const d = new URL(link).hostname.replace('www.', '');
-          return d !== dominioLoja;
-        } catch { return true; }
-      });
+      const temCategoria = (p: any) =>
+        p.ambiente || p.momento || p.vistaSe || p.beleza || p.mercado;
 
-      // 3. Pina novos produtos (limite de 8 por loja para não lotar)
+      const isDaLoja = (p: any) => {
+        const link = p.linkOriginal || p.link || '';
+        try { return new URL(link).hostname.replace('www.', '') === dominioLoja; }
+        catch { return false; }
+      };
+
+      // Remove apenas os "a_catalogar" desta loja (catalogados ficam intactos)
+      const removidos = pinadosAtualizados.filter(p => isDaLoja(p) && !temCategoria(p));
+      pinadosAtualizados = pinadosAtualizados.filter(p => !(isDaLoja(p) && !temCategoria(p)));
+
+      // Catalogados desta loja (para match automático)
+      const catalogadosDaLoja = pinadosAtualizados.filter(p => isDaLoja(p) && temCategoria(p));
+
+      // Função de similaridade simples por palavras do título
+      function similaridade(a: string, b: string): number {
+        const palavras = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, '').split(/\s+/).filter(w => w.length > 3);
+        const pa = new Set(palavras(a));
+        const pb = palavras(b);
+        if (pa.size === 0 || pb.length === 0) return 0;
+        const comuns = pb.filter(w => pa.has(w)).length;
+        return comuns / Math.max(pa.size, pb.length);
+      }
+
+      // 3. Pina novos produtos
       const novos: ProdutoPinado[] = [];
       const limite = Math.min(produtos.length, limiteConfigured);
       for (let i = 0; i < limite; i++) {
         const produto = produtos[i];
         const linkAfiliado = await gerarLinkAfiliado(produto);
-               novos.push({
-          ...produto,
-          link: linkAfiliado,
-          linkOriginal: produto.link,
-          destinos: [cron.destino],
-          pinedAt: new Date().toISOString(),
-          ...(loja.ambiente ? { ambiente: loja.ambiente } : {}),
-          ...(loja.tipoAmbiente ? { tipoAmbiente: loja.tipoAmbiente } : {}),
-                    ...(loja.momento ? { momento: loja.momento } : {}),
-          ...(loja.tipoMomento ? { tipoMomento: loja.tipoMomento } : {}),
-          ...(loja.vistaSe ? { vistaSe: loja.vistaSe } : {}),
-          ...(loja.tipoVistaSe ? { tipoVistaSe: loja.tipoVistaSe } : {}),
-          ...(loja.beleza ? { beleza: loja.beleza } : {}),
-          ...((loja as any).tipoBeleza ? { tipoBeleza: (loja as any).tipoBeleza } : {}),
-          ...(loja.moedaUSD ? { moedaUSD: true } : {}),
-        });
+
+        // Tenta match com catalogado existente (similaridade > 0.5)
+        let matchIdx = -1;
+        let melhorScore = 0.5;
+        for (let j = 0; j < catalogadosDaLoja.length; j++) {
+          const score = similaridade(produto.nome || '', catalogadosDaLoja[j].nome || '');
+          if (score > melhorScore) { melhorScore = score; matchIdx = j; }
+        }
+
+        if (matchIdx >= 0) {
+          // Match encontrado: substitui o catalogado preservando a categoria
+          const antigo = catalogadosDaLoja[matchIdx];
+          const atualizado = {
+            ...antigo,
+            nome: produto.nome,
+            imagem: produto.imagem,
+            preco: produto.preco,
+            precoOriginal: produto.precoOriginal,
+            desconto: produto.desconto,
+            parcelas: produto.parcelas,
+            valorParcela: produto.valorParcela,
+            link: linkAfiliado,
+            linkOriginal: produto.link,
+            pinedAt: new Date().toISOString(),
+            ...(loja.moedaUSD ? { moedaUSD: true } : {}),
+          };
+          // Substitui no array principal
+          const idxPrincipal = pinadosAtualizados.findIndex(p => p.id === antigo.id);
+          if (idxPrincipal >= 0) pinadosAtualizados[idxPrincipal] = atualizado as any;
+          // Remove do array de catalogados para não dar match duplo
+          catalogadosDaLoja.splice(matchIdx, 1);
+        } else {
+          // Sem match: vai para "a catalogar"
+          novos.push({
+            ...produto,
+            link: linkAfiliado,
+            linkOriginal: produto.link,
+            destinos: [cron.destino],
+            pinedAt: new Date().toISOString(),
+            aCatalogar: true,
+            lojaNome: loja.nome,
+            ...(loja.moedaUSD ? { moedaUSD: true } : {}),
+          } as any);
+        }
       }
 
       pinadosAtualizados = [...pinadosAtualizados, ...novos];

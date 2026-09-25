@@ -56,10 +56,14 @@ export async function PATCH(req: NextRequest) {
 
   const produtos: any[] = (await kv.get('produtos:pinados')) || [];
 
+    const limparACatalogar = body.limparACatalogar === true;
+
   for (const id of ids) {
     const idx = produtos.findIndex((p: any) => p.id === id);
     if (idx !== -1) {
-    produtos[idx] = aplicarCat(produtos[idx], categoria, nomeAmbiente, tipoAmbiente, tipoMomento, tipoVistaSe, tipoBeleza, tipoMercado);
+      let p = aplicarCat(produtos[idx], categoria, nomeAmbiente, tipoAmbiente, tipoMomento, tipoVistaSe, tipoBeleza);
+      if (limparACatalogar) { delete p.aCatalogar; delete p.lojaNome; }
+      produtos[idx] = p;
     }
   }
 
