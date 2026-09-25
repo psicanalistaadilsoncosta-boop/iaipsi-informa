@@ -39,10 +39,13 @@ const CATEGORIA_LABELS: Record<string, string> = {
 const AMBIENTES = ['Sala', 'Quarto', 'Escritório', 'Cozinha', 'Banheiro', 'Área externa'];
 const TIPOS_AMBIENTE = ['Iluminação', 'Climatização', 'Móveis', 'Decoração', 'Organização', 'Eletrônicos'];
 
+const MOMENTOS = ['Café da manhã', 'Vinho', 'Churrasco', 'Lareira', 'Domingo relaxado', 'Festa em Casa'];
+const TIPOS_MOMENTO = ['Eletro', 'Móveis', 'Acessórios', 'Alimentos'];
+
 const TIPOS_POR_CATEGORIA: Record<string, string[]> = {
   ambiente: AMBIENTES,
   vistaSe:  ['Roupas', 'Calçados', 'Acessórios', 'Infantil', 'Bebê', 'Brinquedos'],
-  momento:  ['Café da manhã', 'Vinho', 'Churrasco', 'Lareira', 'Domingo relaxado', 'Festa em Casa'],
+  momento:  MOMENTOS,
   beleza:   ['Perfumes', 'Skincare', 'Maquiagem', 'Cabelos', 'Massagem', 'Solar', 'Cuidados'],
 };
 
@@ -82,6 +85,8 @@ export default function AdminProdutosPage() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [subCategoria, setSubCategoria] = useState<Categoria>(null); // qual cat está expandida no submenu
   const [subAmbienteNome, setSubAmbienteNome] = useState<string | null>(null); // cômodo escolhido → mostra tipos
+  const [subMomentoNome, setSubMomentoNome] = useState<string | null>(null);   // clima escolhido → mostra tipoMomento
+  const [loteMomentoNome, setLoteMomentoNome] = useState<string | null>(null);
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
   const [movendoLote, setMovendoLote] = useState(false);
   const [loteSubCategoria, setLoteSubCategoria] = useState<Categoria>(null);
@@ -173,6 +178,9 @@ export default function AdminProdutosPage() {
     if (novaCategoria === 'ambiente') {
       if (!nomeAmb) { setLoteSubCategoria('ambiente'); setLoteAmbienteNome(null); return; }
       if (!tipo) { setLoteAmbienteNome(nomeAmb); return; }
+        } else if (novaCategoria === 'momento') {
+      if (!tipo) { setLoteSubCategoria('momento'); setLoteMomentoNome(null); return; }
+      if (!nomeAmb) { setLoteMomentoNome(tipo); return; }
     } else if (TIPOS_POR_CATEGORIA[novaCategoria].length > 0 && !tipo) {
       setLoteSubCategoria(novaCategoria);
       return;
@@ -180,6 +188,7 @@ export default function AdminProdutosPage() {
     setMovendoLote(true);
     setLoteSubCategoria(null);
     setLoteAmbienteNome(null);
+    setLoteMomentoNome(null);
 
     setProdutos(prev => prev.map(p => !selecionados.has(p.id) ? p : aplicarCategoria(p, novaCategoria, tipo, nomeAmb)));
 
@@ -208,7 +217,7 @@ export default function AdminProdutosPage() {
       novo.ambiente = nomeAmb || 'Sala';
       novo.tipoAmbiente = tipo || 'Organização';
     }
-    else if (novaCategoria === 'momento') { novo.momento = tipo || 'Café da manhã'; novo.tipoMomento = 'Acessórios'; }
+    else if (novaCategoria === 'momento') { novo.momento = tipo || 'Café da manhã'; novo.tipoMomento = nomeAmb || 'Acessórios'; }
     else if (novaCategoria === 'vistaSe') { novo.vistaSe = true; novo.tipoVistaSe = tipo || 'Roupas'; }
     else if (novaCategoria === 'beleza') { novo.beleza = true; novo.tipoBeleza = tipo || 'Cuidados'; }
     return novo;
@@ -220,6 +229,11 @@ export default function AdminProdutosPage() {
     if (novaCategoria === 'ambiente') {
       if (!nomeAmb) { setSubCategoria('ambiente'); setSubAmbienteNome(null); return; }
       if (!tipo) { setSubAmbienteNome(nomeAmb); return; }
+       } else if (novaCategoria === 'momento') {
+      if (!tipo) { setSubCategoria('momento'); setSubMomentoNome(null); return; }
+      // tipo = clima (Vinho), ainda precisa do tipoMomento
+      // nomeAmb reaproveitado como tipoMomento aqui
+      if (!nomeAmb) { setSubMomentoNome(tipo); return; }
     } else if (TIPOS_POR_CATEGORIA[novaCategoria].length > 0 && !tipo) {
       setSubCategoria(novaCategoria);
       return;
@@ -228,6 +242,7 @@ export default function AdminProdutosPage() {
     setOpenDropdown(null);
     setSubCategoria(null);
     setSubAmbienteNome(null);
+    setSubMomentoNome(null);
 
     setProdutos(prev => prev.map(p => p.id !== produto.id ? p : aplicarCategoria(p, novaCategoria, tipo, nomeAmb)));
 
@@ -376,6 +391,34 @@ export default function AdminProdutosPage() {
                   </button>
                 ))}
                 <button onClick={() => setLoteAmbienteNome(null)} style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: 12 }}>← voltar</button>
+              </div>
+            )}
+
+            {/* Submenu lote: momento nível 2 — clima */}
+            {loteSubCategoria === 'momento' && !loteMomentoNome && (
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, paddingTop: 10, borderTop: '1px solid #333' }}>
+                <span style={{ color: '#9ca3af', fontSize: 13, alignSelf: 'center' }}>Clima:</span>
+                {MOMENTOS.map(m => (
+                  <button key={m} onClick={() => moverLote('momento', m)} disabled={movendoLote}
+                    style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid #444', background: '#222', color: '#fff', fontSize: 13, cursor: 'pointer' }}>
+                    {m}
+                  </button>
+                ))}
+                <button onClick={() => setLoteSubCategoria(null)} style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: 12 }}>✕</button>
+              </div>
+            )}
+
+            {/* Submenu lote: momento nível 3 — tipo */}
+            {loteSubCategoria === 'momento' && loteMomentoNome && (
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, paddingTop: 10, borderTop: '1px solid #333' }}>
+                <span style={{ color: '#9ca3af', fontSize: 13, alignSelf: 'center' }}>{loteMomentoNome} →</span>
+                {TIPOS_MOMENTO.map(t => (
+                  <button key={t} onClick={() => moverLote('momento', loteMomentoNome, t)} disabled={movendoLote}
+                    style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid #444', background: '#222', color: '#fff', fontSize: 13, cursor: 'pointer' }}>
+                    {t}
+                  </button>
+                ))}
+                <button onClick={() => setLoteMomentoNome(null)} style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: 12 }}>← voltar</button>
               </div>
             )}
 
@@ -739,6 +782,44 @@ export default function AdminProdutosPage() {
                                 ))}
                               </>
                             )}
+
+                            {/* Momento nível 2: clima */}
+                            {subCategoria === 'momento' && !subMomentoNome && (
+                              <>
+                                <button onClick={() => setSubCategoria(null)}
+                                  style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', padding: '8px 14px', background: '#f9fafb', border: 'none', borderBottom: '1px solid #e5e7eb', fontSize: 13, color: '#6b7280', cursor: 'pointer' }}>
+                                  ← Momento
+                                </button>
+                                {MOMENTOS.map(m => (
+                                  <button key={m} onClick={() => moverCategoria(produto, 'momento', m)}
+                                    style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', background: '#fff', border: 'none', borderBottom: '1px solid #f3f4f6', fontSize: 14, color: '#111', cursor: 'pointer', textAlign: 'left' }}
+                                    onMouseEnter={e => (e.currentTarget.style.background = '#f3f4f6')}
+                                    onMouseLeave={e => (e.currentTarget.style.background = '#fff')}>
+                                    {m} <span style={{ marginLeft: 'auto', color: '#9ca3af', fontSize: 11 }}>▶</span>
+                                  </button>
+                                ))}
+                              </>
+                            )}
+
+                            {/* Momento nível 3: tipo */}
+                            {subCategoria === 'momento' && subMomentoNome && (
+                              <>
+                                <button onClick={() => setSubMomentoNome(null)}
+                                  style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', padding: '8px 14px', background: '#f9fafb', border: 'none', borderBottom: '1px solid #e5e7eb', fontSize: 13, color: '#6b7280', cursor: 'pointer' }}>
+                                  ← {subMomentoNome}
+                                </button>
+                                {TIPOS_MOMENTO.map(t => (
+                                  <button key={t} onClick={() => moverCategoria(produto, 'momento', subMomentoNome, t)}
+                                    style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', background: '#fff', border: 'none', borderBottom: '1px solid #f3f4f6', fontSize: 14, color: '#111', cursor: 'pointer', textAlign: 'left' }}
+                                    onMouseEnter={e => (e.currentTarget.style.background = '#f3f4f6')}
+                                    onMouseLeave={e => (e.currentTarget.style.background = '#fff')}>
+                                    {t}
+                                  </button>
+                                ))}
+                              </>
+                            )}
+
+
 
                             {/* Nível 2: tipos das outras categorias */}
                             {subCategoria && subCategoria !== 'ambiente' && (
