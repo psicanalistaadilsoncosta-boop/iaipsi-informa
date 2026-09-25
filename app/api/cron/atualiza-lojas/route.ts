@@ -157,7 +157,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: true, mensagem: 'Nenhuma loja para atualizar agora.' });
   }
 
-  const resultados: Record<string, { removidos: number; pinados: number; erro?: string }> = {};
+  const resultados: Record<string, { removidos?: number; pinados: number; erro?: string }> = {};
   let pinadosAtualizados = [...pinados];
 
   for (const loja of lojasParaAtualizar) {
