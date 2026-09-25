@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 
 const MOMENTOS = ['Café da manhã', 'Vinho', 'Churrasco', 'Lareira', 'Domingo relaxado', 'Festa em casa'];
-const TIPOS_MOMENTO = ['Eletro', 'Móveis', 'Acessórios', 'Alimentos'];
+const TIPOS_MOMENTO = ['Eletro', 'Móveis', 'Acessórios', 'Alimentos', 'Bebidas', 'Vinhos'];
+
+
 
 const MOMENTO_EMOJI: Record<string, string> = {
   'Café da manhã': '☕', 'Vinho': '🍷', 'Churrasco': '🥩',
