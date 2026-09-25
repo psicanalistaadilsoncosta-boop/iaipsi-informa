@@ -504,7 +504,8 @@ export default function AdminProdutosPage() {
                 })}
               </div>
             )}
-                          </>)}
+                           </div>
+        )}
 
         {/* Barra de seleção em lote */}
         {selecionados.size > 0 && (
