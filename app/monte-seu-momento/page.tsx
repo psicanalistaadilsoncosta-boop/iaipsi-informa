@@ -183,9 +183,9 @@ export default function MonteSeuMomentoPage() {
                             </div>
                           )}
                                                    <div style={{ marginTop: 'auto' }}>
-                            {p.precoOriginal > p.preco && (
+                                {p.precoOriginal != null && p.precoOriginal > p.preco && (
                               <div style={{ fontSize: '0.7rem', color: '#9ca3af', textDecoration: 'line-through' }}>
-                                R$ {p.precoOriginal.toFixed(2).replace('.', ',')}
+                                R$ {(p.precoOriginal as number).toFixed(2).replace('.', ',')}
                               </div>
                             )}
                             <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#dc2626' }}>

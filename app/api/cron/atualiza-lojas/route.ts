@@ -32,8 +32,7 @@ interface LojaLomadee {
   tipoVistaSe?: string;
   beleza?: boolean;
   tipoBeleza?: string;
-  moedaUSD?: boolean;
-}
+ }
 
 interface LojaAwin {
   tipo: 'awin';
@@ -50,8 +49,7 @@ interface LojaAwin {
   tipoVistaSe?: string;
   beleza?: boolean;
   tipoBeleza?: string;
-  moedaUSD?: boolean;
-}
+ }
 
 type Loja = LojaLomadee | LojaAwin;
 
