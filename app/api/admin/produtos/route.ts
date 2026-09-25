@@ -14,25 +14,29 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(produtos);
 }
 
-function aplicarCat(p: any, categoria: string, nomeAmbiente?: string, tipoAmbiente?: string, tipoMomento?: string, tipoVistaSe?: string, tipoBeleza?: string) {
+function aplicarCat(p: any, categoria: string, nomeAmbiente?: string, tipoAmbiente?: string, tipoMomento?: string, tipoVistaSe?: string, tipoBeleza?: string, tipoMercado?: string) {
   const novo = { ...p };
   delete novo.ambiente; delete novo.tipoAmbiente;
   delete novo.momento; delete novo.tipoMomento;
   delete novo.vistaSe; delete novo.tipoVistaSe;
   delete novo.beleza; delete novo.tipoBeleza;
+  delete novo.mercado; delete novo.tipoMercado;
 
   if (categoria === 'ambiente') {
     novo.ambiente = nomeAmbiente || 'Sala';
     novo.tipoAmbiente = tipoAmbiente || 'Organização';
   } else if (categoria === 'momento') {
     novo.momento = tipoMomento || 'Café da manhã';
-    novo.tipoMomento = 'Acessórios';
+    novo.tipoMomento = nomeAmbiente || 'Acessórios';
   } else if (categoria === 'vistaSe') {
     novo.vistaSe = true;
     novo.tipoVistaSe = tipoVistaSe || 'Roupas';
   } else if (categoria === 'beleza') {
     novo.beleza = true;
     novo.tipoBeleza = tipoBeleza || 'Cuidados';
+  } else if (categoria === 'mercado') {
+    novo.mercado = true;
+    novo.tipoMercado = tipoMercado || 'Alimentos';
   }
   return novo;
 }
@@ -43,7 +47,7 @@ function aplicarCat(p: any, categoria: string, nomeAmbiente?: string, tipoAmbien
 export async function PATCH(req: NextRequest) {
   if (!checkAuth(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
   const body = await req.json();
-  const { categoria, nomeAmbiente, tipoAmbiente, tipoMomento, tipoVistaSe, tipoBeleza } = body;
+  const { categoria, nomeAmbiente, tipoAmbiente, tipoMomento, tipoVistaSe, tipoBeleza, tipoMercado } = body;
   if (!categoria) return NextResponse.json({ error: 'categoria obrigatória' }, { status: 400 });
 
   // Suporte a lote (ids[]) ou individual (id)
@@ -55,7 +59,7 @@ export async function PATCH(req: NextRequest) {
   for (const id of ids) {
     const idx = produtos.findIndex((p: any) => p.id === id);
     if (idx !== -1) {
-      produtos[idx] = aplicarCat(produtos[idx], categoria, nomeAmbiente, tipoAmbiente, tipoMomento, tipoVistaSe, tipoBeleza);
+    produtos[idx] = aplicarCat(produtos[idx], categoria, nomeAmbiente, tipoAmbiente, tipoMomento, tipoVistaSe, tipoBeleza, tipoMercado);
     }
   }
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-type Categoria = 'ambiente' | 'vistaSe' | 'beleza' | 'momento' | null;
+type Categoria = 'ambiente' | 'vistaSe' | 'beleza' | 'momento' | 'mercado' | null;
 
 interface Produto {
   id: string;
@@ -19,6 +19,8 @@ interface Produto {
   tipoVistaSe?: string;
   beleza?: boolean;
   tipoBeleza?: string;
+  mercado?: boolean;
+  tipoMercado?: string;
 }
 
 const BADGE_COLORS: Record<string, string> = {
@@ -26,6 +28,7 @@ const BADGE_COLORS: Record<string, string> = {
   vistaSe: '#be185d',
   beleza: '#9d174d',
   momento: '#d97706',
+  mercado: '#059669',
 };
 
 const CATEGORIA_LABELS: Record<string, string> = {
@@ -33,6 +36,7 @@ const CATEGORIA_LABELS: Record<string, string> = {
   vistaSe: 'Vista-se',
   beleza: 'Beleza',
   momento: 'Momento',
+  mercado: 'Mercado',
 };
 
 // Ambiente: primeiro nível = cômodo, segundo nível = tipo
@@ -42,11 +46,14 @@ const TIPOS_AMBIENTE = ['Iluminação', 'Climatização', 'Móveis', 'Decoraçã
 const MOMENTOS = ['Café da manhã', 'Vinho', 'Churrasco', 'Lareira', 'Domingo relaxado', 'Festa em Casa'];
 const TIPOS_MOMENTO = ['Eletro', 'Móveis', 'Acessórios', 'Alimentos'];
 
+const TIPOS_MERCADO = ['Bebidas', 'Alimentos', 'Café', 'Snacks', 'Hortifruti', 'Limpeza', 'Pet'];
+
 const TIPOS_POR_CATEGORIA: Record<string, string[]> = {
   ambiente: AMBIENTES,
   vistaSe:  ['Roupas', 'Calçados', 'Acessórios', 'Infantil', 'Bebê', 'Brinquedos'],
   momento:  MOMENTOS,
   beleza:   ['Perfumes', 'Skincare', 'Maquiagem', 'Cabelos', 'Massagem', 'Solar', 'Cuidados'],
+  mercado:  TIPOS_MERCADO,
 };
 
 const MOVER_OPTIONS: { value: Categoria; label: string }[] = [
@@ -54,6 +61,7 @@ const MOVER_OPTIONS: { value: Categoria; label: string }[] = [
   { value: 'vistaSe', label: 'Vista-se' },
   { value: 'beleza', label: 'Beleza' },
   { value: 'momento', label: 'Momento' },
+  { value: 'mercado', label: 'Mercado' },
 ];
 
 const PAGE_SIZE = 50;
@@ -63,6 +71,7 @@ function getCategoria(p: Produto): Categoria {
   if (p.momento || p.tipoMomento) return 'momento';
   if (p.vistaSe) return 'vistaSe';
   if (p.beleza) return 'beleza';
+  if (p.mercado) return 'mercado';
   return null;
 }
 
@@ -197,7 +206,7 @@ export default function AdminProdutosPage() {
       await fetch('/api/admin/produtos', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids: [...selecionados], categoria: novaCategoria, nomeAmbiente: nomeAmb, tipoAmbiente: tipo, tipoMomento: tipo, tipoVistaSe: tipo, tipoBeleza: tipo }),
+       body: JSON.stringify({ ids: [...selecionados], categoria: novaCategoria, nomeAmbiente: nomeAmb, tipoAmbiente: tipo, tipoMomento: tipo, tipoVistaSe: tipo, tipoBeleza: tipo, tipoMercado: tipo }),
       });
       setSelecionados(new Set());
     } catch {
@@ -213,6 +222,7 @@ export default function AdminProdutosPage() {
     delete novo.momento; delete novo.tipoMomento;
     delete novo.vistaSe; delete novo.tipoVistaSe;
     delete novo.beleza; delete novo.tipoBeleza;
+    delete novo.mercado; delete novo.tipoMercado;
     if (novaCategoria === 'ambiente') {
       novo.ambiente = nomeAmb || 'Sala';
       novo.tipoAmbiente = tipo || 'Organização';
@@ -220,6 +230,7 @@ export default function AdminProdutosPage() {
     else if (novaCategoria === 'momento') { novo.momento = tipo || 'Café da manhã'; novo.tipoMomento = nomeAmb || 'Acessórios'; }
     else if (novaCategoria === 'vistaSe') { novo.vistaSe = true; novo.tipoVistaSe = tipo || 'Roupas'; }
     else if (novaCategoria === 'beleza') { novo.beleza = true; novo.tipoBeleza = tipo || 'Cuidados'; }
+    else if (novaCategoria === 'mercado') { novo.mercado = true; novo.tipoMercado = tipo || 'Alimentos'; }
     return novo;
   }
 
@@ -250,7 +261,7 @@ export default function AdminProdutosPage() {
       await fetch('/api/admin/produtos', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: produto.id, categoria: novaCategoria, nomeAmbiente: nomeAmb, tipoAmbiente: tipo, tipoMomento: tipo, tipoVistaSe: tipo, tipoBeleza: tipo }),
+       body: JSON.stringify({ id: produto.id, categoria: novaCategoria, nomeAmbiente: nomeAmb, tipoAmbiente: tipo, tipoMomento: tipo, tipoVistaSe: tipo, tipoBeleza: tipo, tipoMercado: tipo }),
       });
     } catch {
       await fetchProdutos();
@@ -421,9 +432,8 @@ export default function AdminProdutosPage() {
                 <button onClick={() => setLoteMomentoNome(null)} style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: 12 }}>← voltar</button>
               </div>
             )}
-
-            {/* Submenu lote: outros tipos (vistaSe, beleza, momento) */}
-            {loteSubCategoria && loteSubCategoria !== 'ambiente' && TIPOS_POR_CATEGORIA[loteSubCategoria].length > 0 && (
+          {/* Submenu lote: outros tipos (vistaSe, beleza) */}
+            {loteSubCategoria && loteSubCategoria !== 'ambiente' && loteSubCategoria !== 'momento' && TIPOS_POR_CATEGORIA[loteSubCategoria].length > 0 && (
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, paddingTop: 10, borderTop: '1px solid #333' }}>
                 <span style={{ color: '#9ca3af', fontSize: 13, alignSelf: 'center' }}>Tipo:</span>
                 {TIPOS_POR_CATEGORIA[loteSubCategoria].map(tipo => (
@@ -483,6 +493,7 @@ export default function AdminProdutosPage() {
             <option value="vistaSe">Vista-se</option>
             <option value="beleza">Beleza</option>
             <option value="momento">Momento</option>
+            <option value="mercado">Mercado</option>
             <option value="sem-categoria">Sem categoria</option>
           </select>
           <span style={{ fontSize: 13, color: '#9ca3af', whiteSpace: 'nowrap' }}>
@@ -653,9 +664,14 @@ export default function AdminProdutosPage() {
                                 {produto.tipoVistaSe}
                               </span>
                             )}
-                            {cat === 'beleza' && produto.tipoBeleza && (
+                                                       {cat === 'beleza' && produto.tipoBeleza && (
                               <span style={{ fontSize: 12, color: '#374151', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                 {produto.tipoBeleza}
+                              </span>
+                            )}
+                            {cat === 'mercado' && produto.tipoMercado && (
+                              <span style={{ fontSize: 12, color: '#374151', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {produto.tipoMercado}
                               </span>
                             )}
                           </>
