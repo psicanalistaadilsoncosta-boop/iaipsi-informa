@@ -34,8 +34,12 @@ const CATEGORIA_LABELS: Record<string, string> = {
   momento: 'Momento',
 };
 
+// Ambiente: primeiro nível = cômodo, segundo nível = tipo
+const AMBIENTES = ['Sala', 'Quarto', 'Escritório', 'Cozinha', 'Banheiro', 'Área externa'];
+const TIPOS_AMBIENTE = ['Iluminação', 'Climatização', 'Móveis', 'Decoração', 'Organização', 'Eletrônicos'];
+
 const TIPOS_POR_CATEGORIA: Record<string, string[]> = {
-  ambiente: ['Sala', 'Quarto', 'Cozinha', 'Escritório', 'Banheiro', 'Área externa'],
+  ambiente: AMBIENTES,
   vistaSe:  ['Roupas', 'Calçados', 'Acessórios', 'Infantil', 'Bebê'],
   momento:  ['Café da manhã', 'Vinho', 'Churrasco', 'Lareira', 'Domingo relaxado', 'Festa em Casa'],
   beleza:   ['Perfumes', 'Skincare', 'Maquiagem', 'Cabelos', 'Massagem', 'Solar', 'Cuidados'],
@@ -76,9 +80,11 @@ export default function AdminProdutosPage() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [subCategoria, setSubCategoria] = useState<Categoria>(null); // qual cat está expandida no submenu
+  const [subAmbienteNome, setSubAmbienteNome] = useState<string | null>(null); // cômodo escolhido → mostra tipos
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
   const [movendoLote, setMovendoLote] = useState(false);
   const [loteSubCategoria, setLoteSubCategoria] = useState<Categoria>(null);
+  const [loteAmbienteNome, setLoteAmbienteNome] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Fecha dropdown ao clicar fora
@@ -160,24 +166,28 @@ export default function AdminProdutosPage() {
     });
   }
 
-  async function moverLote(novaCategoria: Categoria, tipo?: string) {
+  async function moverLote(novaCategoria: Categoria, tipo?: string, nomeAmb?: string) {
     if (!novaCategoria || selecionados.size === 0) return;
-    // Se tem subtipos e não escolheu, mostra submenu do lote
-    if (TIPOS_POR_CATEGORIA[novaCategoria].length > 0 && !tipo) {
+    // Ambiente: passo 1 = escolher cômodo, passo 2 = escolher tipo
+    if (novaCategoria === 'ambiente') {
+      if (!nomeAmb) { setLoteSubCategoria('ambiente'); setLoteAmbienteNome(null); return; }
+      if (!tipo) { setLoteAmbienteNome(nomeAmb); return; }
+    } else if (TIPOS_POR_CATEGORIA[novaCategoria].length > 0 && !tipo) {
       setLoteSubCategoria(novaCategoria);
       return;
     }
     setMovendoLote(true);
     setLoteSubCategoria(null);
+    setLoteAmbienteNome(null);
 
-    setProdutos(prev => prev.map(p => !selecionados.has(p.id) ? p : aplicarCategoria(p, novaCategoria, tipo)));
+    setProdutos(prev => prev.map(p => !selecionados.has(p.id) ? p : aplicarCategoria(p, novaCategoria, tipo, nomeAmb)));
 
     try {
       await Promise.all([...selecionados].map(id =>
         fetch('/api/admin/produtos', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, categoria: novaCategoria, tipoAmbiente: tipo, tipoMomento: tipo, tipoVistaSe: tipo, tipoBeleza: tipo }),
+          body: JSON.stringify({ id, categoria: novaCategoria, nomeAmbiente: nomeAmb, tipoAmbiente: tipo, tipoMomento: tipo, tipoVistaSe: tipo, tipoBeleza: tipo }),
         })
       ));
       setSelecionados(new Set());
@@ -188,37 +198,44 @@ export default function AdminProdutosPage() {
     }
   }
 
-  function aplicarCategoria(p: Produto, novaCategoria: Categoria, tipo?: string) {
+  function aplicarCategoria(p: Produto, novaCategoria: Categoria, tipo?: string, nomeAmb?: string) {
     const novo = { ...p };
     delete novo.ambiente; delete novo.tipoAmbiente;
     delete novo.momento; delete novo.tipoMomento;
     delete novo.vistaSe; delete novo.tipoVistaSe;
     delete novo.beleza; delete (novo as any).tipoBeleza;
-    if (novaCategoria === 'ambiente') { novo.ambiente = tipo || 'Sala'; novo.tipoAmbiente = tipo || 'Sala'; }
+    if (novaCategoria === 'ambiente') {
+      novo.ambiente = nomeAmb || 'Sala';
+      novo.tipoAmbiente = tipo || 'Organização';
+    }
     else if (novaCategoria === 'momento') { novo.momento = tipo || 'Café da manhã'; novo.tipoMomento = 'Acessórios'; }
     else if (novaCategoria === 'vistaSe') { novo.vistaSe = true; novo.tipoVistaSe = tipo || 'Roupas'; }
-    else if (novaCategoria === 'beleza') { novo.beleza = true; if (tipo) (novo as any).tipoBeleza = tipo; }
+    else if (novaCategoria === 'beleza') { novo.beleza = true; (novo as any).tipoBeleza = tipo || 'Cuidados'; }
     return novo;
   }
 
-  async function moverCategoria(produto: Produto, novaCategoria: Categoria, tipo?: string) {
+  async function moverCategoria(produto: Produto, novaCategoria: Categoria, tipo?: string, nomeAmb?: string) {
     if (!novaCategoria) return;
-    // Se tem subtipos e não escolheu ainda, expande submenu
-    if (TIPOS_POR_CATEGORIA[novaCategoria].length > 0 && !tipo) {
+    // Ambiente: passo 1 = escolher cômodo, passo 2 = escolher tipo
+    if (novaCategoria === 'ambiente') {
+      if (!nomeAmb) { setSubCategoria('ambiente'); setSubAmbienteNome(null); return; }
+      if (!tipo) { setSubAmbienteNome(nomeAmb); return; }
+    } else if (TIPOS_POR_CATEGORIA[novaCategoria].length > 0 && !tipo) {
       setSubCategoria(novaCategoria);
       return;
     }
     setSavingId(produto.id);
     setOpenDropdown(null);
     setSubCategoria(null);
+    setSubAmbienteNome(null);
 
-    setProdutos(prev => prev.map(p => p.id !== produto.id ? p : aplicarCategoria(p, novaCategoria, tipo)));
+    setProdutos(prev => prev.map(p => p.id !== produto.id ? p : aplicarCategoria(p, novaCategoria, tipo, nomeAmb)));
 
     try {
       await fetch('/api/admin/produtos', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: produto.id, categoria: novaCategoria, tipoAmbiente: tipo, tipoMomento: tipo, tipoVistaSe: tipo, tipoBeleza: tipo }),
+        body: JSON.stringify({ id: produto.id, categoria: novaCategoria, nomeAmbiente: nomeAmb, tipoAmbiente: tipo, tipoMomento: tipo, tipoVistaSe: tipo, tipoBeleza: tipo }),
       });
     } catch {
       await fetchProdutos();
@@ -334,34 +351,45 @@ export default function AdminProdutosPage() {
                 Cancelar
               </button>
             </div>
-            {/* Submenu de tipos do lote */}
-            {loteSubCategoria && TIPOS_POR_CATEGORIA[loteSubCategoria].length > 0 && (
+            {/* Submenu lote: ambiente nível 2 — cômodos */}
+            {loteSubCategoria === 'ambiente' && !loteAmbienteNome && (
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, paddingTop: 10, borderTop: '1px solid #333' }}>
-                <span style={{ color: '#9ca3af', fontSize: 13, alignSelf: 'center' }}>Tipo:</span>
-                {TIPOS_POR_CATEGORIA[loteSubCategoria].map(tipo => (
-                  <button
-                    key={tipo}
-                    onClick={() => moverLote(loteSubCategoria, tipo)}
-                    disabled={movendoLote}
-                    style={{
-                      padding: '4px 12px',
-                      borderRadius: 6,
-                      border: '1px solid #444',
-                      background: '#222',
-                      color: '#fff',
-                      fontSize: 13,
-                      cursor: 'pointer',
-                    }}
-                  >
+                <span style={{ color: '#9ca3af', fontSize: 13, alignSelf: 'center' }}>Cômodo:</span>
+                {AMBIENTES.map(amb => (
+                  <button key={amb} onClick={() => moverLote('ambiente', undefined, amb)} disabled={movendoLote}
+                    style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid #444', background: '#222', color: '#fff', fontSize: 13, cursor: 'pointer' }}>
+                    {amb}
+                  </button>
+                ))}
+                <button onClick={() => setLoteSubCategoria(null)} style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: 12 }}>✕</button>
+              </div>
+            )}
+
+            {/* Submenu lote: ambiente nível 3 — tipo */}
+            {loteSubCategoria === 'ambiente' && loteAmbienteNome && (
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, paddingTop: 10, borderTop: '1px solid #333' }}>
+                <span style={{ color: '#9ca3af', fontSize: 13, alignSelf: 'center' }}>{loteAmbienteNome} →</span>
+                {TIPOS_AMBIENTE.map(tipo => (
+                  <button key={tipo} onClick={() => moverLote('ambiente', tipo, loteAmbienteNome)} disabled={movendoLote}
+                    style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid #444', background: '#222', color: '#fff', fontSize: 13, cursor: 'pointer' }}>
                     {tipo}
                   </button>
                 ))}
-                <button
-                  onClick={() => setLoteSubCategoria(null)}
-                  style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: 12 }}
-                >
-                  ✕
-                </button>
+                <button onClick={() => setLoteAmbienteNome(null)} style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: 12 }}>← voltar</button>
+              </div>
+            )}
+
+            {/* Submenu lote: outros tipos (vistaSe, beleza, momento) */}
+            {loteSubCategoria && loteSubCategoria !== 'ambiente' && TIPOS_POR_CATEGORIA[loteSubCategoria].length > 0 && (
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, paddingTop: 10, borderTop: '1px solid #333' }}>
+                <span style={{ color: '#9ca3af', fontSize: 13, alignSelf: 'center' }}>Tipo:</span>
+                {TIPOS_POR_CATEGORIA[loteSubCategoria].map(tipo => (
+                  <button key={tipo} onClick={() => moverLote(loteSubCategoria, tipo)} disabled={movendoLote}
+                    style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid #444', background: '#222', color: '#fff', fontSize: 13, cursor: 'pointer' }}>
+                    {tipo}
+                  </button>
+                ))}
+                <button onClick={() => setLoteSubCategoria(null)} style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: 12 }}>✕</button>
               </div>
             )}
           </div>
@@ -636,18 +664,11 @@ export default function AdminProdutosPage() {
                                 key={opt.value}
                                 onClick={() => moverCategoria(produto, opt.value)}
                                 style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: 8,
-                                  width: '100%',
-                                  padding: '9px 14px',
+                                  display: 'flex', alignItems: 'center', gap: 8,
+                                  width: '100%', padding: '9px 14px',
                                   background: cat === opt.value ? '#f9fafb' : '#fff',
-                                  border: 'none',
-                                  borderBottom: '1px solid #f3f4f6',
-                                  fontSize: 14,
-                                  color: '#111',
-                                  cursor: 'pointer',
-                                  textAlign: 'left',
+                                  border: 'none', borderBottom: '1px solid #f3f4f6',
+                                  fontSize: 14, color: '#111', cursor: 'pointer', textAlign: 'left',
                                 }}
                                 onMouseEnter={e => (e.currentTarget.style.background = '#f3f4f6')}
                                 onMouseLeave={e => (e.currentTarget.style.background = cat === opt.value ? '#f9fafb' : '#fff')}
@@ -655,32 +676,57 @@ export default function AdminProdutosPage() {
                                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: BADGE_COLORS[opt.value!], flexShrink: 0 }} />
                                 {opt.label}
                                 {TIPOS_POR_CATEGORIA[opt.value!].length > 0 && <span style={{ marginLeft: 'auto', color: '#9ca3af', fontSize: 11 }}>▶</span>}
-                                {cat === opt.value && TIPOS_POR_CATEGORIA[opt.value!].length === 0 && <span style={{ marginLeft: 'auto', color: BADGE_COLORS[opt.value!], fontSize: 12 }}>✓</span>}
                               </button>
                             ))}
-                            {/* Nível 2: tipos */}
-                            {subCategoria && (
+
+                            {/* Ambiente nível 2: cômodos */}
+                            {subCategoria === 'ambiente' && !subAmbienteNome && (
                               <>
-                                <button
-                                  onClick={() => setSubCategoria(null)}
-                                  style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', padding: '8px 14px', background: '#f9fafb', border: 'none', borderBottom: '1px solid #e5e7eb', fontSize: 13, color: '#6b7280', cursor: 'pointer' }}
-                                >
+                                <button onClick={() => setSubCategoria(null)}
+                                  style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', padding: '8px 14px', background: '#f9fafb', border: 'none', borderBottom: '1px solid #e5e7eb', fontSize: 13, color: '#6b7280', cursor: 'pointer' }}>
+                                  ← Ambiente
+                                </button>
+                                {AMBIENTES.map(amb => (
+                                  <button key={amb} onClick={() => moverCategoria(produto, 'ambiente', undefined, amb)}
+                                    style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', background: '#fff', border: 'none', borderBottom: '1px solid #f3f4f6', fontSize: 14, color: '#111', cursor: 'pointer', textAlign: 'left' }}
+                                    onMouseEnter={e => (e.currentTarget.style.background = '#f3f4f6')}
+                                    onMouseLeave={e => (e.currentTarget.style.background = '#fff')}>
+                                    {amb} <span style={{ marginLeft: 'auto', color: '#9ca3af', fontSize: 11 }}>▶</span>
+                                  </button>
+                                ))}
+                              </>
+                            )}
+
+                            {/* Ambiente nível 3: tipos */}
+                            {subCategoria === 'ambiente' && subAmbienteNome && (
+                              <>
+                                <button onClick={() => setSubAmbienteNome(null)}
+                                  style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', padding: '8px 14px', background: '#f9fafb', border: 'none', borderBottom: '1px solid #e5e7eb', fontSize: 13, color: '#6b7280', cursor: 'pointer' }}>
+                                  ← {subAmbienteNome}
+                                </button>
+                                {TIPOS_AMBIENTE.map(tipo => (
+                                  <button key={tipo} onClick={() => moverCategoria(produto, 'ambiente', tipo, subAmbienteNome)}
+                                    style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', background: '#fff', border: 'none', borderBottom: '1px solid #f3f4f6', fontSize: 14, color: '#111', cursor: 'pointer', textAlign: 'left' }}
+                                    onMouseEnter={e => (e.currentTarget.style.background = '#f3f4f6')}
+                                    onMouseLeave={e => (e.currentTarget.style.background = '#fff')}>
+                                    {tipo}
+                                  </button>
+                                ))}
+                              </>
+                            )}
+
+                            {/* Nível 2: tipos das outras categorias */}
+                            {subCategoria && subCategoria !== 'ambiente' && (
+                              <>
+                                <button onClick={() => setSubCategoria(null)}
+                                  style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', padding: '8px 14px', background: '#f9fafb', border: 'none', borderBottom: '1px solid #e5e7eb', fontSize: 13, color: '#6b7280', cursor: 'pointer' }}>
                                   ← {CATEGORIA_LABELS[subCategoria]}
                                 </button>
                                 {TIPOS_POR_CATEGORIA[subCategoria].map(tipo => (
-                                  <button
-                                    key={tipo}
-                                    onClick={() => moverCategoria(produto, subCategoria, tipo)}
-                                    style={{
-                                      display: 'flex', alignItems: 'center', gap: 8,
-                                      width: '100%', padding: '9px 14px',
-                                      background: '#fff', border: 'none',
-                                      borderBottom: '1px solid #f3f4f6',
-                                      fontSize: 14, color: '#111', cursor: 'pointer', textAlign: 'left',
-                                    }}
+                                  <button key={tipo} onClick={() => moverCategoria(produto, subCategoria, tipo)}
+                                    style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', background: '#fff', border: 'none', borderBottom: '1px solid #f3f4f6', fontSize: 14, color: '#111', cursor: 'pointer', textAlign: 'left' }}
                                     onMouseEnter={e => (e.currentTarget.style.background = '#f3f4f6')}
-                                    onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
-                                  >
+                                    onMouseLeave={e => (e.currentTarget.style.background = '#fff')}>
                                     {tipo}
                                   </button>
                                 ))}

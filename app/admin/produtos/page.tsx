@@ -18,6 +18,7 @@ interface Produto {
   vistaSe?: boolean;
   tipoVistaSe?: string;
   beleza?: boolean;
+  tipoBeleza?: string;
 }
 
 const BADGE_COLORS: Record<string, string> = {
@@ -203,14 +204,14 @@ export default function AdminProdutosPage() {
     delete novo.ambiente; delete novo.tipoAmbiente;
     delete novo.momento; delete novo.tipoMomento;
     delete novo.vistaSe; delete novo.tipoVistaSe;
-    delete novo.beleza; delete (novo as any).tipoBeleza;
+    delete novo.beleza; delete novo.tipoBeleza;
     if (novaCategoria === 'ambiente') {
       novo.ambiente = nomeAmb || 'Sala';
       novo.tipoAmbiente = tipo || 'Organização';
     }
     else if (novaCategoria === 'momento') { novo.momento = tipo || 'Café da manhã'; novo.tipoMomento = 'Acessórios'; }
     else if (novaCategoria === 'vistaSe') { novo.vistaSe = true; novo.tipoVistaSe = tipo || 'Roupas'; }
-    else if (novaCategoria === 'beleza') { novo.beleza = true; (novo as any).tipoBeleza = tipo || 'Cuidados'; }
+    else if (novaCategoria === 'beleza') { novo.beleza = true; novo.tipoBeleza = tipo || 'Cuidados'; }
     return novo;
   }
 
@@ -577,20 +578,45 @@ export default function AdminProdutosPage() {
                       </span>
 
                       {/* Badge categoria */}
-                      <div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                         {cat ? (
-                          <span style={{
-                            display: 'inline-block',
-                            padding: '3px 10px',
-                            borderRadius: 20,
-                            background: BADGE_COLORS[cat] + '18',
-                            color: BADGE_COLORS[cat],
-                            fontSize: 12,
-                            fontWeight: 600,
-                            border: `1px solid ${BADGE_COLORS[cat]}40`,
-                          }}>
-                            {CATEGORIA_LABELS[cat]}
-                          </span>
+                          <>
+                            <span style={{
+                              display: 'inline-block',
+                              padding: '2px 8px',
+                              borderRadius: 20,
+                              background: BADGE_COLORS[cat] + '18',
+                              color: BADGE_COLORS[cat],
+                              fontSize: 11,
+                              fontWeight: 700,
+                              border: `1px solid ${BADGE_COLORS[cat]}40`,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.04em',
+                            }}>
+                              {CATEGORIA_LABELS[cat]}
+                            </span>
+                            {/* Detalhe: Sala / Eletrônicos, Vinho, Roupas, etc. */}
+                            {cat === 'ambiente' && (produto.ambiente || produto.tipoAmbiente) && (
+                              <span style={{ fontSize: 12, color: '#374151', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {[produto.ambiente, produto.tipoAmbiente].filter(Boolean).join(' / ')}
+                              </span>
+                            )}
+                            {cat === 'momento' && produto.momento && (
+                              <span style={{ fontSize: 12, color: '#374151', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {produto.momento}
+                              </span>
+                            )}
+                            {cat === 'vistaSe' && produto.tipoVistaSe && (
+                              <span style={{ fontSize: 12, color: '#374151', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {produto.tipoVistaSe}
+                              </span>
+                            )}
+                            {cat === 'beleza' && produto.tipoBeleza && (
+                              <span style={{ fontSize: 12, color: '#374151', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {produto.tipoBeleza}
+                              </span>
+                            )}
+                          </>
                         ) : (
                           <span style={{
                             display: 'inline-block',
