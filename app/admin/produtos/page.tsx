@@ -497,17 +497,17 @@ export default function AdminProdutosPage() {
                       <div style={{ padding: '8px 10px' }}>
                         <div style={{ fontSize: 12, fontWeight: 600, color: '#111', lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', marginBottom: 4 }}>{p.nome}</div>
                         {p.lojaNome && <div style={{ fontSize: 11, color: '#6b7280' }}>🏪 {p.lojaNome}</div>}
-                        <div style={{ fontSize: 13, fontWeight: 800, color: '#dc2626', marginTop: 4 }}>R$ {(p.preco || 0).toFixed(2).replace('.', ',')}              </>)}
-
-        </div>
-      </div>
-    </div>
-  );
+                                              <div style={{ fontSize: 13, fontWeight: 800, color: '#dc2626', marginTop: 4 }}>R$ {(p.preco || 0).toFixed(2).replace('.', ',')}</div>
+                      </div>
+                    </div>
+                  );
                 })}
               </div>
             )}
-          </div>
+          </>
         )}
+
+        </>)}
 
         {/* Barra de seleção em lote */}
         {selecionados.size > 0 && (
