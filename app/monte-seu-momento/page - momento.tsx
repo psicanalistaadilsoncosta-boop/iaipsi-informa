@@ -161,7 +161,7 @@ export default function MonteSeuMomentoPage() {
                   {p.imagem && (
                     <div style={{ height: '160px', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px', position: 'relative' }}>
                       <img src={p.imagem} alt={p.nome} style={{ maxHeight: '136px', maxWidth: '100%', objectFit: 'contain' }} />
-                      {!!p.desconto && p.desconto > 0 && (
+                      {p.desconto && p.desconto > 0 && (
                         <span style={{ position: 'absolute', top: '8px', right: '8px', backgroundColor: '#dc2626', color: '#fff', fontSize: '0.7rem', fontWeight: 800, padding: '2px 7px', borderRadius: '999px' }}>
                           -{p.desconto}%
                         </span>
