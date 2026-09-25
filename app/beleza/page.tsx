@@ -86,8 +86,11 @@ export default function BelezaPage() {
         <div style={{ fontSize: '2rem' }}>💄</div>
         <h1 style={{ margin: '0.5rem 0 0.25rem', fontSize: '1.8rem', fontWeight: 700 }}>Beleza & Cuidados</h1>
         <p style={{ margin: 0, opacity: 0.85, fontSize: '1rem' }}>
-          Perfumes, skincare, maquiagem e mais — monte sua lista e receba os links
+          Perfumes, skincare, maquiagem e mais — monte sua lista e receba os links</p>
+<p style={{ margin: 0, opacity: 0.65, fontSize: '0.65rem' }}>
+         Atenção: os preços, descontos, frete, disponibilidade e demais condições apresentados são apenas referenciais.<br />Valem as condições exibidas no momento da compra, diretamente na loja e no carrinho do site.
         </p>
+
       </div>
 
       {/* Abas */}
@@ -159,11 +162,27 @@ export default function BelezaPage() {
                     <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#1f2937', lineHeight: 1.3, marginBottom: '0.4rem' }}>
                       {nome.length > 60 ? nome.slice(0, 57) + '...' : nome}
                     </div>
-                    {preco && (
+                    {p.moedaUSD && (
+                      <div style={{ fontSize: '0.68rem', color: '#92400e', background: '#fef3c7', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', marginBottom: '0.25rem', fontWeight: 600 }}>
+                        💵 Preço convertido de USD
+                      </div>
+                    )}
+                                       {preco && (
                       <div style={{ fontSize: '0.95rem', fontWeight: 700, color: COR }}>
                         R$ {parseFloat(preco).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
                     )}
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+                      <a href={p.link} target="_blank" rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        style={{ flex: 1, textAlign: 'center', padding: '7px', backgroundColor: '#2563eb', color: '#fff', borderRadius: '8px', textDecoration: 'none', fontSize: '0.78rem', fontWeight: 700 }}>
+                        Ver oferta
+                      </a>
+                      <button onClick={e => { e.stopPropagation(); toggleCarrinho(p); }}
+                        style={{ flex: 1, padding: '7px', backgroundColor: selected ? COR : '#f3f4f6', color: selected ? '#fff' : '#374151', border: 'none', borderRadius: '8px', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer' }}>
+                        {selected ? '✓ Na lista' : '+ Lista'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               );

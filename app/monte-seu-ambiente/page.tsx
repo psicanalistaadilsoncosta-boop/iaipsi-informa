@@ -112,6 +112,7 @@ export default function MonteSeuAmbientePage() {
 
   return (
     <main style={{ fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+    <div style={{ maxWidth: '1060px', margin: '0 auto' }}>
 
       {/* Hero */}
       <div style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #2563eb 100%)', color: '#fff', padding: '48px 24px', textAlign: 'center' }}>
@@ -119,10 +120,12 @@ export default function MonteSeuAmbientePage() {
           🏠 Monte seu Ambiente
         </h1>
         <p style={{ fontSize: '1.05rem', margin: 0, opacity: 0.9, maxWidth: '520px', marginInline: 'auto', lineHeight: 1.5 }}>
-          Escolha o ambiente, descubra produtos selecionados e monte sua lista de compras com links de oferta.
+          Escolha o ambiente, descubra produtos selecionados e monte sua lista de compras com links de oferta.</p>
+<p style={{ margin: 0, opacity: 0.65, fontSize: '0.65rem' }}>
+         Atenção: os preços, descontos, frete, disponibilidade e demais condições apresentados são apenas referenciais.<br />Valem as condições exibidas no momento da compra, diretamente na loja e no carrinho do site.
         </p>
       </div>
-
+</div>
       <div style={{ maxWidth: '1060px', margin: '0 auto', padding: '32px 20px' }}>
 
         {loading && (
@@ -217,8 +220,13 @@ export default function MonteSeuAmbientePage() {
                           <h3 style={{ fontSize: '0.8rem', fontWeight: 600, color: '#111827', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                             {p.nome}
                           </h3>
-                          {p.loja && (
+                           {p.loja && (
                             <div style={{ fontSize: '0.68rem', color: '#047857', fontWeight: 600 }}>🏪 {p.loja}</div>
+                          )}
+                          {(p as any).moedaUSD && (
+                            <div style={{ fontSize: '0.68rem', color: '#92400e', background: '#fef3c7', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', marginBottom: '0.25rem', fontWeight: 600 }}>
+                              💵 Preço convertido de USD
+                            </div>
                           )}
                           <div style={{ marginTop: 'auto' }}>
                             {p.precoOriginal > p.preco && (

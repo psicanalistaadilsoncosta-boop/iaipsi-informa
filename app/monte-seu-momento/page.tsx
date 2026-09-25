@@ -88,18 +88,23 @@ export default function MonteSeuMomentoPage() {
   };
 
   return (
-    <main style={{ fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh', padding: '32px 20px' }}>
-      <div style={{ maxWidth: '1060px', margin: '0 auto' }}>
+          <main style={{ fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
 
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '2rem', fontWeight: 900, color: '#111827', margin: '0 0 8px' }}>
+        {/* Banner */}
+        <div style={{ background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)', color: '#fff', padding: '48px 24px', textAlign: 'center' }}>
+          <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: '0 0 12px', letterSpacing: '-0.5px' }}>
             ✨ Monte seu Momento
           </h1>
-          <p style={{ color: '#6b7280', fontSize: '0.95rem', margin: 0 }}>
+          <p style={{ fontSize: '1.05rem', margin: '0 0 10px', opacity: 0.9, maxWidth: '520px', marginInline: 'auto', lineHeight: 1.5 }}>
             Escolha o clima, monte sua lista e receba os links de oferta no e-mail
           </p>
+          <p style={{ margin: 0, opacity: 0.7, fontSize: '0.72rem', maxWidth: '520px', marginInline: 'auto', lineHeight: 1.5 }}>
+            Atenção: os preços, descontos, frete, disponibilidade e demais condições apresentados são apenas referenciais.<br />Valem as condições exibidas no momento da compra, diretamente na loja e no carrinho do site.
+          </p>
         </div>
+
+      <div style={{ maxWidth: '1060px', margin: '0 auto', padding: '32px 20px' }}>
+
 
         {/* Seletor de momento */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center', marginBottom: '28px' }}>
@@ -169,15 +174,24 @@ export default function MonteSeuMomentoPage() {
                     <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#111827', marginBottom: '6px', lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                       {p.nome}
                     </div>
-                    {p.loja && <div style={{ fontSize: '0.72rem', color: '#047857', marginBottom: '4px' }}>🏪 {p.loja}</div>}
-                    {p.precoOriginal && p.precoOriginal > p.preco && (
-                      <div style={{ fontSize: '0.75rem', color: '#9ca3af', textDecoration: 'line-through' }}>
-                        R$ {p.precoOriginal.toFixed(2).replace('.', ',')}
-                      </div>
-                    )}
-                    <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#dc2626', marginBottom: '2px' }}>
-                      R$ {p.preco.toFixed(2).replace('.', ',')}
-                    </div>
+                     {p.loja && (
+                            <div style={{ fontSize: '0.68rem', color: '#047857', fontWeight: 600 }}>🏪 {p.loja}</div>
+                          )}
+                          {(p as any).moedaUSD && (
+                            <div style={{ fontSize: '0.68rem', color: '#92400e', background: '#fef3c7', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', marginBottom: '0.25rem', fontWeight: 600 }}>
+                              💵 Preço convertido de USD
+                            </div>
+                          )}
+                                                   <div style={{ marginTop: 'auto' }}>
+                            {p.precoOriginal > p.preco && (
+                              <div style={{ fontSize: '0.7rem', color: '#9ca3af', textDecoration: 'line-through' }}>
+                                R$ {p.precoOriginal.toFixed(2).replace('.', ',')}
+                              </div>
+                            )}
+                            <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#dc2626' }}>
+                              R$ {p.preco.toFixed(2).replace('.', ',')}
+                            </div>
+                          </div>
                     {p.parcelas && p.valorParcela && (
                       <div style={{ fontSize: '0.72rem', color: '#047857', fontWeight: 600, marginBottom: '10px' }}>
                         {p.parcelas}x de R$ {parseFloat(p.valorParcela).toFixed(2).replace('.', ',')}
