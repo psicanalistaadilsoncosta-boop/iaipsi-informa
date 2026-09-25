@@ -504,10 +504,7 @@ export default function AdminProdutosPage() {
                 })}
               </div>
             )}
-          </>
-        )}
-
-        </>)}
+                          </>)}
 
         {/* Barra de seleção em lote */}
         {selecionados.size > 0 && (
@@ -1080,12 +1077,14 @@ export default function AdminProdutosPage() {
             )}
 
             {/* Info paginação */}
-            <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, marginTop: 12 }}>
+                       <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, marginTop: 12 }}>
               Página {paginaAtual} de {totalPaginas} —{' '}
               mostrando {(paginaAtual - 1) * PAGE_SIZE + 1}–{Math.min(paginaAtual * PAGE_SIZE, produtosFiltrados.length)} de {produtosFiltrados.length}
             </p>
           </>
         )}
+
+        </>)}
       </div>
 
       <style>{`
