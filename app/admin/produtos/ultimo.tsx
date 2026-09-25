@@ -68,6 +68,8 @@ export default function AdminProdutosPage() {
 
   const [savingId, setSavingId] = useState<string | null>(null);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
+  const [movendoLote, setMovendoLote] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Fecha dropdown ao clicar fora
@@ -108,10 +110,81 @@ export default function AdminProdutosPage() {
     if (authed) fetchProdutos();
   }, [authed, fetchProdutos]);
 
+  // Filtragem (declarada cedo para uso nas funções abaixo)
+  const produtosFiltradosBase = produtos.filter(p => {
+    const matchBusca =
+      !busca ||
+      (p.nome || '').toLowerCase().includes(busca.toLowerCase()) ||
+      (p.loja || '').toLowerCase().includes(busca.toLowerCase());
+    const cat = getCategoria(p);
+    const matchCat =
+      filtroCategoria === 'todos' ||
+      (filtroCategoria === 'sem-categoria' ? cat === null : cat === filtroCategoria);
+    return matchBusca && matchCat;
+  });
+  const totalPaginasBase = Math.max(1, Math.ceil(produtosFiltradosBase.length / PAGE_SIZE));
+  const paginaAtualBase = Math.min(pagina, totalPaginasBase);
+  const produtosPagina = produtosFiltradosBase.slice((paginaAtualBase - 1) * PAGE_SIZE, paginaAtualBase * PAGE_SIZE);
+
   // Reset page on filter/search change
   useEffect(() => {
     setPagina(1);
+    setSelecionados(new Set());
   }, [busca, filtroCategoria]);
+
+  function toggleSelecionado(id: string) {
+    setSelecionados(prev => {
+      const novo = new Set(prev);
+      if (novo.has(id)) novo.delete(id); else novo.add(id);
+      return novo;
+    });
+  }
+
+  function toggleTodosNaPagina() {
+    const idsPagina = produtosPagina.map(p => p.id);
+    const todosSelecionados = idsPagina.every(id => selecionados.has(id));
+    setSelecionados(prev => {
+      const novo = new Set(prev);
+      if (todosSelecionados) idsPagina.forEach(id => novo.delete(id));
+      else idsPagina.forEach(id => novo.add(id));
+      return novo;
+    });
+  }
+
+  async function moverLote(novaCategoria: Categoria) {
+    if (!novaCategoria || selecionados.size === 0) return;
+    setMovendoLote(true);
+
+    // Optimistic UI
+    setProdutos(prev => prev.map(p => {
+      if (!selecionados.has(p.id)) return p;
+      const novo = { ...p };
+      delete novo.ambiente; delete novo.tipoAmbiente;
+      delete novo.momento; delete novo.tipoMomento;
+      delete novo.vistaSe; delete novo.tipoVistaSe;
+      delete novo.beleza;
+      if (novaCategoria === 'ambiente') { novo.ambiente = 'Sala'; novo.tipoAmbiente = 'Decoração'; }
+      else if (novaCategoria === 'momento') { novo.momento = 'Café da manhã'; novo.tipoMomento = 'Acessórios'; }
+      else if (novaCategoria === 'vistaSe') { novo.vistaSe = true; novo.tipoVistaSe = 'Roupas'; }
+      else if (novaCategoria === 'beleza') { novo.beleza = true; }
+      return novo;
+    }));
+
+    try {
+      await Promise.all([...selecionados].map(id =>
+        fetch('/api/admin/produtos', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, categoria: novaCategoria }),
+        })
+      ));
+      setSelecionados(new Set());
+    } catch {
+      await fetchProdutos();
+    } finally {
+      setMovendoLote(false);
+    }
+  }
 
   async function moverCategoria(produto: Produto, novaCategoria: Categoria) {
     if (!novaCategoria) return;
@@ -149,24 +222,9 @@ export default function AdminProdutosPage() {
     }
   }
 
-  // Filtragem
-  const produtosFiltrados = produtos.filter(p => {
-    const matchBusca =
-      !busca ||
-      (p.nome || '').toLowerCase().includes(busca.toLowerCase()) ||
-      (p.loja || '').toLowerCase().includes(busca.toLowerCase());
-
-    const cat = getCategoria(p);
-    const matchCat =
-      filtroCategoria === 'todos' ||
-      (filtroCategoria === 'sem-categoria' ? cat === null : cat === filtroCategoria);
-
-    return matchBusca && matchCat;
-  });
-
-  const totalPaginas = Math.max(1, Math.ceil(produtosFiltrados.length / PAGE_SIZE));
-  const paginaAtual = Math.min(pagina, totalPaginas);
-  const produtosPagina = produtosFiltrados.slice((paginaAtual - 1) * PAGE_SIZE, paginaAtual * PAGE_SIZE);
+  const produtosFiltrados = produtosFiltradosBase;
+  const totalPaginas = totalPaginasBase;
+  const paginaAtual = paginaAtualBase;
 
   // ---------- NÃO AUTENTICADO ----------
   if (!authed) {
@@ -231,6 +289,50 @@ export default function AdminProdutosPage() {
             {produtos.length} produtos carregados
           </p>
         </div>
+
+        {/* Barra de seleção em lote */}
+        {selecionados.size > 0 && (
+          <div style={{
+            background: '#111',
+            color: '#fff',
+            borderRadius: 10,
+            padding: '12px 20px',
+            marginBottom: 12,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            flexWrap: 'wrap',
+          }}>
+            <span style={{ fontSize: 14, fontWeight: 600 }}>{selecionados.size} selecionado{selecionados.size !== 1 ? 's' : ''}</span>
+            <span style={{ color: '#9ca3af', fontSize: 13 }}>Mover para:</span>
+            {MOVER_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => moverLote(opt.value)}
+                disabled={movendoLote}
+                style={{
+                  padding: '5px 14px',
+                  borderRadius: 7,
+                  border: 'none',
+                  background: BADGE_COLORS[opt.value!],
+                  color: '#fff',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: movendoLote ? 'not-allowed' : 'pointer',
+                  opacity: movendoLote ? 0.6 : 1,
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
+            <button
+              onClick={() => setSelecionados(new Set())}
+              style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', fontSize: 13 }}
+            >
+              Cancelar
+            </button>
+          </div>
+        )}
 
         {/* Filtros */}
         <div style={{
@@ -300,7 +402,7 @@ export default function AdminProdutosPage() {
               {/* Cabeçalho da tabela */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: '60px 1fr 160px 140px 120px',
+                gridTemplateColumns: '32px 60px 1fr 160px 140px 120px',
                 padding: '10px 16px',
                 background: '#f3f4f6',
                 borderBottom: '1px solid #e5e7eb',
@@ -312,6 +414,12 @@ export default function AdminProdutosPage() {
                 gap: 12,
                 alignItems: 'center',
               }}>
+                <input
+                  type="checkbox"
+                  checked={produtosPagina.length > 0 && produtosPagina.every(p => selecionados.has(p.id))}
+                  onChange={toggleTodosNaPagina}
+                  style={{ cursor: 'pointer', width: 15, height: 15 }}
+                />
                 <span>Img</span>
                 <span>Nome</span>
                 <span>Loja</span>
@@ -335,15 +443,23 @@ export default function AdminProdutosPage() {
                       key={produto.id}
                       style={{
                         display: 'grid',
-                        gridTemplateColumns: '60px 1fr 160px 140px 120px',
+                        gridTemplateColumns: '32px 60px 1fr 160px 140px 120px',
                         padding: '10px 16px',
                         borderBottom: idx < produtosPagina.length - 1 ? '1px solid #f3f4f6' : 'none',
                         alignItems: 'center',
                         gap: 12,
-                        background: isSaving ? '#fafafa' : '#fff',
+                        background: selecionados.has(produto.id) ? '#f5f3ff' : isSaving ? '#fafafa' : '#fff',
                         transition: 'background 0.15s',
                       }}
                     >
+                      {/* Checkbox */}
+                      <input
+                        type="checkbox"
+                        checked={selecionados.has(produto.id)}
+                        onChange={() => toggleSelecionado(produto.id)}
+                        style={{ cursor: 'pointer', width: 15, height: 15 }}
+                      />
+
                       {/* Imagem */}
                       <div style={{
                         width: 48,

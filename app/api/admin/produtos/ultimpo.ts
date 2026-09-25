@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
 // body: { id, categoria: 'ambiente'|'vistaSe'|'beleza'|'momento', tipoAmbiente?, tipoMomento?, tipoVistaSe? }
 export async function PATCH(req: NextRequest) {
   if (!checkAuth(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
-  const { id, categoria, tipoAmbiente, tipoMomento, tipoVistaSe, tipoBeleza } = await req.json();
+  const { id, categoria, tipoAmbiente, tipoMomento, tipoVistaSe } = await req.json();
   if (!id || !categoria) return NextResponse.json({ error: 'id e categoria obrigatórios' }, { status: 400 });
 
   const produtos: any[] = (await kv.get('produtos:pinados')) || [];
@@ -31,7 +31,7 @@ export async function PATCH(req: NextRequest) {
   delete p.ambiente; delete p.tipoAmbiente;
   delete p.momento; delete p.tipoMomento;
   delete p.vistaSe; delete p.tipoVistaSe;
-  delete p.beleza; delete p.tipoBeleza;
+  delete p.beleza;
 
   // Aplica nova categoria
   if (categoria === 'ambiente') {
@@ -45,7 +45,6 @@ export async function PATCH(req: NextRequest) {
     p.tipoVistaSe = tipoVistaSe || 'Roupas';
   } else if (categoria === 'beleza') {
     p.beleza = true;
-    if (tipoBeleza) p.tipoBeleza = tipoBeleza;
   }
 
   produtos[idx] = p;

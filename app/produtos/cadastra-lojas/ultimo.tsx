@@ -20,10 +20,6 @@ interface LojaLomadee {
   tipoAmbiente?: string;
   momento?: string;
   tipoMomento?: string;
-  vistaSe?: boolean;
-  tipoVistaSe?: string;
-  beleza?: boolean;
-  tipoBeleza?: string;
 }
 
 interface LojaAwin {
@@ -37,10 +33,6 @@ interface LojaAwin {
   tipoAmbiente?: string;
   momento?: string;
   tipoMomento?: string;
-  vistaSe?: boolean;
-  tipoVistaSe?: string;
-  beleza?: boolean;
-  tipoBeleza?: string;
 }
 
 type Loja = LojaLomadee | LojaAwin;
@@ -49,8 +41,6 @@ const AMBIENTES = ['Sala', 'Quarto', 'Escritório', 'Cozinha', 'Banheiro', 'Áre
 const TIPOS_AMBIENTE = ['Iluminação', 'Climatização', 'Móveis', 'Decoração', 'Organização', 'Eletrônicos'];
 const MOMENTOS = ['Café da manhã', 'Vinho', 'Churrasco', 'Lareira', 'Domingo relaxado', 'Festa em casa'];
 const TIPOS_MOMENTO = ['Eletro', 'Móveis', 'Acessórios', 'Alimentos'];
-const TIPOS_VISTASE = ['Roupas', 'Calçados', 'Acessórios', 'Infantil', 'Bebê'];
-const TIPOS_BELEZA = ['Perfumes', 'Skincare', 'Maquiagem', 'Cabelos', 'Massagem', 'Solar', 'Cuidados'];
 
 const DESTINO_LABELS: Record<string, string> = {
   'ofertas-selecionadas': '⭐ Ofertas Selecionadas',
@@ -97,170 +87,7 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
   );
 }
 
-// ──────────────────────────────────────────────
-// Seletor de categoria reutilizável
-// ──────────────────────────────────────────────
-interface CatState {
-  ambiente: string; tipoAmbiente: string;
-  momento: string;  tipoMomento: string;
-  vistaSe: boolean; tipoVistaSe: string;
-  beleza: boolean;  tipoBeleza: string;
-}
-
-function CategoriaSelector({ value, onChange }: {
-  value: CatState;
-  onChange: (v: CatState) => void;
-}) {
-  const set = (patch: Partial<CatState>) => onChange({ ...value, ...patch });
-
-  const selectStyle: React.CSSProperties = {
-    padding: '5px 8px', borderRadius: '6px', border: '1px solid #d1d5db',
-    fontSize: '0.78rem', backgroundColor: '#fff', cursor: 'pointer',
-  };
-  const labelStyle: React.CSSProperties = {
-    fontSize: '0.7rem', fontWeight: 700, color: '#6b7280', marginBottom: '3px', display: 'block',
-  };
-
-  return (
-    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-      {/* Ambiente */}
-      <div>
-        <label style={labelStyle}>🏠 AMBIENTE</label>
-        <select value={value.ambiente} onChange={e => set({ ambiente: e.target.value, tipoAmbiente: '' })} style={selectStyle}>
-          <option value="">— Nenhum —</option>
-          {AMBIENTES.map(a => <option key={a} value={a}>{a}</option>)}
-        </select>
-      </div>
-      {value.ambiente && (
-        <div>
-          <label style={labelStyle}>TIPO AMBIENTE</label>
-          <select value={value.tipoAmbiente} onChange={e => set({ tipoAmbiente: e.target.value })} style={selectStyle}>
-            <option value="">— Nenhum —</option>
-            {TIPOS_AMBIENTE.map(t => <option key={t} value={t}>{t}</option>)}
-          </select>
-        </div>
-      )}
-
-      {/* Momento */}
-      <div>
-        <label style={labelStyle}>✨ MOMENTO</label>
-        <select value={value.momento} onChange={e => set({ momento: e.target.value, tipoMomento: '' })} style={selectStyle}>
-          <option value="">— Nenhum —</option>
-          {MOMENTOS.map(m => <option key={m} value={m}>{m}</option>)}
-        </select>
-      </div>
-      {value.momento && (
-        <div>
-          <label style={labelStyle}>TIPO MOMENTO</label>
-          <select value={value.tipoMomento} onChange={e => set({ tipoMomento: e.target.value })} style={selectStyle}>
-            <option value="">— Nenhum —</option>
-            {TIPOS_MOMENTO.map(t => <option key={t} value={t}>{t}</option>)}
-          </select>
-        </div>
-      )}
-
-      {/* Vista-se */}
-      <div>
-        <label style={labelStyle}>👗 VISTA-SE</label>
-        <select
-          value={value.vistaSe ? (value.tipoVistaSe || '__sim__') : ''}
-          onChange={e => {
-            if (!e.target.value) set({ vistaSe: false, tipoVistaSe: '' });
-            else set({ vistaSe: true, tipoVistaSe: e.target.value === '__sim__' ? '' : e.target.value });
-          }}
-          style={selectStyle}
-        >
-          <option value="">— Nenhum —</option>
-          {TIPOS_VISTASE.map(t => <option key={t} value={t}>{t}</option>)}
-        </select>
-      </div>
-
-      {/* Beleza */}
-      <div>
-        <label style={labelStyle}>💄 BELEZA</label>
-        <select
-          value={value.beleza ? (value.tipoBeleza || '__sim__') : ''}
-          onChange={e => {
-            if (!e.target.value) set({ beleza: false, tipoBeleza: '' });
-            else set({ beleza: true, tipoBeleza: e.target.value === '__sim__' ? '' : e.target.value });
-          }}
-          style={selectStyle}
-        >
-          <option value="">— Nenhum —</option>
-          {TIPOS_BELEZA.map(t => <option key={t} value={t}>{t}</option>)}
-        </select>
-      </div>
-    </div>
-  );
-}
-
-function emptyCat(): CatState {
-  return { ambiente: '', tipoAmbiente: '', momento: '', tipoMomento: '', vistaSe: false, tipoVistaSe: '', beleza: false, tipoBeleza: '' };
-}
-
-function lojaTocat(l: Loja): CatState {
-  return {
-    ambiente: l.ambiente ?? '',
-    tipoAmbiente: l.tipoAmbiente ?? '',
-    momento: l.momento ?? '',
-    tipoMomento: l.tipoMomento ?? '',
-    vistaSe: l.vistaSe ?? false,
-    tipoVistaSe: l.tipoVistaSe ?? '',
-    beleza: l.beleza ?? false,
-    tipoBeleza: (l as any).tipoBeleza ?? '',
-  };
-}
-
-function catToFields(c: CatState) {
-  return {
-    ambiente: c.ambiente || undefined,
-    tipoAmbiente: c.tipoAmbiente || undefined,
-    momento: c.momento || undefined,
-    tipoMomento: c.tipoMomento || undefined,
-    vistaSe: c.vistaSe || undefined,
-    tipoVistaSe: c.tipoVistaSe || undefined,
-    beleza: c.beleza || undefined,
-    tipoBeleza: c.tipoBeleza || undefined,
-  };
-}
-
-// ──────────────────────────────────────────────
-// Badge de categorias na listagem
-// ──────────────────────────────────────────────
-function CatBadges({ loja }: { loja: Loja }) {
-  return (
-    <span style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginTop: '3px' }}>
-      {loja.ambiente && (
-        <span style={{ fontSize: '0.72rem', color: '#7c3aed', backgroundColor: '#f5f3ff', padding: '1px 6px', borderRadius: '3px', fontWeight: 600 }}>
-          🏠 {loja.ambiente}{loja.tipoAmbiente ? ` · ${loja.tipoAmbiente}` : ''}
-        </span>
-      )}
-      {loja.momento && (
-        <span style={{ fontSize: '0.72rem', color: '#d97706', backgroundColor: '#fef3c7', padding: '1px 6px', borderRadius: '3px', fontWeight: 600 }}>
-          ✨ {loja.momento}{loja.tipoMomento ? ` · ${loja.tipoMomento}` : ''}
-        </span>
-      )}
-      {loja.vistaSe && (
-        <span style={{ fontSize: '0.72rem', color: '#be185d', backgroundColor: '#fdf2f8', padding: '1px 6px', borderRadius: '3px', fontWeight: 600 }}>
-          👗 Vista-se{loja.tipoVistaSe ? ` · ${loja.tipoVistaSe}` : ''}
-        </span>
-      )}
-      {loja.beleza && (
-        <span style={{ fontSize: '0.72rem', color: '#9d174d', backgroundColor: '#fdf2f8', padding: '1px 6px', borderRadius: '3px', fontWeight: 600 }}>
-          💄 Beleza{(loja as any).tipoBeleza ? ` · ${(loja as any).tipoBeleza}` : ''}
-        </span>
-      )}
-    </span>
-  );
-}
-
-// ──────────────────────────────────────────────
-// Painel Cron
-// ──────────────────────────────────────────────
-function CronPanel({ loja, onSave }: {
-  loja: Loja;
-  onSave: (cron: LojaCron | null, cats: CatState) => void;
-}) {
+function CronPanel({ loja, onSave }: { loja: Loja; onSave: (cron: LojaCron | null, cats: { ambiente?: string; tipoAmbiente?: string; momento?: string; tipoMomento?: string }) => void }) {
   const cronAtual = loja.cron;
   const [ativo, setAtivo] = useState(cronAtual?.ativo ?? false);
   const [frequencia, setFrequencia] = useState<LojaCron['frequencia']>(cronAtual?.frequencia ?? 'semanal');
@@ -268,30 +95,33 @@ function CronPanel({ loja, onSave }: {
   const [limite, setLimite] = useState(cronAtual?.limite ?? 50);
   const [expandido, setExpandido] = useState(false);
   const [salvando, setSalvando] = useState(false);
-  const [cats, setCats] = useState<CatState>(lojaTocat(loja));
+  const [ambiente, setAmbiente] = useState(loja.ambiente ?? '');
+  const [tipoAmbiente, setTipoAmbiente] = useState(loja.tipoAmbiente ?? '');
+  const [momento, setMomento] = useState(loja.momento ?? '');
+  const [tipoMomento, setTipoMomento] = useState(loja.tipoMomento ?? '');
 
-  const selectSmall: React.CSSProperties = {
-    padding: '5px 8px', borderRadius: '6px', border: '1px solid #d1d5db',
-    fontSize: '0.78rem', backgroundColor: '#fff', cursor: 'pointer',
-  };
-
-  async function handleSalvar() {
+    async function handleSalvar() {
     setSalvando(true);
     await onSave(
       { ativo, frequencia, destino, limite, ultimaAtualizacao: cronAtual?.ultimaAtualizacao ?? null },
-      cats,
+      { ambiente: ambiente || undefined, tipoAmbiente: tipoAmbiente || undefined, momento: momento || undefined, tipoMomento: tipoMomento || undefined }
     );
     setSalvando(false);
     setExpandido(false);
   }
 
-  async function handleDesativar() {
+   async function handleDesativar() {
     setSalvando(true);
-    await onSave(null, cats);
+    await onSave(null, { ambiente: ambiente || undefined, tipoAmbiente: tipoAmbiente || undefined, momento: momento || undefined, tipoMomento: tipoMomento || undefined });
     setAtivo(false);
     setSalvando(false);
     setExpandido(false);
   }
+
+  const selectSmall: React.CSSProperties = {
+    padding: '5px 8px', borderRadius: '6px', border: '1px solid #d1d5db',
+    fontSize: '0.78rem', backgroundColor: '#fff', cursor: 'pointer',
+  };
 
   if (!expandido) {
     return (
@@ -313,13 +143,41 @@ function CronPanel({ loja, onSave }: {
 
   return (
     <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '12px', marginTop: '8px' }}>
-      <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#374151', marginBottom: '10px' }}>⚙️ Configurar loja</div>
-
-      {/* Categorias */}
-      <div style={{ marginBottom: '14px' }}>
-        <CategoriaSelector value={cats} onChange={setCats} />
+            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#374151', marginBottom: '10px' }}>⚙️ Configurar loja</div>
+      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '12px', alignItems: 'flex-end' }}>
+        <div>
+          <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#6b7280', marginBottom: '3px' }}>🏠 AMBIENTE</div>
+          <select value={ambiente} onChange={e => { setAmbiente(e.target.value); setTipoAmbiente(''); }} style={{ padding: '5px 8px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.78rem' }}>
+            <option value="">— Nenhum —</option>
+            {AMBIENTES.map(a => <option key={a} value={a}>{a}</option>)}
+          </select>
+        </div>
+        {ambiente && (
+          <div>
+            <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#6b7280', marginBottom: '3px' }}>TIPO AMBIENTE</div>
+            <select value={tipoAmbiente} onChange={e => setTipoAmbiente(e.target.value)} style={{ padding: '5px 8px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.78rem' }}>
+              <option value="">— Nenhum —</option>
+              {TIPOS_AMBIENTE.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+        )}
+        <div>
+          <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#6b7280', marginBottom: '3px' }}>✨ MOMENTO</div>
+          <select value={momento} onChange={e => { setMomento(e.target.value); setTipoMomento(''); }} style={{ padding: '5px 8px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.78rem' }}>
+            <option value="">— Nenhum —</option>
+            {MOMENTOS.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
+        </div>
+        {momento && (
+          <div>
+            <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#6b7280', marginBottom: '3px' }}>TIPO MOMENTO</div>
+            <select value={tipoMomento} onChange={e => setTipoMomento(e.target.value)} style={{ padding: '5px 8px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.78rem' }}>
+              <option value="">— Nenhum —</option>
+              {TIPOS_MOMENTO.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+        )}
       </div>
-
       <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#374151', marginBottom: '10px' }}>🔁 Automação de atualização</div>
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '10px' }}>
         <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
@@ -327,7 +185,7 @@ function CronPanel({ loja, onSave }: {
             style={{ width: '15px', height: '15px', accentColor: '#7c3aed', cursor: 'pointer' }} />
           Ativar automação
         </label>
-        <div>
+                <div>
           <span style={{ fontSize: '0.72rem', color: '#6b7280', marginRight: '4px' }}>Qtd. produtos:</span>
           <select value={limite} onChange={e => setLimite(parseInt(e.target.value))} style={selectSmall}>
             <option value={20}>20</option>
@@ -383,9 +241,6 @@ function CronPanel({ loja, onSave }: {
   );
 }
 
-// ──────────────────────────────────────────────
-// Página principal
-// ──────────────────────────────────────────────
 export default function CadastraLojasPage() {
   const [auth, setAuth] = useState<boolean | null>(null);
   const [lojas, setLojas] = useState<Loja[]>([]);
@@ -393,18 +248,24 @@ export default function CadastraLojasPage() {
   const [salvando, setSalvando] = useState(false);
   const [aba, setAba] = useState<'lomadee' | 'awin'>('lomadee');
 
-  // Form Lomadee
+   // Form Lomadee
   const [nomeL, setNomeL] = useState('');
   const [urlL, setUrlL] = useState('');
   const [moedaUSDL, setMoedaUSDL] = useState(false);
-  const [catsL, setCatsL] = useState<CatState>(emptyCat());
+  const [ambienteL, setAmbienteL] = useState('');
+  const [tipoAmbienteL, setTipoAmbienteL] = useState('');
+  const [momentoL, setMomentoL] = useState('');
+  const [tipoMomentoL, setTipoMomentoL] = useState('');
 
   // Form Awin
   const [nomeA, setNomeA] = useState('');
   const [urlA, setUrlA] = useState('');
   const [anuncianteId, setAnuncianteId] = useState('');
   const [moedaUSD, setMoedaUSD] = useState(false);
-  const [catsA, setCatsA] = useState<CatState>(emptyCat());
+  const [ambienteA, setAmbienteA] = useState('');
+  const [tipoAmbienteA, setTipoAmbienteA] = useState('');
+  const [momentoA, setMomentoA] = useState('');
+  const [tipoMomentoA, setTipoMomentoA] = useState('');
 
   useEffect(() => {
     fetch('/api/editorial/auth/check').then(r => r.json()).then(d => setAuth(d.ok)).catch(() => setAuth(false));
@@ -447,8 +308,15 @@ export default function CadastraLojasPage() {
     await carregarLojas();
   }
 
-  async function atualizarCron(loja: Loja, cron: LojaCron | null, cats: CatState) {
-    const atualizada: Loja = { ...loja, cron: cron ?? undefined, ...catToFields(cats) };
+   async function atualizarCron(loja: Loja, cron: LojaCron | null, cats: { ambiente?: string; tipoAmbiente?: string; momento?: string; tipoMomento?: string }) {
+    const atualizada: Loja = {
+      ...loja,
+      cron: cron ?? undefined,
+      ambiente: cats.ambiente,
+      tipoAmbiente: cats.tipoAmbiente,
+      momento: cats.momento,
+      tipoMomento: cats.tipoMomento,
+    };
     await salvarLoja(atualizada);
   }
 
@@ -457,8 +325,8 @@ export default function CadastraLojasPage() {
     if (!nomeL.trim() || !urlL.trim()) return;
     let url = urlL.trim();
     if (!url.startsWith('http')) url = 'https://' + url;
-    await salvarLoja({ tipo: 'lomadee', nome: nomeL.trim(), url, moedaUSD: moedaUSDL, ...catToFields(catsL) });
-    setNomeL(''); setUrlL(''); setMoedaUSDL(false); setCatsL(emptyCat());
+    await salvarLoja({ tipo: 'lomadee', nome: nomeL.trim(), url, moedaUSD: moedaUSDL, ambiente: ambienteL || undefined, tipoAmbiente: tipoAmbienteL || undefined, momento: momentoL || undefined, tipoMomento: tipoMomentoL || undefined });
+    setNomeL(''); setUrlL(''); setMoedaUSDL(false); setAmbienteL(''); setTipoAmbienteL(''); setMomentoL(''); setTipoMomentoL('');
   }
 
   async function handleAdicionarAwin(e: React.FormEvent) {
@@ -466,8 +334,8 @@ export default function CadastraLojasPage() {
     if (!nomeA.trim() || !urlA.trim() || !anuncianteId.trim()) return;
     let url = urlA.trim();
     if (!url.startsWith('http')) url = 'https://' + url;
-    await salvarLoja({ tipo: 'awin', nome: nomeA.trim(), url, anuncianteId: anuncianteId.trim(), moedaUSD, ...catToFields(catsA) });
-    setNomeA(''); setUrlA(''); setAnuncianteId(''); setMoedaUSD(false); setCatsA(emptyCat());
+    await salvarLoja({ tipo: 'awin', nome: nomeA.trim(), url, anuncianteId: anuncianteId.trim(), moedaUSD, ambiente: ambienteA || undefined, tipoAmbiente: tipoAmbienteA || undefined, momento: momentoA || undefined, tipoMomento: tipoMomentoA || undefined });
+    setNomeA(''); setUrlA(''); setAnuncianteId(''); setMoedaUSD(false); setAmbienteA(''); setTipoAmbienteA(''); setMomentoA(''); setTipoMomentoA('');
   }
 
   const lojasFiltradas = lojas.filter(l => l.tipo === aba);
@@ -493,7 +361,6 @@ export default function CadastraLojasPage() {
             <p style={{ color: '#6b7280', fontSize: '0.9rem', margin: '4px 0 0' }}>Lojas cadastradas aparecem como opção ao buscar produtos</p>
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
-            <a href="/admin/produtos" style={{ backgroundColor: '#f3f4f6', color: '#374151', padding: '6px 12px', borderRadius: '6px', textDecoration: 'none', fontSize: '0.78rem', fontWeight: 600 }}>🗂 Admin Produtos</a>
             <a href="/produtos/buscar" style={{ backgroundColor: '#f3f4f6', color: '#374151', padding: '6px 12px', borderRadius: '6px', textDecoration: 'none', fontSize: '0.78rem', fontWeight: 600 }}>📌 Buscar produtos</a>
             <a href="/" style={{ backgroundColor: '#f3f4f6', color: '#374151', padding: '6px 12px', borderRadius: '6px', textDecoration: 'none', fontSize: '0.78rem', fontWeight: 600 }}>← Site</a>
           </div>
@@ -520,7 +387,7 @@ export default function CadastraLojasPage() {
         <div style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '20px', marginBottom: '20px' }}>
           <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#111827', margin: '0 0 16px' }}>➕ Adicionar loja Lomadee</h2>
           <form onSubmit={handleAdicionarLomadee}>
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: '12px' }}>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
               <div style={{ flex: 1, minWidth: '160px' }}>
                 <label style={labelStyle}>Nome da loja</label>
                 <input value={nomeL} onChange={e => setNomeL(e.target.value)} placeholder="ex: Viva Vinho" style={inputStyle} required />
@@ -529,11 +396,42 @@ export default function CadastraLojasPage() {
                 <label style={labelStyle}>URL do site</label>
                 <input value={urlL} onChange={e => setUrlL(e.target.value)} placeholder="https://www.vivavinho.com.br" style={inputStyle} required />
               </div>
+                          </div>
+                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '12px', alignItems: 'flex-end' }}>
+              <div>
+                <label style={labelStyle}>🏠 Ambiente</label>
+                <select value={ambienteL} onChange={e => { setAmbienteL(e.target.value); setTipoAmbienteL(''); }} style={inputStyle}>
+                  <option value="">— Nenhum —</option>
+                  {AMBIENTES.map(a => <option key={a} value={a}>{a}</option>)}
+                </select>
+              </div>
+              {ambienteL && (
+                <div>
+                  <label style={labelStyle}>Tipo de ambiente</label>
+                  <select value={tipoAmbienteL} onChange={e => setTipoAmbienteL(e.target.value)} style={inputStyle}>
+                    <option value="">— Nenhum —</option>
+                    {TIPOS_AMBIENTE.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+              )}
+              <div>
+                <label style={labelStyle}>✨ Momento</label>
+                <select value={momentoL} onChange={e => { setMomentoL(e.target.value); setTipoMomentoL(''); }} style={inputStyle}>
+                  <option value="">— Nenhum —</option>
+                  {MOMENTOS.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+              {momentoL && (
+                <div>
+                  <label style={labelStyle}>Tipo de momento</label>
+                  <select value={tipoMomentoL} onChange={e => setTipoMomentoL(e.target.value)} style={inputStyle}>
+                    <option value="">— Nenhum —</option>
+                    {TIPOS_MOMENTO.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+              )}
             </div>
-            <div style={{ marginBottom: '12px' }}>
-              <CategoriaSelector value={catsL} onChange={setCatsL} />
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap', marginTop: '12px' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.88rem', fontWeight: 600, color: '#374151' }}>
                 <input type="checkbox" checked={moedaUSDL} onChange={e => setMoedaUSDL(e.target.checked)}
                   style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#be185d' }} />
@@ -569,10 +467,41 @@ export default function CadastraLojasPage() {
                 <input value={anuncianteId} onChange={e => setAnuncianteId(e.target.value)} placeholder="ex: awin-arno" style={inputStyle} required />
               </div>
             </div>
-            <div style={{ marginBottom: '12px' }}>
-              <CategoriaSelector value={catsA} onChange={setCatsA} />
+                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '12px', alignItems: 'flex-end' }}>
+              <div>
+                <label style={labelStyle}>🏠 Ambiente</label>
+                <select value={ambienteA} onChange={e => { setAmbienteA(e.target.value); setTipoAmbienteA(''); }} style={inputStyle}>
+                  <option value="">— Nenhum —</option>
+                  {AMBIENTES.map(a => <option key={a} value={a}>{a}</option>)}
+                </select>
+              </div>
+              {ambienteA && (
+                <div>
+                  <label style={labelStyle}>Tipo de ambiente</label>
+                  <select value={tipoAmbienteA} onChange={e => setTipoAmbienteA(e.target.value)} style={inputStyle}>
+                    <option value="">— Nenhum —</option>
+                    {TIPOS_AMBIENTE.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+              )}
+              <div>
+                <label style={labelStyle}>✨ Momento</label>
+                <select value={momentoA} onChange={e => { setMomentoA(e.target.value); setTipoMomentoA(''); }} style={inputStyle}>
+                  <option value="">— Nenhum —</option>
+                  {MOMENTOS.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+              {momentoA && (
+                <div>
+                  <label style={labelStyle}>Tipo de momento</label>
+                  <select value={tipoMomentoA} onChange={e => setTipoMomentoA(e.target.value)} style={inputStyle}>
+                    <option value="">— Nenhum —</option>
+                    {TIPOS_MOMENTO.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+              )}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap', marginTop: '12px' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.88rem', fontWeight: 600, color: '#374151' }}>
                 <input type="checkbox" checked={moedaUSD} onChange={e => setMoedaUSD(e.target.checked)}
                   style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#f59e0b' }} />
@@ -600,15 +529,26 @@ export default function CadastraLojasPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {lojasFiltradas.map((loja, i) => (
             <div key={i} style={{ backgroundColor: '#fff', borderRadius: '10px', border: '1px solid #e5e7eb', padding: '14px 16px' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                 <div style={{ flex: 1, minWidth: '200px' }}>
                   <div style={{ fontWeight: 700, color: '#111827', fontSize: '0.95rem' }}>{loja.nome}</div>
                   <div style={{ fontSize: '0.78rem', color: '#6b7280', marginTop: '2px' }}>{loja.url}</div>
-                  <div style={{ fontSize: '0.72rem', color: loja.tipo === 'awin' ? '#f59e0b' : '#be185d', fontWeight: 600, marginTop: '2px' }}>
-                    {loja.tipo === 'awin' ? `Awin ID: ${(loja as LojaAwin).anuncianteId}` : 'Lomadee'}
-                    {loja.moedaUSD && <span style={{ marginLeft: '6px', color: '#92400e', backgroundColor: '#fef3c7', padding: '1px 5px', borderRadius: '3px' }}>💵 USD</span>}
-                  </div>
-                  <CatBadges loja={loja} />
+                                    {loja.tipo === 'awin' && (
+                    <div style={{ fontSize: '0.72rem', color: '#f59e0b', fontWeight: 600, marginTop: '2px' }}>
+                      Awin ID: {(loja as LojaAwin).anuncianteId}
+                      {(loja as LojaAwin).moedaUSD && <span style={{ marginLeft: '8px', color: '#92400e', backgroundColor: '#fef3c7', padding: '1px 5px', borderRadius: '3px' }}>💵 USD</span>}
+                      {loja.ambiente && <span style={{ marginLeft: '8px', color: '#7c3aed', backgroundColor: '#f5f3ff', padding: '1px 5px', borderRadius: '3px' }}>🏠 {loja.ambiente}{loja.tipoAmbiente ? ` · ${loja.tipoAmbiente}` : ''}</span>}
+                      {loja.momento && <span style={{ marginLeft: '8px', color: '#d97706', backgroundColor: '#fef3c7', padding: '1px 5px', borderRadius: '3px' }}>✨ {loja.momento}{loja.tipoMomento ? ` · ${loja.tipoMomento}` : ''}</span>}
+                    </div>
+                  )}
+                     {loja.tipo === 'lomadee' && (
+                    <div style={{ fontSize: '0.72rem', color: '#be185d', fontWeight: 600, marginTop: '2px' }}>
+                      Lomadee
+                      {(loja as LojaLomadee).moedaUSD && <span style={{ marginLeft: '8px', color: '#92400e', backgroundColor: '#fef3c7', padding: '1px 5px', borderRadius: '3px' }}>💵 USD</span>}
+                      {loja.ambiente && <span style={{ marginLeft: '8px', color: '#7c3aed', backgroundColor: '#f5f3ff', padding: '1px 5px', borderRadius: '3px' }}>🏠 {loja.ambiente}{loja.tipoAmbiente ? ` · ${loja.tipoAmbiente}` : ''}</span>}
+                      {loja.momento && <span style={{ marginLeft: '8px', color: '#d97706', backgroundColor: '#fef3c7', padding: '1px 5px', borderRadius: '3px' }}>✨ {loja.momento}{loja.tipoMomento ? ` · ${loja.tipoMomento}` : ''}</span>}
+                    </div>
+                  )}
                 </div>
                 <button onClick={() => removerLoja(loja.url, loja.tipo)}
                   style={{ padding: '6px 14px', borderRadius: '6px', border: '1px solid #fca5a5', backgroundColor: '#fff', color: '#dc2626', fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
@@ -618,7 +558,7 @@ export default function CadastraLojasPage() {
 
               {/* Painel de automação cron */}
               <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #f3f4f6' }}>
-                <CronPanel loja={loja} onSave={(cron, cats) => atualizarCron(loja, cron, cats)} />
+              <CronPanel loja={loja} onSave={(cron, cats) => atualizarCron(loja, cron, cats)} />
               </div>
             </div>
           ))}
