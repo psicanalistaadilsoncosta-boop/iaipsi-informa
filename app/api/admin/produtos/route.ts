@@ -1,17 +1,23 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { kv } from '@/lib/kv';
 
 export const dynamic = 'force-dynamic';
 
+function checkAuth(req: NextRequest) {
+  return req.cookies.get('editorial_auth')?.value === 'true';
+}
+
 // GET — retorna todos os produtos
-export async function GET() {
+export async function GET(req: NextRequest) {
+  if (!checkAuth(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
   const produtos: any[] = (await kv.get('produtos:pinados')) || [];
   return NextResponse.json(produtos);
 }
 
 // PATCH — atualiza categoria de um produto pelo id
 // body: { id, categoria: 'ambiente'|'vistaSe'|'beleza'|'momento', tipoAmbiente?, tipoMomento?, tipoVistaSe? }
-export async function PATCH(req: Request) {
+export async function PATCH(req: NextRequest) {
+  if (!checkAuth(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
   const { id, categoria, tipoAmbiente, tipoMomento, tipoVistaSe } = await req.json();
   if (!id || !categoria) return NextResponse.json({ error: 'id e categoria obrigatórios' }, { status: 400 });
 

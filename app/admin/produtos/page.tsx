@@ -57,9 +57,7 @@ function getImageSrc(p: Produto): string {
 
 export default function AdminProdutosPage() {
   const [authed, setAuthed] = useState(false);
-  const [senha, setSenha] = useState('');
   const [loginError, setLoginError] = useState('');
-  const [loginLoading, setLoginLoading] = useState(false);
 
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(false);
@@ -83,27 +81,15 @@ export default function AdminProdutosPage() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
-    setLoginLoading(true);
-    setLoginError('');
-    try {
-      const res = await fetch('/api/editorial/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ senha }),
-      });
-      if (res.ok) {
-        setAuthed(true);
-      } else {
-        setLoginError('Senha incorreta.');
-      }
-    } catch {
-      setLoginError('Erro ao autenticar.');
-    } finally {
-      setLoginLoading(false);
-    }
-  }
+  // Checa cookie ao carregar
+  useEffect(() => {
+    fetch('/api/admin/produtos')
+      .then(r => {
+        if (r.ok) setAuthed(true);
+        else setLoginError('Acesse primeiro /cadastra-lojas para fazer login.');
+      })
+      .catch(() => setLoginError('Erro ao verificar autenticação.'));
+  }, []);
 
   const fetchProdutos = useCallback(async () => {
     setLoading(true);
@@ -182,7 +168,7 @@ export default function AdminProdutosPage() {
   const paginaAtual = Math.min(pagina, totalPaginas);
   const produtosPagina = produtosFiltrados.slice((paginaAtual - 1) * PAGE_SIZE, paginaAtual * PAGE_SIZE);
 
-  // ---------- LOGIN ----------
+  // ---------- NÃO AUTENTICADO ----------
   if (!authed) {
     return (
       <div style={{
@@ -199,53 +185,28 @@ export default function AdminProdutosPage() {
           boxShadow: '0 2px 16px rgba(0,0,0,0.08)',
           padding: '40px 36px',
           width: 340,
+          textAlign: 'center',
         }}>
-          <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 6, color: '#111' }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12, color: '#111' }}>
             Admin — Produtos
           </h1>
-          <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 28 }}>
-            Digite a senha para acessar.
-          </p>
-          <form onSubmit={handleLogin}>
-            <input
-              type="password"
-              placeholder="Senha"
-              value={senha}
-              onChange={e => setSenha(e.target.value)}
-              autoFocus
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                borderRadius: 8,
-                border: '1.5px solid #e5e7eb',
-                fontSize: 15,
-                outline: 'none',
-                boxSizing: 'border-box',
-                marginBottom: 12,
-              }}
-            />
-            {loginError && (
-              <p style={{ color: '#dc2626', fontSize: 13, marginBottom: 10 }}>{loginError}</p>
-            )}
-            <button
-              type="submit"
-              disabled={loginLoading}
-              style={{
-                width: '100%',
-                padding: '10px 0',
-                background: '#111',
+          {loginError ? (
+            <>
+              <p style={{ color: '#dc2626', fontSize: 14, marginBottom: 20 }}>{loginError}</p>
+              <a href="/cadastra-lojas" style={{
+                display: 'inline-block',
+                padding: '10px 24px',
+                background: '#7c3aed',
                 color: '#fff',
-                border: 'none',
                 borderRadius: 8,
-                fontSize: 15,
                 fontWeight: 600,
-                cursor: loginLoading ? 'not-allowed' : 'pointer',
-                opacity: loginLoading ? 0.7 : 1,
-              }}
-            >
-              {loginLoading ? 'Entrando...' : 'Entrar'}
-            </button>
-          </form>
+                textDecoration: 'none',
+                fontSize: 14,
+              }}>Fazer login em Cadastro de Lojas</a>
+            </>
+          ) : (
+            <p style={{ color: '#6b7280', fontSize: 14 }}>Verificando autenticação...</p>
+          )}
         </div>
       </div>
     );
