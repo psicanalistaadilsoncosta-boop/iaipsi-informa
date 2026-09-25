@@ -37,13 +37,13 @@ export default function TermosPrivacidadePage() {
             {
               titulo: '4. Ofertas, Cupons e Links de Afiliado',
               icone: '🛍',
-              texto: `O IAIPSI Informa participa de programas de afiliados (Lomadee, Awin, Rakuten e outros). Isso significa que ao clicar em certos links e realizar uma compra, o site pode receber uma comissão sem custo adicional para você.\n\nOs preços, condições de parcelamento e disponibilidade dos produtos são de responsabilidade exclusiva dos anunciantes e podem ser alterados a qualquer momento sem aviso prévio. Sempre confirme as condições finais no site do anunciante e no carrinho de compras antes de finalizar a compra.\n\nO IAIPSI Informa não se responsabiliza por divergências de preço, cancelamentos, atrasos ou problemas na entrega dos produtos adquiridos.`,
+              texto: `O IAIPSI Informa participa de programas de afiliados (Lomadee, Awin, Rakuten e outros). Isso significa que ao clicar em certos links e realizar uma compra, o site pode receber uma comissão sem custo adicional para você.\n\nOs preços, condições de parcelamento e disponibilidade dos produtos são de responsabilidade exclusiva dos anunciantes e podem ser alterados a qualquer momento sem aviso prévio. Sempre confirme as condições finais no site do anunciante e no carrinho de compras antes de finalizar a compra.\n\nO IAIPSI Informa não se responsabiliza por divergências de preço, cancelamentos, atrasos ou problemas na entrega dos produtos adquiridos, visto que é somente um agregador de ofertas.`,
             },
             {
-              titulo: '5. Cookies e Dados Pessoais',
-              icone: '🍪',
-              texto: `O IAIPSI Informa não utiliza cookies de rastreamento, pixels de publicidade ou ferramentas de coleta de dados pessoais próprias.\n\nNão coletamos nome, e-mail, CPF ou qualquer dado pessoal dos visitantes. Não há cadastro, login ou área de membros.\n\nOs sites externos acessados via links (lojas, portais de notícias, parceiros afiliados) possuem suas próprias políticas de privacidade e uso de cookies, sobre as quais não temos controle.`,
-            },
+  titulo: '5. Cookies e Dados Pessoais',
+  icone: '🍪',
+  texto: `O IAIPSI Informa não utiliza cookies de rastreamento, pixels de publicidade ou ferramentas de coleta de dados pessoais próprias.\n\nNão coletamos nome, e-mail, CPF ou qualquer dado pessoal dos visitantes. Não há cadastro, login ou área de membros.\n\n⚠️ Exceção: Seu Universo. Ao montar sua lista de produtos e ofertas e solicitar o envio por email, o endereço de email informado por você é armazenado em nossa newsletter para que você receba novidades e curadoria selecionada. Você pode solicitar a remoção a qualquer momento.\n\nOs sites externos acessados via links (lojas, portais de notícias, parceiros afiliados) possuem suas próprias políticas de privacidade e uso de cookies, sobre as quais não temos controle.`,
+},
             {
               titulo: '6. Inteligência Artificial',
               icone: '🤖',

@@ -73,138 +73,110 @@ const PAGINAS_PRODUTOS = [
 
 function BannerNewsletter() {
   return (
-    <>
-      <style>{`
-        .bn-wrap {
-          background: linear-gradient(135deg, #7c3aed, #a855f7);
-          border-radius: 14px;
-          padding: 20px 24px;
-          display: flex;
-          flex-direction: row;
-          align-items: center;
-          justify-content: space-between;
-          gap: 24px;
-          box-shadow: 0 4px 16px rgba(124,58,237,0.25);
-          box-sizing: border-box;
-          width: 100%;
-          height: 100%;
-          min-height: 80px;
-        }
-        .bn-left { display: flex; align-items: center; gap: 14px; }
-        .bn-icon { font-size: 2rem; line-height: 1; }
-        .bn-title { font-weight: 800; font-size: 1.05rem; color: #fff; }
-        .bn-sub { font-size: 0.8rem; color: #e9d5ff; margin-top: 2px; }
-        .bn-cats {
-          background-color: rgba(255,255,255,0.15);
-          border-radius: 10px;
-          width: 128px;
-          padding: 10px 20px;
-          font-size: 0.8rem;
-          color: #f3e8ff;
-          line-height: 1.8;
-          flex-shrink: 0;
-          white-space: nowrap;
-          box-sizing: border-box;
-          text-align: center;
-        }
-        .bn-wrap-container { grid-column: span 2; display: flex; }
-        @media (max-width: 640px) {
-          .bn-wrap-container { grid-column: 1 / -1; }
-          .bn-wrap { flex-direction: column; align-items: flex-start; gap: 14px; padding: 18px 20px; }
-          .bn-cats { width: 100%; padding: 8px 12px; }
-        }
-      `}</style>
-
-      <div className="bn-wrap">
-        <div className="bn-left">
-          <div className="bn-icon">📧✨</div>
-          <div>
-            <div className="bn-title">Sua lista, no seu email</div>
-            <div className="bn-sub">Escolha produtos e ofertas, receba a lista que você montou e as novidades do seu universo.</div>
-          </div>
+    <div style={{
+      background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
+      borderRadius: '14px',
+      padding: '20px 24px',
+      display: 'flex',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: '20px',
+      boxShadow: '0 4px 16px rgba(124,58,237,0.25)',
+      boxSizing: 'border-box',
+      height: '100%',
+    }}>
+      <div style={{ fontSize: '2.4rem', flexShrink: 0 }}>📧✨</div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontWeight: 800, fontSize: '1rem', color: '#fff', marginBottom: '4px' }}>Receba no seu email</div>
+        <div style={{ fontSize: '0.78rem', color: '#e9d5ff', lineHeight: 1.5 }}>
+          Ao enviar uma oferta nas nossas páginas, seu email é salvo e você passa a receber novidades e ofertas selecionadas das categorias que você usar.
         </div>
-        <div className="bn-cats">🏠🍷👔🧴🛒👶 </div>
       </div>
-    </>
+      <div style={{
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        borderRadius: '10px',
+        padding: '10px 16px',
+        fontSize: '0.75rem',
+        color: '#f3e8ff',
+        lineHeight: 1.8,
+        flexShrink: 0,
+        whiteSpace: 'nowrap',
+      }}>
+        🏠 Ambiente &nbsp;·&nbsp; 🍷 Momento &nbsp;·&nbsp; 👔 Vista-se<br />
+        🧴 Beleza &nbsp;·&nbsp; 🛒 Mercado &nbsp;·&nbsp; 👶 Vista seu Filho
+      </div>
+    </div>
   );
 }
 
 function GridPaginasProdutos() {
-  const renderCard = (p: typeof PAGINAS_PRODUTOS[number]) => (
-    <a
-      key={p.href}
-      href={p.href}
-      style={{ textDecoration: 'none' }}
-    >
-      <div style={{
-        backgroundColor: p.corBg,
-        border: `1.5px solid ${p.corBorda}`,
-        borderRadius: '14px',
-        padding: '20px 16px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        textAlign: 'center',
-        gap: '10px',
-        transition: 'transform 0.15s, box-shadow 0.15s',
-        cursor: 'pointer',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-      }}
-        onMouseEnter={e => {
-          (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)';
-          (e.currentTarget as HTMLDivElement).style.boxShadow = '0 6px 16px rgba(0,0,0,0.10)';
-        }}
-        onMouseLeave={e => {
-          (e.currentTarget as HTMLDivElement).style.transform = '';
-          (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)';
-        }}
-      >
-        <div style={{ display: 'flex', gap: '6px', lineHeight: 1 }}>
-          <span style={{ fontSize: '2.2rem' }}>{p.emoji}</span>
-          <span style={{ fontSize: '2.2rem' }}>{p.emoji2}</span>
-        </div>
-        <div>
-          <div style={{ fontWeight: 800, fontSize: '0.92rem', color: p.cor, marginBottom: '4px' }}>{p.titulo}</div>
-          <div style={{ fontSize: '0.75rem', color: '#6b7280', lineHeight: 1.4 }}>{p.descricao}</div>
-        </div>
-        <div style={{
-          marginTop: '4px',
-          backgroundColor: p.cor,
-          color: '#fff',
-          fontSize: '0.75rem',
-          fontWeight: 700,
-          padding: '5px 14px',
-          borderRadius: '20px',
-        }}>
-          Ver produtos →
-        </div>
-      </div>
-    </a>
-  );
-
   return (
     <section style={{ marginBottom: '32px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
         <div style={{ width: '4px', height: '28px', backgroundColor: '#dc2626', borderRadius: '2px' }} />
-        <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#111827', margin: 0 }}>Seu Universo</h2>
-        <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 500, marginLeft: '4px' }}>ambiente, moda, beleza e mais...</span>
+        <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#111827', margin: 0 }}>Explore por Categoria</h2>
+        <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 500, marginLeft: '4px' }}>produtos selecionados</span>
       </div>
-
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
         gap: '12px',
       }}>
-        {/* Os 5 primeiros cards */}
-        {PAGINAS_PRODUTOS.slice(0, 5).map(renderCard)}
-
-        {/* Vista seu Filho + Banner lado a lado — ocupam 2 colunas cada */}
-               {PAGINAS_PRODUTOS.slice(5).map(renderCard)}
-
-        <div className="bn-wrap-container">
+        {PAGINAS_PRODUTOS.map(p => (
+          <a
+            key={p.href}
+            href={p.href}
+            style={{ textDecoration: 'none' }}
+          >
+            <div style={{
+              backgroundColor: p.corBg,
+              border: `1.5px solid ${p.corBorda}`,
+              borderRadius: '14px',
+              padding: '20px 16px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center',
+              gap: '10px',
+              transition: 'transform 0.15s, box-shadow 0.15s',
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+            }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)';
+                (e.currentTarget as HTMLDivElement).style.boxShadow = '0 6px 16px rgba(0,0,0,0.10)';
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLDivElement).style.transform = '';
+                (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)';
+              }}
+            >
+              <div style={{ display: 'flex', gap: '6px', lineHeight: 1 }}>
+                <span style={{ fontSize: '2.2rem' }}>{p.emoji}</span>
+                <span style={{ fontSize: '2.2rem' }}>{p.emoji2}</span>
+              </div>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: '0.92rem', color: p.cor, marginBottom: '4px' }}>{p.titulo}</div>
+                <div style={{ fontSize: '0.75rem', color: '#6b7280', lineHeight: 1.4 }}>{p.descricao}</div>
+              </div>
+              <div style={{
+                marginTop: '4px',
+                backgroundColor: p.cor,
+                color: '#fff',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                padding: '5px 14px',
+                borderRadius: '20px',
+              }}>
+                Ver produtos →
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+              <div style={{ gridColumn: 'span 2', minWidth: 0 }}>
           <BannerNewsletter />
         </div>
-      </div>
     </section>
   );
 }
@@ -621,7 +593,7 @@ export default function NewsClient({ posts, ads, editorial, sabores, ofertasMix,
           <div>
             <h1 style={{ fontSize: '2.1rem', color: '#111827', margin: 0, fontWeight: 800 }}>IAIPSI Informa</h1>
             <p style={{ color: '#6b7280', fontSize: '1rem', margin: '6px 0 0' }}>
-              Política · Economia · Esportes · Saúde Mental · Ciência · Psicanálise · Tecnologia · Liderança · Mundo · Compras · Turismo 
+              Política · Economia · Esportes · Saúde Mental · Ciência · Psicanálise · Tecnologia · Liderança · Mundo
             </p>
             <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
               <a href="/ofertas" style={{ backgroundColor: '#dc2626', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>🛍 Ofertas & Cupons</a>

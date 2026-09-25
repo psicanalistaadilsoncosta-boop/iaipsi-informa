@@ -7,208 +7,6 @@ import OfertaDestaque from './OfertaDestaque';
 import ArtigosProdutoSection from './ArtigosProdutoSection';
 import ViagemDestaque from './ViagemDestaque';
 
-// ─── GRID DAS 5 PÁGINAS DE PRODUTOS ──────────────────────────────────────────
-const PAGINAS_PRODUTOS = [
-  {
-    emoji: '🏠',
-    emoji2: '🪴',
-    titulo: 'Monte seu Ambiente',
-    descricao: 'Móveis, decoração e tudo para transformar sua casa',
-    href: '/monte-seu-ambiente',
-    cor: '#0f766e',
-    corBg: '#f0fdfa',
-    corBorda: '#99f6e4',
-  },
-  {
-    emoji: '🍷',
-    emoji2: '☕',
-    titulo: 'Monte seu Momento',
-    descricao: 'Produtos para tornar cada ocasião especial e inesquecível',
-    href: '/monte-seu-momento',
-    cor: '#7c3aed',
-    corBg: '#faf5ff',
-    corBorda: '#ddd6fe',
-  },
-  {
-    emoji: '👔',
-    emoji2: '👗',
-    titulo: 'Vista-se',
-    descricao: 'Moda, roupas e acessórios para todos os estilos',
-    href: '/vista-se',
-    cor: '#be185d',
-    corBg: '#fdf2f8',
-    corBorda: '#fbcfe8',
-  },
-  {
-    emoji: '🧴',
-    emoji2: '💄',
-    titulo: 'Beleza',
-    descricao: 'Cosméticos, cuidados pessoais e bem-estar',
-    href: '/beleza',
-    cor: '#db2777',
-    corBg: '#fff1f2',
-    corBorda: '#fecdd3',
-  },
-  {
-    emoji: '🛒',
-    emoji2: '🧺',
-    titulo: 'Mercado',
-    descricao: 'Alimentos, bebidas e produtos essenciais do dia a dia',
-    href: '/mercado',
-    cor: '#047857',
-    corBg: '#f0fdf4',
-    corBorda: '#bbf7d0',
-  },
-  {
-    emoji: '👶',
-    emoji2: '👟',
-    titulo: 'Vista seu Filho',
-    descricao: 'Roupas, acessórios e produtos para bebês e crianças',
-    href: '/vista-seu-filho',
-    cor: '#f59e0b',
-    corBg: '#fffbeb',
-    corBorda: '#fde68a',
-  },
-];
-
-function BannerNewsletter() {
-  return (
-    <>
-      <style>{`
-        .bn-wrap {
-          background: linear-gradient(135deg, #7c3aed, #a855f7);
-          border-radius: 14px;
-          padding: 20px 24px;
-          display: flex;
-          flex-direction: row;
-          align-items: center;
-          justify-content: space-between;
-          gap: 24px;
-          box-shadow: 0 4px 16px rgba(124,58,237,0.25);
-          box-sizing: border-box;
-          width: 100%;
-          height: 100%;
-          min-height: 80px;
-        }
-        .bn-left { display: flex; align-items: center; gap: 14px; }
-        .bn-icon { font-size: 2rem; line-height: 1; }
-        .bn-title { font-weight: 800; font-size: 1.05rem; color: #fff; }
-        .bn-sub { font-size: 0.8rem; color: #e9d5ff; margin-top: 2px; }
-        .bn-cats {
-          background-color: rgba(255,255,255,0.15);
-          border-radius: 10px;
-          width: 128px;
-          padding: 10px 20px;
-          font-size: 0.8rem;
-          color: #f3e8ff;
-          line-height: 1.8;
-          flex-shrink: 0;
-          white-space: nowrap;
-          box-sizing: border-box;
-          text-align: center;
-        }
-        .bn-wrap-container { grid-column: span 2; display: flex; }
-        @media (max-width: 640px) {
-          .bn-wrap-container { grid-column: 1 / -1; }
-          .bn-wrap { flex-direction: column; align-items: flex-start; gap: 14px; padding: 18px 20px; }
-          .bn-cats { width: 100%; padding: 8px 12px; }
-        }
-      `}</style>
-
-      <div className="bn-wrap">
-        <div className="bn-left">
-          <div className="bn-icon">📧✨</div>
-          <div>
-            <div className="bn-title">Sua lista, no seu email</div>
-            <div className="bn-sub">Escolha produtos e ofertas, receba a lista que você montou e as novidades do seu universo.</div>
-          </div>
-        </div>
-        <div className="bn-cats">🏠🍷👔🧴🛒👶 </div>
-      </div>
-    </>
-  );
-}
-
-function GridPaginasProdutos() {
-  const renderCard = (p: typeof PAGINAS_PRODUTOS[number]) => (
-    <a
-      key={p.href}
-      href={p.href}
-      style={{ textDecoration: 'none' }}
-    >
-      <div style={{
-        backgroundColor: p.corBg,
-        border: `1.5px solid ${p.corBorda}`,
-        borderRadius: '14px',
-        padding: '20px 16px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        textAlign: 'center',
-        gap: '10px',
-        transition: 'transform 0.15s, box-shadow 0.15s',
-        cursor: 'pointer',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-      }}
-        onMouseEnter={e => {
-          (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)';
-          (e.currentTarget as HTMLDivElement).style.boxShadow = '0 6px 16px rgba(0,0,0,0.10)';
-        }}
-        onMouseLeave={e => {
-          (e.currentTarget as HTMLDivElement).style.transform = '';
-          (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)';
-        }}
-      >
-        <div style={{ display: 'flex', gap: '6px', lineHeight: 1 }}>
-          <span style={{ fontSize: '2.2rem' }}>{p.emoji}</span>
-          <span style={{ fontSize: '2.2rem' }}>{p.emoji2}</span>
-        </div>
-        <div>
-          <div style={{ fontWeight: 800, fontSize: '0.92rem', color: p.cor, marginBottom: '4px' }}>{p.titulo}</div>
-          <div style={{ fontSize: '0.75rem', color: '#6b7280', lineHeight: 1.4 }}>{p.descricao}</div>
-        </div>
-        <div style={{
-          marginTop: '4px',
-          backgroundColor: p.cor,
-          color: '#fff',
-          fontSize: '0.75rem',
-          fontWeight: 700,
-          padding: '5px 14px',
-          borderRadius: '20px',
-        }}>
-          Ver produtos →
-        </div>
-      </div>
-    </a>
-  );
-
-  return (
-    <section style={{ marginBottom: '32px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-        <div style={{ width: '4px', height: '28px', backgroundColor: '#dc2626', borderRadius: '2px' }} />
-        <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#111827', margin: 0 }}>Seu Universo</h2>
-        <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 500, marginLeft: '4px' }}>ambiente, moda, beleza e mais...</span>
-      </div>
-
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-        gap: '12px',
-      }}>
-        {/* Os 5 primeiros cards */}
-        {PAGINAS_PRODUTOS.slice(0, 5).map(renderCard)}
-
-        {/* Vista seu Filho + Banner lado a lado — ocupam 2 colunas cada */}
-               {PAGINAS_PRODUTOS.slice(5).map(renderCard)}
-
-        <div className="bn-wrap-container">
-          <BannerNewsletter />
-        </div>
-      </div>
-    </section>
-  );
-}
-
 // ─── CARD DE VIAGEM NO GRID ───────────────────────────────────────────────
 function ViagemNoticiaCard({ viagem }: { viagem: any }) {
   const url = viagem.affiliate_url || viagem.affiliateUrl || '';
@@ -230,12 +28,12 @@ function ViagemNoticiaCard({ viagem }: { viagem: any }) {
           <span style={{ position: 'absolute', top: '8px', left: '8px', backgroundColor: '#0f766e', color: '#fff', fontSize: '0.62rem', fontWeight: 700, padding: '2px 8px', borderRadius: '20px' }}>
             ✈️ Viagem
           </span>
-          {viagem.rating != null && Number(viagem.rating) > 0 && (
+             {viagem.rating != null && Number(viagem.rating) > 0 && (
             <span style={{ position: 'absolute', bottom: '6px', right: '8px', backgroundColor: 'rgba(0,0,0,0.55)', color: '#fbbf24', fontSize: '0.62rem', fontWeight: 700, padding: '2px 7px', borderRadius: '20px' }}>
               ★ {Number(viagem.rating).toFixed(1)}{viagem.reviewCount ? ` (${Number(viagem.reviewCount).toLocaleString('pt-BR')})` : ''}
             </span>
           )}
-        </div>
+                 </div>
         <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
           {viagem.destino && (
             <div style={{ fontSize: '0.68rem', color: '#6b7280', fontWeight: 600 }}>📍 {viagem.destino}</div>
@@ -251,6 +49,7 @@ function ViagemNoticiaCard({ viagem }: { viagem: any }) {
           <div style={{ backgroundColor: '#0f766e', color: '#fff', padding: '7px', borderRadius: '6px', fontWeight: 700, fontSize: '0.8rem', textAlign: 'center', marginTop: '4px' }}>
             Ver oferta →
           </div>
+         
         </div>
       </article>
     </a>
@@ -286,9 +85,10 @@ function OfertaCard({ item }: { item: any }) {
                 {copiado ? '✅ Copiado!' : item.code}
               </button>
             )}
-            <a href={`/ir?url=${encodeURIComponent(item.link)}&nome=${encodeURIComponent(item.titulo)}&imagem=${encodeURIComponent(item.imagem || '')}`} style={{ backgroundColor: '#dc2626', color: '#fff', padding: '8px', borderRadius: '6px', fontWeight: 700, fontSize: '0.82rem', textAlign: 'center', textDecoration: 'none' }}>
+           <a href={`/ir?url=${encodeURIComponent(item.link)}&nome=${encodeURIComponent(item.titulo)}&imagem=${encodeURIComponent(item.imagem || '')}`} style={{ backgroundColor: '#dc2626', color: '#fff', padding: '8px', borderRadius: '6px', fontWeight: 700, fontSize: '0.82rem', textAlign: 'center', textDecoration: 'none' }}>
               {item.isCupom ? 'Usar cupom →' : 'Ver oferta →'}
             </a>
+          
           </div>
         </div>
       </article>
@@ -297,7 +97,7 @@ function OfertaCard({ item }: { item: any }) {
 
   if (item.tipo === 'marca') {
     return (
-      <a href={`/ir?url=${encodeURIComponent(item.link)}&nome=${encodeURIComponent(item.titulo)}&imagem=${encodeURIComponent(item.logo || '')}`} style={{ textDecoration: 'none', breakInside: 'avoid', display: 'block', marginBottom: '20px' }}>
+            <a href={`/ir?url=${encodeURIComponent(item.link)}&nome=${encodeURIComponent(item.titulo)}&imagem=${encodeURIComponent(item.logo || '')}`} style={{ textDecoration: 'none', breakInside: 'avoid', display: 'block', marginBottom: '20px' }}>
         <article style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '20px', boxShadow: '0 2px 6px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', textAlign: 'center', minHeight: '160px', justifyContent: 'center' }}>
           <span style={{ fontSize: '0.65rem', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Publicidade</span>
           <div style={{ width: '64px', height: '64px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #f3f4f6', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -317,7 +117,7 @@ function OfertaCard({ item }: { item: any }) {
 
   if (item.tipo === 'produto') {
     return (
-      <a href={`/ir?url=${encodeURIComponent(item.link)}&nome=${encodeURIComponent(item.titulo)}&imagem=${encodeURIComponent(item.imagem || '')}`} style={{ textDecoration: 'none', breakInside: 'avoid', display: 'block', marginBottom: '20px' }}>
+            <a href={`/ir?url=${encodeURIComponent(item.link)}&nome=${encodeURIComponent(item.titulo)}&imagem=${encodeURIComponent(item.imagem || '')}`} style={{ textDecoration: 'none', breakInside: 'avoid', display: 'block', marginBottom: '20px' }}>
         <article style={{ backgroundColor: '#fff', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>
           <div style={{ height: '160px', overflow: 'hidden', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', padding: '8px' }}>
             {item.imagem && <img src={item.imagem} alt={item.titulo} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
@@ -342,13 +142,13 @@ function OfertaCard({ item }: { item: any }) {
                 </div>
               )}
               <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#dc2626' }}>
-                R$ {item.preco.toFixed(2).replace('.', ',')}
-              </div>
-              <div style={{ fontSize: '0.65rem', color: '#9ca3af', marginTop: '2px', lineHeight: 1.3 }}>
-                Confira o valor no site e no carrinho
-              </div>
+              R$ {item.preco.toFixed(2).replace('.', ',')}
             </div>
-            <div style={{ backgroundColor: '#dc2626', color: '#fff', padding: '7px', borderRadius: '6px', fontWeight: 700, fontSize: '0.8rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.65rem', color: '#9ca3af', marginTop: '2px', lineHeight: 1.3 }}>
+              Confira o valor no site e no carrinho
+            </div>
+            </div>
+                       <div style={{ backgroundColor: '#dc2626', color: '#fff', padding: '7px', borderRadius: '6px', fontWeight: 700, fontSize: '0.8rem', textAlign: 'center' }}>
               Ver oferta →
             </div>
           </div>
@@ -359,7 +159,6 @@ function OfertaCard({ item }: { item: any }) {
 
   return null;
 }
-
 const CATEGORY_COLORS: Record<string, string> = {
   'Política': '#1e3a8a',
   'Economia': '#047857',
@@ -560,7 +359,7 @@ function NewsCard({ item }: { item: FeedItem }) {
             {item.category}
           </span>
         </div>
-        <h2 style={{ fontSize: '1.02rem', margin: '0 0 8px', lineHeight: 1.4, fontWeight: 700, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                <h2 style={{ fontSize: '1.02rem', margin: '0 0 8px', lineHeight: 1.4, fontWeight: 700, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
           <a href={`/noticia?url=${encodeURIComponent(item.link ?? '#')}&titulo=${encodeURIComponent(item.title ?? '')}&categoria=${encodeURIComponent(item.category ?? '')}&cor=${encodeURIComponent((item.categoryColor ?? '#2563eb').replace('#', ''))}&snippet=${encodeURIComponent(item.contentSnippet ?? '')}`} style={{ color: '#1f2937', textDecoration: 'none' }}>{item.title}</a>
         </h2>
         {item.pubDate && (
@@ -574,7 +373,7 @@ function NewsCard({ item }: { item: FeedItem }) {
           </p>
         )}
         <div style={{ marginTop: 'auto', paddingTop: '10px', borderTop: '1px solid #f3f4f6' }}>
-          <a href={`/noticia?url=${encodeURIComponent(item.link ?? '#')}&titulo=${encodeURIComponent(item.title ?? '')}&categoria=${encodeURIComponent(item.category ?? '')}&cor=${encodeURIComponent((item.categoryColor ?? '#2563eb').replace('#', ''))}&snippet=${encodeURIComponent(item.contentSnippet ?? '')}`} style={{ color: item.categoryColor || '#2563eb', fontWeight: 600, fontSize: '0.85rem', textDecoration: 'none' }}>
+                    <a href={`/noticia?url=${encodeURIComponent(item.link ?? '#')}&titulo=${encodeURIComponent(item.title ?? '')}&categoria=${encodeURIComponent(item.category ?? '')}&cor=${encodeURIComponent((item.categoryColor ?? '#2563eb').replace('#', ''))}&snippet=${encodeURIComponent(item.contentSnippet ?? '')}`} style={{ color: item.categoryColor || '#2563eb', fontWeight: 600, fontSize: '0.85rem', textDecoration: 'none' }}>
             Ler matéria completa →
           </a>
         </div>
@@ -585,17 +384,18 @@ function NewsCard({ item }: { item: FeedItem }) {
 
 // ─── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────
 export default function NewsClient({ posts, ads, editorial, sabores, ofertasMix, artigosProduto, viagemDestaque, viagensNoticias, comPalavraDestaque }: { posts: FeedItem[]; ads: AdItem[]; editorial: EditorialItem[]; sabores: SaboresItem[]; ofertasMix: any[]; artigosProduto?: any[]; viagemDestaque?: any; viagensNoticias?: any[]; comPalavraDestaque?: any }) {
-  const safePosts = posts ?? [];
+const safePosts = posts ?? [];
   const safeAds = ads ?? [];
   const safeEditorial = editorial ?? [];
   const safeSabores = sabores ?? [];
 
+  // Todos os anúncios ativos — independente da posição
   const allAds = safeAds.filter(a => a.active !== false);
   const adsTopo = safeAds.filter(a => a.position === 'topo' && a.active !== false);
   const adsMeio = safeAds.filter(a => a.position === 'meio' && a.active !== false);
   const adsRodape = safeAds.filter(a => a.position === 'rodape' && a.active !== false);
   const [ofertasMixEmbaralhado, setOfertasMixEmbaralhado] = useState<any[]>(ofertasMix ?? []);
-
+  
   useEffect(() => {
     setOfertasMixEmbaralhado([...(ofertasMix ?? [])].sort(() => Math.random() - 0.5));
   }, []);
@@ -610,9 +410,6 @@ export default function NewsClient({ posts, ads, editorial, sabores, ofertasMix,
   const [active, setActive] = useState('Todas');
   const filtered = active === 'Todas' ? safePosts : safePosts.filter(p => p.category === active);
 
-  // Apenas 3 notícias na home
-  const filteredHome = filtered.slice(0, 3);
-
   return (
     <main style={{ maxWidth: '1060px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, -apple-system, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
 
@@ -620,38 +417,36 @@ export default function NewsClient({ posts, ads, editorial, sabores, ofertasMix,
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <h1 style={{ fontSize: '2.1rem', color: '#111827', margin: 0, fontWeight: 800 }}>IAIPSI Informa</h1>
-            <p style={{ color: '#6b7280', fontSize: '1rem', margin: '6px 0 0' }}>
-              Política · Economia · Esportes · Saúde Mental · Ciência · Psicanálise · Tecnologia · Liderança · Mundo · Compras · Turismo 
+                        <p style={{ color: '#6b7280', fontSize: '1rem', margin: '6px 0 0' }}>
+              Política · Economia · Esportes · Saúde Mental · Ciência · Psicanálise · Tecnologia · Liderança · Mundo
             </p>
-            <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
+                       <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
               <a href="/ofertas" style={{ backgroundColor: '#dc2626', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>🛍 Ofertas & Cupons</a>
               <a href="/ofertas-selecionadas" style={{ backgroundColor: '#2563eb', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>⭐ Selecionadas</a>
               <a href="/parcelado" style={{ backgroundColor: '#047857', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>💳 Parcelado</a>
-              <a href="/oferta-do-dia" style={{ backgroundColor: '#b45309', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>🔥 Oferta do Dia</a>
+                            <a href="/oferta-do-dia" style={{ backgroundColor: '#b45309', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>🔥 Oferta do Dia</a>
               <a href="/viagens-selecionadas" style={{ backgroundColor: '#0f766e', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>🌍 Viagens</a>
-              <a href="/viagens" style={{ backgroundColor: '#0f766e', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>🗺️ Roteiros de Viagem</a>
+               <a href="/viagens" style={{ backgroundColor: '#0f766e', color: '#fff', padding: '6px 16px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>🗺️ Roteiros de Viagem</a>
+
             </div>
           </div>
         </div>
       </header>
 
-      {adsTopo.length > 0 && (
+        {adsTopo.length > 0 && (
         <div style={{ marginBottom: '16px' }}>
           <AdBannerRotating ads={adsTopo} />
         </div>
       )}
 
-      {/* Grid das 5 páginas de produtos */}
-      <GridPaginasProdutos />
-
-      {comPalavraDestaque && (
+           {comPalavraDestaque && (
         <section style={{ marginBottom: '28px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
             <div style={{ width: '4px', height: '28px', backgroundColor: '#1e3a5f', borderRadius: '2px' }} />
             <img src="/compalavra.png" alt="ComAPalavra" style={{ height: '32px', objectFit: 'contain' }} />
             <a href="/compalavra" style={{ marginLeft: 'auto', fontSize: '0.8rem', color: '#1e3a5f', fontWeight: 600, textDecoration: 'none' }}>Ver todos os artigos →</a>
           </div>
-          <a href={`/compalavra/${comPalavraDestaque.slug}`} style={{ textDecoration: 'none', display: 'block' }}>
+                   <a href={`/compalavra/${comPalavraDestaque.slug}`} style={{ textDecoration: 'none', display: 'block' }}>
             <div style={{ borderRadius: '16px', overflow: 'hidden', border: '1px solid #e5e7eb', boxShadow: '0 4px 16px rgba(0,0,0,0.08)', position: 'relative', backgroundColor: '#fff' }}>
               <div style={{ height: '320px', overflow: 'hidden', backgroundColor: '#1e3a5f', position: 'relative' }}>
                 {comPalavraDestaque.imagem ? (
@@ -683,8 +478,7 @@ export default function NewsClient({ posts, ads, editorial, sabores, ofertasMix,
           </a>
         </section>
       )}
-
-      <OfertaDestaque />
+            <OfertaDestaque />
       <ArtigosProdutoSection artigos={artigosProduto || []} />
       {viagemDestaque && <ViagemDestaque viagem={viagemDestaque} />}
       <EditorialSection items={safeEditorial.slice(0, 3)} />
@@ -753,67 +547,54 @@ export default function NewsClient({ posts, ads, editorial, sabores, ofertasMix,
         </section>
       )}
 
-      {/* Seção de notícias — apenas 3 na home */}
-      <section style={{ marginBottom: '8px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-          <div style={{ width: '4px', height: '28px', backgroundColor: '#2563eb', borderRadius: '2px' }} />
-          <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#111827', margin: 0 }}>Últimas Notícias</h2>
-          <a href="/noticias" style={{ marginLeft: 'auto', fontSize: '0.8rem', color: '#2563eb', fontWeight: 600, textDecoration: 'none' }}>Ver todas as notícias →</a>
-        </div>
+      <nav style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '24px' }}>
+        {categories.map((cat) => {
+          const feedColor = safePosts.find(p => p.category === cat)?.categoryColor;
+          const isActive = active === cat;
+          return (
+            <button key={cat} onClick={() => setActive(cat)} style={{ padding: '7px 16px', borderRadius: '999px', border: `2px solid ${isActive ? (feedColor || '#2563eb') : '#e5e7eb'}`, backgroundColor: isActive ? (feedColor || '#2563eb') : '#fff', color: isActive ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.15s' }}>
+              {cat}
+            </button>
+          );
+        })}
+      </nav>
 
-        <nav style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '20px' }}>
-          {categories.map((cat) => {
-            const feedColor = safePosts.find(p => p.category === cat)?.categoryColor;
-            const isActive = active === cat;
-            return (
-              <button key={cat} onClick={() => setActive(cat)} style={{ padding: '7px 16px', borderRadius: '999px', border: `2px solid ${isActive ? (feedColor || '#2563eb') : '#e5e7eb'}`, backgroundColor: isActive ? (feedColor || '#2563eb') : '#fff', color: isActive ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.15s' }}>
-                {cat}
-              </button>
-            );
-          })}
-        </nav>
-
-        <div style={{ columns: '3 300px', columnGap: '20px' }}>
-          {filteredHome.length === 0 ? (
-            <p style={{ color: '#6b7280' }}>Nenhuma notícia encontrada.</p>
-          ) : (
-            filteredHome.map((item, index) => (
-              <Fragment key={`item-${index}`}>
-                <NewsCard item={item} />
-              </Fragment>
-            ))
-          )}
-        </div>
-
-        {/* Botão ver todas */}
-        <div style={{ textAlign: 'center', marginTop: '20px' }}>
-          <a
-            href="/noticias"
-            style={{
-              display: 'inline-block',
-              backgroundColor: '#fff',
-              color: '#2563eb',
-              border: '2px solid #2563eb',
-              padding: '12px 32px',
-              borderRadius: '8px',
-              fontWeight: 700,
-              fontSize: '0.95rem',
-              textDecoration: 'none',
-              transition: 'all 0.15s',
-            }}
-          >
-            📰 Ver todas as notícias →
-          </a>
-        </div>
+      <section style={{ columns: '3 300px', columnGap: '20px' }}>
+        {filtered.length === 0 ? (
+          <p style={{ color: '#6b7280' }}>Nenhuma notícia encontrada.</p>
+        ) : (
+          filtered.map((item, index) => (
+            <Fragment key={`item-${index}`}>
+                           {index > 0 && index % 6 === 0 && (() => {
+                const ofertaIndex = Math.floor(index / 6) - 1;
+                const oferta = safeOfertasMix[ofertaIndex % Math.max(safeOfertasMix.length, 1)];
+                return oferta ? <OfertaCard item={oferta} /> : null;
+              })()}
+              {index > 0 && index % 9 === 0 && (() => {
+                const safeViagens = viagensNoticias ?? [];
+                if (safeViagens.length === 0) return null;
+                const vIdx = Math.floor(index / 9) - 1;
+                const viagem = safeViagens[vIdx % safeViagens.length];
+                return viagem ? <ViagemNoticiaCard viagem={viagem} /> : null;
+              })()}
+              {index > 0 && index % 12 === 0 && adsMeio.length > 0 && (
+                <div style={{ breakInside: 'avoid', marginBottom: '20px' }}>
+                  <AdBannerRotating ads={adsMeio} />
+                </div>
+              )}
+              <NewsCard item={item} />
+            </Fragment>
+          ))
+        )}
       </section>
 
-      {adsRodape.length > 0 && (
+           {adsRodape.length > 0 && (
         <div style={{ marginTop: '32px' }}>
           <AdBannerRotating ads={adsRodape} />
         </div>
       )}
 
-      <FooterSite />
+            <FooterSite />
 
     </main>
   );

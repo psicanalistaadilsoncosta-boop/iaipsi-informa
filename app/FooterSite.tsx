@@ -60,8 +60,7 @@ export default function FooterSite() {
             <div style={{ marginTop: '20px', backgroundColor: '#f0fdf4', borderRadius: '8px', padding: '12px 14px', border: '1px solid #bbf7d0' }}>
               <p style={{ fontSize: '0.65rem', color: '#047857', margin: 0, lineHeight: 1.5, fontWeight: 500 }}>
                 🍪 Não utilizamos cookies de rastreamento.<br />
-                Sem coleta de dados pessoais.
-              </p>
+                </p>
             </div>
           </div>
 
