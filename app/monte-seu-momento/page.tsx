@@ -14,7 +14,7 @@ const MOMENTO_EMOJI: Record<string, string> = {
 
 const TIPO_EMOJI: Record<string, string> = {
   'Eletro': '🔌', 'Móveis': '🪑', 'Acessórios': '✨', 'Alimentos': '🛒',
-  'Bebidas': '🍷', 'Vinho': '🍾',
+  'Bebidas': '🍷', 'Vinhos': '🍾',
 };
 
 interface Produto {
