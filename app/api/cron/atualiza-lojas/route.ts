@@ -270,7 +270,7 @@ export async function GET(req: NextRequest) {
       });
       await kv.set(LOJAS_KEY, lojasAtualizadas);
 
-      resultados[loja.nome] = { removidos: pinadosDaLoja.length, pinados: novos.length };
+      resultados[loja.nome] = { pinados: novos.length };
     } catch (err: any) {
       resultados[loja.nome] = { removidos: 0, pinados: 0, erro: err?.message || 'Erro desconhecido' };
     }
