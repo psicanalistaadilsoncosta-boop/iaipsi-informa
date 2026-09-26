@@ -3,7 +3,6 @@ import { fetchShopify } from './shopify';
 import { fetchMiBrasil } from './mibrasil';
 import { fetchEfacil } from './efacil';
 import { fetchNuvemshop, getNuvemshopProductUrls } from './nuvemshop';
-import { fetchMagazord, isMagazord } from './magazord';
 
 const LOJAS_USD = ['italist.com'];
 
@@ -43,14 +42,6 @@ const base = url.replace(/\/$/, '');
     if (res.ok) {
       const produtos = await fetchVtex(base, limit);
       return { produtos, plataforma: 'vtex' };
-    }
-  } catch {}
-
-  // Tenta Magazord (via sitemap-produto.xml)
-  try {
-    if (await isMagazord(base)) {
-      const produtos = await fetchMagazord(base, limit);
-      return { produtos, plataforma: 'magazord' };
     }
   } catch {}
 
