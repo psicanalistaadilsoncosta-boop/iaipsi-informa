@@ -5,13 +5,19 @@ import { fetchEfacil } from './efacil';
 import { fetchNuvemshop, getNuvemshopProductUrls } from './nuvemshop';
 import { fetchMagazord, isMagazord } from './magazord';
 import { fetchTray, isTray } from './tray';
+import { fetchMobly, isMobly } from './mobly';
 
 const LOJAS_USD = ['italist.com'];
 
 export async function detectAndFetch(url: string, limit = 500, isUSD = false) {
 const base = url.replace(/\/$/, '');
 
-    if (base.includes('mibrasil.com.br')) {
+    if (await isMobly(base)) {
+    const produtos = await fetchMobly(url, limit);
+    return { produtos, plataforma: 'mobly' };
+  }
+
+  if (base.includes('mibrasil.com.br')) {
     const produtos = await fetchMiBrasil(url, limit);
     return { produtos, plataforma: 'mibrasil' };
   }
