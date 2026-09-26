@@ -193,8 +193,8 @@ function TickerOfertas({ itens }: { itens: any[] }) {
         }
       }, TICKER_DURACAO_OFERTAS_MS);
 
-      const totalMsg = isMobile
-        ? TICKER_MENSAGEM_PARTES.length * (700 + TICKER_DURACAO_MSG_MS)
+           const totalMsg = isMobile
+        ? TICKER_MENSAGEM_PARTES.length * (700 + TICKER_DURACAO_MSG_MS) + 2000
         : 700 + TICKER_DURACAO_MSG_MS;
 
       const t2 = setTimeout(ciclo, TICKER_DURACAO_OFERTAS_MS + totalMsg);
