@@ -143,7 +143,7 @@ function TickerOfertas({ itens }: { itens: any[] }) {
     .filter(i => i.title || i.titulo)
     .map(i => (i.title || i.titulo) as string);
 
-  const [modo, setModo] = useState<'ofertas' | 'msg0' | 'msg1'>('ofertas');
+  const [modo, setModo] = useState<'ofertas' | 'msg0' | 'msg1' | 'msg2'>('ofertas');
   const [visible, setVisible] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -173,12 +173,17 @@ function TickerOfertas({ itens }: { itens: any[] }) {
 
       const t1 = setTimeout(() => {
         if (isMobile) {
-          // Mobile: duas partes sequenciais
+                   // Mobile: três partes sequenciais
           pisca(() => {
             setModo('msg0');
             setTimeout(() => {
               pisca(() => {
                 setModo('msg1');
+                setTimeout(() => {
+                  pisca(() => {
+                    setModo('msg2');
+                  });
+                }, TICKER_DURACAO_MSG_MS);
               });
             }, TICKER_DURACAO_MSG_MS);
           });
@@ -188,8 +193,8 @@ function TickerOfertas({ itens }: { itens: any[] }) {
         }
       }, TICKER_DURACAO_OFERTAS_MS);
 
-      const totalMsg = isMobile
-        ? 700 + TICKER_DURACAO_MSG_MS + 700 + TICKER_DURACAO_MSG_MS
+            const totalMsg = isMobile
+        ? 700 + TICKER_DURACAO_MSG_MS + 700 + TICKER_DURACAO_MSG_MS + 700 + TICKER_DURACAO_MSG_MS
         : 700 + TICKER_DURACAO_MSG_MS;
 
       const t2 = setTimeout(ciclo, TICKER_DURACAO_OFERTAS_MS + totalMsg);
@@ -205,9 +210,9 @@ function TickerOfertas({ itens }: { itens: any[] }) {
   const lista = [...titulos, ...titulos];
   const duracaoScroll = Math.max(titulos.length * 4, 20);
   const isMensagem = modo === 'msg0' || modo === 'msg1';
-  const textoMsg = isMobile
-    ? TICKER_MENSAGEM_PARTES[modo === 'msg0' ? 0 : 1]
-    : `${TICKER_MENSAGEM_PARTES[0]} ${TICKER_MENSAGEM_PARTES[1]}`;
+    const textoMsg = isMobile
+    ? TICKER_MENSAGEM_PARTES[modo === 'msg0' ? 0 : modo === 'msg1' ? 1 : 2]
+    : TICKER_MENSAGEM_PARTES.join(' ');
 
   return (
     <div style={{
