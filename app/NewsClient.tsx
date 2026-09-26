@@ -132,12 +132,11 @@ function BannerNewsletter() {
 // ─── TICKER DE OFERTAS ────────────────────────────────────────────────────────
 const TICKER_MENSAGEM_PARTES = [
   '✨ Monte a sua lista de ofertas!',
-  '📧 Receba tudo no seu email. 🛍',
-  '📧 Acesse quando quiser! 🛍',
-
+  '📧 Receba tudo no seu email.',
+  '🛍 Acesse quando quiser!',
 ];
 const TICKER_DURACAO_OFERTAS_MS = 8000;
-const TICKER_DURACAO_MSG_MS     = 3200; // por parte
+const TICKER_DURACAO_MSG_MS     = 3500; // por parte
 
 function TickerOfertas({ itens }: { itens: any[] }) {
   const titulos = itens
