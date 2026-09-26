@@ -4,7 +4,6 @@ import { fetchMiBrasil } from './mibrasil';
 import { fetchEfacil } from './efacil';
 import { fetchNuvemshop, getNuvemshopProductUrls } from './nuvemshop';
 import { fetchMagazord, isMagazord } from './magazord';
-import { fetchTray, isTray } from './tray';
 
 const LOJAS_USD = ['italist.com'];
 
@@ -44,14 +43,6 @@ const base = url.replace(/\/$/, '');
     if (res.ok) {
       const produtos = await fetchVtex(base, limit);
       return { produtos, plataforma: 'vtex' };
-    }
-  } catch {}
-
-  // Tenta Tray (via web_api)
-  try {
-    if (await isTray(base)) {
-      const produtos = await fetchTray(base, limit);
-      return { produtos, plataforma: 'tray' };
     }
   } catch {}
 
