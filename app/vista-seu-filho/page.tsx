@@ -99,7 +99,9 @@ export default function VistaSeuFilhoPage() {
   return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: COR_LIGHT }}>
       {/* Header */}
-      <div style={{ background: COR, color: '#fff', padding: '2rem 1rem 1.5rem', textAlign: 'center' }}>
+      <div style={{ backgroundImage: 'url(/universo/vista-seu-filho.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', color: '#fff', padding: '2rem 1rem 1.5rem', textAlign: 'center', position: 'relative' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(3,105,161,0.5), rgba(3,105,161,0.85))' }} />
+        <div style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ fontSize: '2rem' }}>👶</div>
         <h1 style={{ margin: '0.5rem 0 0.25rem', fontSize: '1.8rem', fontWeight: 700 }}>Vista seu Filho</h1>
         <p style={{ margin: 0, opacity: 0.85, fontSize: '1rem' }}>
@@ -108,6 +110,7 @@ export default function VistaSeuFilhoPage() {
          Atenção: os preços, descontos, frete, disponibilidade e demais condições apresentados são apenas referenciais.<br />Valem as condições exibidas no momento da compra, diretamente na loja e no carrinho do site.</p>
 
       </div>
+</div>
 
       {/* Abas */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', padding: '1rem', flexWrap: 'wrap', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>

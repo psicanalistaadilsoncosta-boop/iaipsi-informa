@@ -66,7 +66,9 @@ export default function MercadoPage() {
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: COR_LIGHT }}>
 
       {/* Banner */}
-      <div style={{ background: `linear-gradient(135deg, ${COR} 0%, #047857 100%)`, color: '#fff', padding: '48px 24px', textAlign: 'center' }}>
+      <div style={{ backgroundImage: 'url(/universo/mercado.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', color: '#fff', padding: '48px 24px', textAlign: 'center', position: 'relative' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(5,150,105,0.5), rgba(4,120,87,0.85))' }} />
+        <div style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ fontSize: '2rem' }}>🛒</div>
         <h1 style={{ margin: '0.5rem 0 0.25rem', fontSize: '1.8rem', fontWeight: 700 }}>Mercado</h1>
         <p style={{ margin: '0 0 10px', opacity: 0.9, fontSize: '1rem' }}>
@@ -75,7 +77,8 @@ export default function MercadoPage() {
         <p style={{ margin: 0, opacity: 0.65, fontSize: '0.72rem', maxWidth: '520px', marginInline: 'auto' }}>
           Atenção: os preços, descontos e disponibilidade são referenciais. Valem as condições exibidas na loja no momento da compra.
         </p>
-      </div>
+      </div>      </div>
+
 
       {/* Abas */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', padding: '1rem', flexWrap: 'wrap', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>

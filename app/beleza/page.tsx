@@ -82,8 +82,10 @@ export default function BelezaPage() {
   return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: COR_LIGHT }}>
       {/* Header */}
-      <div style={{ background: `linear-gradient(135deg, ${COR} 0%, #db2777 100%)`, color: '#fff', padding: '2rem 1rem 1.5rem', textAlign: 'center' }}>
+      <div style={{ backgroundImage: 'url(/universo/beleza.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', color: '#fff', padding: '2rem 1rem 1.5rem', textAlign: 'center', position: 'relative' }}>
         <div style={{ fontSize: '2rem' }}>💄</div>
+<div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to right, rgba(157,23,77,0.5), rgba(219,39,119,0.85))` }} />
+<div style={{ position: 'relative', zIndex: 1 }}>
         <h1 style={{ margin: '0.5rem 0 0.25rem', fontSize: '1.8rem', fontWeight: 700 }}>Beleza & Cuidados</h1>
         <p style={{ margin: 0, opacity: 0.85, fontSize: '1rem' }}>
           Perfumes, skincare, maquiagem e mais — monte sua lista e receba os links</p>
@@ -91,7 +93,8 @@ export default function BelezaPage() {
          Atenção: os preços, descontos, frete, disponibilidade e demais condições apresentados são apenas referenciais.<br />Valem as condições exibidas no momento da compra, diretamente na loja e no carrinho do site.
         </p>
 
-      </div>
+      </div>      </div>
+
 
       {/* Abas */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', padding: '1rem', flexWrap: 'wrap', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>

@@ -15,10 +15,9 @@ const PAGINAS_PRODUTOS = [
     titulo: 'Monte seu Ambiente',
     descricao: 'Móveis, decoração e tudo para transformar sua casa',
     href: '/monte-seu-ambiente',
-    cor: '#219BF6',
+   cor: '#219BF6',
     corBg: '#eff8ff',
     corBorda: '#bfdbfe',
-    imagem: '/universo/ambiente.jpg',
   },
   {
     emoji: '🍷',
@@ -29,7 +28,6 @@ const PAGINAS_PRODUTOS = [
     cor: '#7c3aed',
     corBg: '#faf5ff',
     corBorda: '#ddd6fe',
-    imagem: '/universo/momento.jpg',
   },
   {
     emoji: '👔',
@@ -40,9 +38,8 @@ const PAGINAS_PRODUTOS = [
     cor: '#be185d',
     corBg: '#fdf2f8',
     corBorda: '#fbcfe8',
-    imagem: '/universo/vista-se.jpg',
   },
-  {
+ {
     emoji: '👶',
     emoji2: '👟',
     titulo: 'Vista seu Filho',
@@ -51,7 +48,6 @@ const PAGINAS_PRODUTOS = [
     cor: '#f59e0b',
     corBg: '#fffbeb',
     corBorda: '#fde68a',
-    imagem: '/universo/vista-seu-filho.jpg',
   },
   {
     emoji: '🧴',
@@ -62,7 +58,6 @@ const PAGINAS_PRODUTOS = [
     cor: '#db2777',
     corBg: '#fff1f2',
     corBorda: '#fecdd3',
-    imagem: '/universo/beleza.jpg',
   },
   {
     emoji: '🛒',
@@ -73,9 +68,8 @@ const PAGINAS_PRODUTOS = [
     cor: '#047857',
     corBg: '#f0fdf4',
     corBorda: '#bbf7d0',
-    imagem: '/universo/mercado.jpg',
   },
-];
+ ];
 
 function BannerNewsletter() {
   return (
@@ -137,18 +131,19 @@ function BannerNewsletter() {
 
 // ─── TICKER DE OFERTAS ────────────────────────────────────────────────────────
 const TICKER_MENSAGEM_PARTES = [
-  '✨ Seu Universo — monte sua lista de ofertas!',
-  '📧 Receba tudo no seu email. Acesse quando quiser! 🛍',
+  '✨ Monte a sua lista de ofertas!',
+  '📧 Receba tudo no seu email.',
+  '🛍 Acesse quando quiser!',
 ];
 const TICKER_DURACAO_OFERTAS_MS = 8000;
-const TICKER_DURACAO_MSG_MS     = 3200; // por parte
+const TICKER_DURACAO_MSG_MS     = 3500; // por parte
 
 function TickerOfertas({ itens }: { itens: any[] }) {
   const titulos = itens
     .filter(i => i.title || i.titulo)
     .map(i => (i.title || i.titulo) as string);
 
-  const [modo, setModo] = useState<'ofertas' | 'msg0' | 'msg1'>('ofertas');
+  const [modo, setModo] = useState<'ofertas' | 'msg0' | 'msg1' | 'msg2'>('ofertas');
   const [visible, setVisible] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -177,24 +172,29 @@ function TickerOfertas({ itens }: { itens: any[] }) {
       setVisible(true);
 
       const t1 = setTimeout(() => {
-        if (isMobile) {
-          // Mobile: duas partes sequenciais
-          pisca(() => {
-            setModo('msg0');
-            setTimeout(() => {
-              pisca(() => {
-                setModo('msg1');
-              });
-            }, TICKER_DURACAO_MSG_MS);
-          });
+               if (isMobile) {
+          // Mobile: percorre todas as partes em sequência
+          const partes = TICKER_MENSAGEM_PARTES.length;
+          const modos = ['msg0', 'msg1', 'msg2'] as const;
+          let idx = 0;
+          const proxParte = () => {
+            pisca(() => {
+              setModo(modos[idx]);
+              idx++;
+              if (idx < partes) {
+                setTimeout(proxParte, TICKER_DURACAO_MSG_MS);
+              }
+            });
+          };
+          proxParte();
         } else {
           // Desktop: mensagem completa numa tacada
           pisca(() => { setModo('msg0'); });
         }
       }, TICKER_DURACAO_OFERTAS_MS);
 
-      const totalMsg = isMobile
-        ? 700 + TICKER_DURACAO_MSG_MS + 700 + TICKER_DURACAO_MSG_MS
+           const totalMsg = isMobile
+        ? TICKER_MENSAGEM_PARTES.length * (700 + TICKER_DURACAO_MSG_MS) + 2000
         : 700 + TICKER_DURACAO_MSG_MS;
 
       const t2 = setTimeout(ciclo, TICKER_DURACAO_OFERTAS_MS + totalMsg);
@@ -210,9 +210,9 @@ function TickerOfertas({ itens }: { itens: any[] }) {
   const lista = [...titulos, ...titulos];
   const duracaoScroll = Math.max(titulos.length * 4, 20);
   const isMensagem = modo === 'msg0' || modo === 'msg1';
-  const textoMsg = isMobile
-    ? TICKER_MENSAGEM_PARTES[modo === 'msg0' ? 0 : 1]
-    : `${TICKER_MENSAGEM_PARTES[0]} ${TICKER_MENSAGEM_PARTES[1]}`;
+    const textoMsg = isMobile
+    ? TICKER_MENSAGEM_PARTES[modo === 'msg0' ? 0 : modo === 'msg1' ? 1 : 2]
+    : TICKER_MENSAGEM_PARTES.join(' ');
 
   return (
     <div style={{
@@ -313,78 +313,46 @@ function GridPaginasProdutos() {
       style={{ textDecoration: 'none' }}
     >
       <div style={{
+        backgroundColor: p.corBg,
         border: `1.5px solid ${p.corBorda}`,
         borderRadius: '14px',
-        overflow: 'hidden',
-        position: 'relative',
-        height: '160px',
+        padding: '20px 16px',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
+        textAlign: 'center',
+        gap: '10px',
         transition: 'transform 0.15s, box-shadow 0.15s',
         cursor: 'pointer',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-        backgroundColor: p.corBg,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
       }}
         onMouseEnter={e => {
           (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)';
-          (e.currentTarget as HTMLDivElement).style.boxShadow = '0 6px 16px rgba(0,0,0,0.14)';
+          (e.currentTarget as HTMLDivElement).style.boxShadow = '0 6px 16px rgba(0,0,0,0.10)';
         }}
         onMouseLeave={e => {
           (e.currentTarget as HTMLDivElement).style.transform = '';
-          (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+          (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)';
         }}
       >
-        {/* Imagem de fundo à esquerda */}
-        <img
-          src={p.imagem}
-          alt={p.titulo}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            objectPosition: 'center',
-          }}
-          onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-        />
-
-        {/* Degradê da esquerda (transparente) para a direita (corBg opaco) */}
+        <div style={{ display: 'flex', gap: '6px', lineHeight: 1 }}>
+          <span style={{ fontSize: '2.2rem' }}>{p.emoji}</span>
+          <span style={{ fontSize: '2.2rem' }}>{p.emoji2}</span>
+        </div>
+        <div>
+          <div style={{ fontWeight: 800, fontSize: '0.92rem', color: p.cor, marginBottom: '4px' }}>{p.titulo}</div>
+          <div style={{ fontSize: '0.75rem', color: '#6b7280', lineHeight: 1.4 }}>{p.descricao}</div>
+        </div>
         <div style={{
-          position: 'absolute',
-          inset: 0,
-          background: `linear-gradient(to right, transparent 0%, ${p.corBg}cc 45%, ${p.corBg} 68%)`,
-        }} />
-
-        {/* Conteúdo de texto — lado direito */}
-        <div style={{
-          position: 'relative',
-          zIndex: 1,
-          marginLeft: 'auto',
-          padding: '14px 16px 14px 0',
-          width: '62%',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-end',
-          textAlign: 'right',
-          gap: '6px',
+          marginTop: '4px',
+          backgroundColor: p.cor,
+          color: '#fff',
+          fontSize: '0.75rem',
+          fontWeight: 700,
+          padding: '5px 14px',
+          borderRadius: '20px',
         }}>
-          <div style={{ display: 'flex', gap: '4px', lineHeight: 1 }}>
-            <span style={{ fontSize: '1.4rem' }}>{p.emoji}</span>
-            <span style={{ fontSize: '1.4rem' }}>{p.emoji2}</span>
-          </div>
-          <div style={{ fontWeight: 800, fontSize: '0.88rem', color: p.cor, lineHeight: 1.2 }}>{p.titulo}</div>
-          <div style={{ fontSize: '0.68rem', color: '#374151', lineHeight: 1.35 }}>{p.descricao}</div>
-          <div style={{
-            backgroundColor: p.cor,
-            color: '#fff',
-            fontSize: '0.68rem',
-            fontWeight: 700,
-            padding: '4px 12px',
-            borderRadius: '20px',
-          }}>
-            Ver produtos →
-          </div>
+          Ver produtos →
         </div>
       </div>
     </a>

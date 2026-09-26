@@ -115,7 +115,9 @@ export default function MonteSeuAmbientePage() {
     <div style={{ maxWidth: '1060px', margin: '0 auto' }}>
 
       {/* Hero */}
-      <div style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #2563eb 100%)', color: '#fff', padding: '48px 24px', textAlign: 'center' }}>
+      <div style={{ backgroundImage: 'url(/universo/ambiente.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', color: '#fff', padding: '48px 24px', textAlign: 'center', position: 'relative' }}>
+<div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(124,58,237,0.5), rgba(37,99,235,0.85))' }} />
+<div style={{ position: 'relative', zIndex: 1 }}>
         <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: '0 0 12px', letterSpacing: '-0.5px' }}>
           🏠 Monte seu Ambiente
         </h1>
@@ -125,7 +127,8 @@ export default function MonteSeuAmbientePage() {
          Atenção: os preços, descontos, frete, disponibilidade e demais condições apresentados são apenas referenciais.<br />Valem as condições exibidas no momento da compra, diretamente na loja e no carrinho do site.
         </p>
       </div>
-</div>
+</div></div>
+
       <div style={{ maxWidth: '1060px', margin: '0 auto', padding: '32px 20px' }}>
 
         {loading && (
