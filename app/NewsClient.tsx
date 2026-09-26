@@ -130,53 +130,83 @@ function BannerNewsletter() {
 }
 
 // ─── TICKER DE OFERTAS ────────────────────────────────────────────────────────
-const TICKER_MENSAGEM = '✨ Seu Universo — monte sua lista de ofertas e receba tudo no seu email. Acesse quando quiser! 🛍';
-const TICKER_DURACAO_OFERTAS_MS = 6000;
-const TICKER_DURACAO_MSG_MS     = 5000;
+const TICKER_MENSAGEM_PARTES = [
+  '✨ Seu Universo — monte sua lista de ofertas!',
+  '📧 Receba tudo no seu email. Acesse quando quiser! 🛍',
+];
+const TICKER_DURACAO_OFERTAS_MS = 8000;
+const TICKER_DURACAO_MSG_MS     = 3200; // por parte
 
 function TickerOfertas({ itens }: { itens: any[] }) {
   const titulos = itens
     .filter(i => i.title || i.titulo)
     .map(i => (i.title || i.titulo) as string);
 
-  const [modo, setModo] = useState<'ofertas' | 'mensagem'>('ofertas');
+  const [modo, setModo] = useState<'ofertas' | 'msg0' | 'msg1'>('ofertas');
   const [visible, setVisible] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 640px)');
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     if (titulos.length === 0) return;
+
+    const pisca = (cb: () => void) => {
+      setVisible(false);
+      setTimeout(() => { setVisible(true);
+        setTimeout(() => { setVisible(false);
+          setTimeout(() => { setVisible(true); cb(); }, 200);
+        }, 200);
+      }, 200);
+    };
 
     const ciclo = () => {
       setModo('ofertas');
       setVisible(true);
 
       const t1 = setTimeout(() => {
-        // Pisca 1
-        setVisible(false);
-        setTimeout(() => {
-          setVisible(true);
-          setTimeout(() => {
-            // Pisca 2
-            setVisible(false);
+        if (isMobile) {
+          // Mobile: duas partes sequenciais
+          pisca(() => {
+            setModo('msg0');
             setTimeout(() => {
-              setModo('mensagem');
-              setVisible(true);
-            }, 220);
-          }, 220);
-        }, 220);
+              pisca(() => {
+                setModo('msg1');
+              });
+            }, TICKER_DURACAO_MSG_MS);
+          });
+        } else {
+          // Desktop: mensagem completa numa tacada
+          pisca(() => { setModo('msg0'); });
+        }
       }, TICKER_DURACAO_OFERTAS_MS);
 
-      const t2 = setTimeout(ciclo, TICKER_DURACAO_OFERTAS_MS + 880 + TICKER_DURACAO_MSG_MS);
+      const totalMsg = isMobile
+        ? 700 + TICKER_DURACAO_MSG_MS + 700 + TICKER_DURACAO_MSG_MS
+        : 700 + TICKER_DURACAO_MSG_MS;
+
+      const t2 = setTimeout(ciclo, TICKER_DURACAO_OFERTAS_MS + totalMsg);
       return () => { clearTimeout(t1); clearTimeout(t2); };
     };
 
     const cleanup = ciclo();
     return cleanup;
-  }, [titulos.length]);
+  }, [titulos.length, isMobile]);
 
   if (titulos.length === 0) return null;
 
   const lista = [...titulos, ...titulos];
   const duracaoScroll = Math.max(titulos.length * 4, 20);
+  const isMensagem = modo === 'msg0' || modo === 'msg1';
+  const textoMsg = isMobile
+    ? TICKER_MENSAGEM_PARTES[modo === 'msg0' ? 0 : 1]
+    : `${TICKER_MENSAGEM_PARTES[0]} ${TICKER_MENSAGEM_PARTES[1]}`;
 
   return (
     <div style={{
@@ -192,7 +222,7 @@ function TickerOfertas({ itens }: { itens: any[] }) {
     }}>
       {/* Label fixo */}
       <div style={{
-        backgroundColor: modo === 'mensagem' ? '#7c3aed' : '#dc2626',
+        backgroundColor: isMensagem ? '#7c3aed' : '#dc2626',
         color: '#fff',
         fontSize: '0.72rem',
         fontWeight: 800,
@@ -206,7 +236,7 @@ function TickerOfertas({ itens }: { itens: any[] }) {
         textTransform: 'uppercase',
         transition: 'background-color 0.3s ease',
       }}>
-        {modo === 'mensagem' ? '🌟 Universo' : '🔥 Ofertas'}
+        {isMensagem ? '🌟 Universo' : '🔥 Ofertas'}
       </div>
 
       {/* Faixa rolante */}
@@ -237,7 +267,7 @@ function TickerOfertas({ itens }: { itens: any[] }) {
           }
         `}</style>
 
-        {modo === 'ofertas' ? (
+        {!isMensagem ? (
           <div className="ticker-track">
             {lista.map((titulo, i) => (
               <span key={i} style={{
@@ -253,14 +283,14 @@ function TickerOfertas({ itens }: { itens: any[] }) {
             ))}
           </div>
         ) : (
-          <div className="ticker-msg">
+          <div className="ticker-msg" key={modo}>
             <span style={{
               color: '#e9d5ff',
               fontSize: '0.82rem',
               fontWeight: 600,
               padding: '0 24px',
             }}>
-              {TICKER_MENSAGEM}
+              {textoMsg}
             </span>
           </div>
         )}
