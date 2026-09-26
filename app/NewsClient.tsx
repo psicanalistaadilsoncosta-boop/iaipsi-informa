@@ -15,9 +15,9 @@ const PAGINAS_PRODUTOS = [
     titulo: 'Monte seu Ambiente',
     descricao: 'Móveis, decoração e tudo para transformar sua casa',
     href: '/monte-seu-ambiente',
-    cor: '#0f766e',
-    corBg: '#f0fdfa',
-    corBorda: '#99f6e4',
+   cor: '#219BF6',
+    corBg: '#eff8ff',
+    corBorda: '#bfdbfe',
   },
   {
     emoji: '🍷',
@@ -39,6 +39,16 @@ const PAGINAS_PRODUTOS = [
     corBg: '#fdf2f8',
     corBorda: '#fbcfe8',
   },
+ {
+    emoji: '👶',
+    emoji2: '👟',
+    titulo: 'Vista seu Filho',
+    descricao: 'Roupas, acessórios e produtos para bebês e crianças',
+    href: '/vista-seu-filho',
+    cor: '#f59e0b',
+    corBg: '#fffbeb',
+    corBorda: '#fde68a',
+  },
   {
     emoji: '🧴',
     emoji2: '💄',
@@ -59,17 +69,7 @@ const PAGINAS_PRODUTOS = [
     corBg: '#f0fdf4',
     corBorda: '#bbf7d0',
   },
-  {
-    emoji: '👶',
-    emoji2: '👟',
-    titulo: 'Vista seu Filho',
-    descricao: 'Roupas, acessórios e produtos para bebês e crianças',
-    href: '/vista-seu-filho',
-    cor: '#f59e0b',
-    corBg: '#fffbeb',
-    corBorda: '#fde68a',
-  },
-];
+ ];
 
 function BannerNewsletter() {
   return (
@@ -126,6 +126,146 @@ function BannerNewsletter() {
         <div className="bn-cats">🏠🍷👔🧴🛒👶 </div>
       </div>
     </>
+  );
+}
+
+// ─── TICKER DE OFERTAS ────────────────────────────────────────────────────────
+const TICKER_MENSAGEM = '✨ Seu Universo — monte sua lista de ofertas e receba tudo no seu email. Acesse quando quiser! 🛍';
+const TICKER_DURACAO_OFERTAS_MS = 6000;
+const TICKER_DURACAO_MSG_MS     = 5000;
+
+function TickerOfertas({ itens }: { itens: any[] }) {
+  const titulos = itens
+    .filter(i => i.title || i.titulo)
+    .map(i => (i.title || i.titulo) as string);
+
+  const [modo, setModo] = useState<'ofertas' | 'mensagem'>('ofertas');
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    if (titulos.length === 0) return;
+
+    const ciclo = () => {
+      setModo('ofertas');
+      setVisible(true);
+
+      const t1 = setTimeout(() => {
+        // Pisca 1
+        setVisible(false);
+        setTimeout(() => {
+          setVisible(true);
+          setTimeout(() => {
+            // Pisca 2
+            setVisible(false);
+            setTimeout(() => {
+              setModo('mensagem');
+              setVisible(true);
+            }, 220);
+          }, 220);
+        }, 220);
+      }, TICKER_DURACAO_OFERTAS_MS);
+
+      const t2 = setTimeout(ciclo, TICKER_DURACAO_OFERTAS_MS + 880 + TICKER_DURACAO_MSG_MS);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    };
+
+    const cleanup = ciclo();
+    return cleanup;
+  }, [titulos.length]);
+
+  if (titulos.length === 0) return null;
+
+  const lista = [...titulos, ...titulos];
+  const duracaoScroll = Math.max(titulos.length * 4, 20);
+
+  return (
+    <div style={{
+      backgroundColor: '#111827',
+      borderRadius: '8px',
+      marginBottom: '20px',
+      overflow: 'hidden',
+      display: 'flex',
+      alignItems: 'center',
+      height: '36px',
+      opacity: visible ? 1 : 0,
+      transition: 'opacity 0.15s ease',
+    }}>
+      {/* Label fixo */}
+      <div style={{
+        backgroundColor: modo === 'mensagem' ? '#7c3aed' : '#dc2626',
+        color: '#fff',
+        fontSize: '0.72rem',
+        fontWeight: 800,
+        padding: '0 14px',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        whiteSpace: 'nowrap',
+        flexShrink: 0,
+        letterSpacing: '0.05em',
+        textTransform: 'uppercase',
+        transition: 'background-color 0.3s ease',
+      }}>
+        {modo === 'mensagem' ? '🌟 Universo' : '🔥 Ofertas'}
+      </div>
+
+      {/* Faixa rolante */}
+      <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+        <style>{`
+          @keyframes ticker-scroll {
+            0%   { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+          @keyframes ticker-msg {
+            0%   { transform: translateX(100%); }
+            28%  { transform: translateX(0%); }
+            72%  { transform: translateX(0%); }
+            100% { transform: translateX(-100%); }
+          }
+          .ticker-track {
+            display: flex;
+            animation: ticker-scroll ${duracaoScroll}s linear infinite;
+            width: max-content;
+          }
+          .ticker-track:hover { animation-play-state: paused; }
+          .ticker-msg {
+            display: flex;
+            align-items: center;
+            height: 36px;
+            animation: ticker-msg ${TICKER_DURACAO_MSG_MS / 1000}s ease 1 forwards;
+            white-space: nowrap;
+          }
+        `}</style>
+
+        {modo === 'ofertas' ? (
+          <div className="ticker-track">
+            {lista.map((titulo, i) => (
+              <span key={i} style={{
+                color: '#f9fafb',
+                fontSize: '0.8rem',
+                fontWeight: 500,
+                whiteSpace: 'nowrap',
+                padding: '0 24px',
+                borderRight: '1px solid #374151',
+              }}>
+                {titulo}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <div className="ticker-msg">
+            <span style={{
+              color: '#e9d5ff',
+              fontSize: '0.82rem',
+              fontWeight: 600,
+              padding: '0 24px',
+            }}>
+              {TICKER_MENSAGEM}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -635,10 +775,15 @@ export default function NewsClient({ posts, ads, editorial, sabores, ofertasMix,
         </div>
       </header>
 
-      {adsTopo.length > 0 && (
+            {adsTopo.length > 0 && (
         <div style={{ marginBottom: '16px' }}>
           <AdBannerRotating ads={adsTopo} />
         </div>
+      )}
+
+      {/* Ticker de ofertas */}
+      {ofertasMix && ofertasMix.length > 0 && (
+        <TickerOfertas itens={ofertasMix} />
       )}
 
       {/* Grid das 5 páginas de produtos */}
