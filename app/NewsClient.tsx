@@ -172,29 +172,29 @@ function TickerOfertas({ itens }: { itens: any[] }) {
       setVisible(true);
 
       const t1 = setTimeout(() => {
-        if (isMobile) {
-                   // Mobile: três partes sequenciais
-          pisca(() => {
-            setModo('msg0');
-            setTimeout(() => {
-              pisca(() => {
-                setModo('msg1');
-                setTimeout(() => {
-                  pisca(() => {
-                    setModo('msg2');
-                  });
-                }, TICKER_DURACAO_MSG_MS);
-              });
-            }, TICKER_DURACAO_MSG_MS);
-          });
+               if (isMobile) {
+          // Mobile: percorre todas as partes em sequência
+          const partes = TICKER_MENSAGEM_PARTES.length;
+          const modos = ['msg0', 'msg1', 'msg2'] as const;
+          let idx = 0;
+          const proxParte = () => {
+            pisca(() => {
+              setModo(modos[idx]);
+              idx++;
+              if (idx < partes) {
+                setTimeout(proxParte, TICKER_DURACAO_MSG_MS);
+              }
+            });
+          };
+          proxParte();
         } else {
           // Desktop: mensagem completa numa tacada
           pisca(() => { setModo('msg0'); });
         }
       }, TICKER_DURACAO_OFERTAS_MS);
 
-            const totalMsg = isMobile
-        ? 700 + TICKER_DURACAO_MSG_MS + 700 + TICKER_DURACAO_MSG_MS + 700 + TICKER_DURACAO_MSG_MS
+      const totalMsg = isMobile
+        ? TICKER_MENSAGEM_PARTES.length * (700 + TICKER_DURACAO_MSG_MS)
         : 700 + TICKER_DURACAO_MSG_MS;
 
       const t2 = setTimeout(ciclo, TICKER_DURACAO_OFERTAS_MS + totalMsg);
