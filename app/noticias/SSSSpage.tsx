@@ -25,7 +25,7 @@ async function fetchAndParseFeed(url: string) {
     headers: {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/153.0.0.0 Safari/537.36',
       'Accept': 'application/rss+xml, application/xml, text/xml, */*;q=0.8',
-      'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+           'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
     },
     signal: AbortSignal.timeout(8000),
   });
@@ -265,7 +265,7 @@ async function getOfertasMix(): Promise<any[]> {
     }
 
     const [campData, brandData] = await Promise.all([
-      fetch(`${BASE_URL}/affiliate/campaigns?limit=20`, {
+           fetch(`${BASE_URL}/affiliate/campaigns?limit=20`, {
         headers: { 'x-api-key': API_KEY },
         next: { revalidate: 900 },
         signal: AbortSignal.timeout(8000),
@@ -334,47 +334,16 @@ async function getViagensNoticias(): Promise<any[]> {
   }
 }
 
-async function getBannerData(): Promise<{ slidesEditoriais: any[]; produtosBanner: any[] }> {
-  try {
-    const [slidesEditoriais, produtosPinados] = await Promise.all([
-      kv.get<any[]>('banner:slides').then(v => v || []),
-      kv.get<any[]>('produtos:pinados').then(v => v || []),
-    ]);
-    const produtosBanner = produtosPinados
-      .filter((p: any) => p.bannerDestaque === true)
-      .map((p: any) => ({
-        tipo: 'oferta' as const,
-        imagem: p.imagem || p.foto || p.thumbnail || '',
-        nome: p.nome || '',
-        loja: p.lojaNome || p.loja || '',
-        precoTipo: (p.precoTipo as 'valor' | 'parcela') || 'valor',
-        preco: p.preco,
-        valorParcela: p.valorParcela,
-        textoParcelamento: (p.textoParcelamento as 'confira' | 'a partir de') || 'a partir de',
-        link: p.link,
-        novaAba: true,
-      }));
-    return { slidesEditoriais, produtosBanner };
-  } catch {
-    return { slidesEditoriais: [], produtosBanner: [] };
-  }
-}
-
 export default async function NoticiasPage() {
-  const [posts, ads, ofertasMix, viagensNoticias, bannerData] = await Promise.all([
-    getNews(), getAds(), getOfertasMix(), getViagensNoticias(), getBannerData(),
+  const [posts, ads, ofertasMix, viagensNoticias] = await Promise.all([
+    getNews(), getAds(), getOfertasMix(), getViagensNoticias(),
   ]);
-
-  const bannerSlides = [...bannerData.slidesEditoriais, ...bannerData.produtosBanner]
-    .sort(() => Math.random() - 0.5);
-
   return (
     <NoticiasClient
       posts={posts}
       ads={ads}
       ofertasMix={ofertasMix}
       viagensNoticias={viagensNoticias}
-      bannerSlides={bannerSlides}
     />
   );
 }

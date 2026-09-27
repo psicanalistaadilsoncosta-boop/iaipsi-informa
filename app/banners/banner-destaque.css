@@ -1,0 +1,351 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   BannerDestaque — estilos base + variantes tipo/altura/overlay
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.banner-destaque {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+/* ── Alturas ───────────────────────────────────────────────────────────────── */
+.banner-altura-grande  { min-height: 420px; }
+.banner-altura-media   { min-height: 300px; }
+.banner-altura-compacta{ min-height: 180px; }
+
+@media (max-width: 640px) {
+  .banner-altura-grande  { min-height: 280px; }
+  .banner-altura-media   { min-height: 200px; }
+  .banner-altura-compacta{ min-height: 140px; }
+}
+
+/* ── Painel ────────────────────────────────────────────────────────────────── */
+.banner-painel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+  display: flex;
+  align-items: stretch;
+}
+
+/* ── Imagens (editorial) ───────────────────────────────────────────────────── */
+.banner-imagem {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.banner-imagem-mobile { display: none; }
+
+@media (max-width: 640px) {
+  .banner-imagem-desktop { display: none; }
+  .banner-imagem-mobile  { display: block; }
+}
+
+/* ── Overlay ───────────────────────────────────────────────────────────────── */
+.banner-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Overlay editorial — gradiente da esquerda para dar legibilidade ao texto */
+.banner-overlay-forte .banner-overlay  { background: linear-gradient(90deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.3) 60%, transparent 100%); }
+.banner-overlay-medio  .banner-overlay { background: linear-gradient(90deg, rgba(0,0,0,0.60) 0%, rgba(0,0,0,0.2) 60%, transparent 100%); }
+.banner-overlay-leve   .banner-overlay { background: linear-gradient(90deg, rgba(0,0,0,0.40) 0%, rgba(0,0,0,0.1) 60%, transparent 100%); }
+
+/* Overlay de oferta — fundo escuro no lado do texto */
+.banner-overlay-oferta {
+  background: linear-gradient(90deg, rgba(10,10,30,0.88) 0%, rgba(10,10,30,0.55) 50%, rgba(10,10,30,0.10) 100%);
+}
+
+/* ── Efeitos ───────────────────────────────────────────────────────────────── */
+.banner-brilho {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.banner-scanlines {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(0,0,0,0.03) 0px,
+    rgba(0,0,0,0.03) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* ── Moldura ───────────────────────────────────────────────────────────────── */
+.banner-moldura {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* ── Link invisível sobre tudo ─────────────────────────────────────────────── */
+.banner-link {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: block;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Conteúdo — slide editorial
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.banner-conteudo {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 40px 48px;
+  gap: 10px;
+  width: 55%;
+  min-height: inherit;
+  color: #fff;
+}
+
+@media (max-width: 640px) {
+  .banner-conteudo {
+    padding: 24px 24px;
+    width: 100%;
+  }
+}
+
+.banner-etiqueta {
+  display: inline-block;
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.30);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  backdrop-filter: blur(4px);
+  width: fit-content;
+}
+
+.banner-conteudo h2 {
+  margin: 0;
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+@media (max-width: 640px) {
+  .banner-conteudo h2 { font-size: 1.3rem; }
+}
+
+.banner-texto {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.85);
+  line-height: 1.5;
+  max-width: 380px;
+}
+
+.banner-botao {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.35);
+  color: #fff;
+  padding: 10px 22px;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  backdrop-filter: blur(6px);
+  width: fit-content;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.banner-botao:hover {
+  background: rgba(255,255,255,0.25);
+  border-color: rgba(255,255,255,0.55);
+}
+
+.banner-seta {
+  font-size: 1.1em;
+  transition: transform 0.2s;
+}
+
+.banner-botao:hover .banner-seta { transform: translateX(4px); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Slide de oferta
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.banner-painel-oferta {
+  background: linear-gradient(135deg, #0a0a1e 0%, #1a1a3e 50%, #0d1b2a 100%);
+}
+
+/* Imagem do produto — lado direito */
+.banner-oferta-imagem {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 55%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.banner-oferta-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+@media (max-width: 640px) {
+  .banner-oferta-imagem {
+    width: 100%;
+    opacity: 0.35;
+  }
+}
+
+/* Conteúdo da oferta — lado esquerdo */
+.banner-conteudo-oferta {
+  width: 50%;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 48px;
+}
+
+@media (max-width: 640px) {
+  .banner-conteudo-oferta {
+    width: 100%;
+    padding: 28px 24px;
+  }
+}
+
+.banner-etiqueta-oferta {
+  background: rgba(255, 200, 0, 0.18);
+  border-color: rgba(255, 200, 0, 0.40);
+  color: #ffd700;
+}
+
+.banner-loja {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.banner-oferta-nome {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+}
+
+@media (max-width: 640px) {
+  .banner-oferta-nome { font-size: 1.2rem; }
+}
+
+.banner-oferta-preco {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+.banner-preco-por {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.60);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.banner-preco-valor {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: #ffd700;
+  line-height: 1;
+  text-shadow: 0 2px 12px rgba(255,215,0,0.35);
+}
+
+.banner-preco-parcela {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #ffd700;
+  line-height: 1.3;
+}
+
+@media (max-width: 640px) {
+  .banner-preco-valor   { font-size: 1.7rem; }
+  .banner-preco-parcela { font-size: 1.1rem; }
+}
+
+.banner-botao-oferta {
+  background: rgba(255, 215, 0, 0.15);
+  border-color: rgba(255, 215, 0, 0.40);
+  color: #ffd700;
+}
+
+.banner-botao-oferta:hover {
+  background: rgba(255, 215, 0, 0.25);
+  border-color: rgba(255, 215, 0, 0.65);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Tipos de banner (outdoor / destaque / compacto)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.banner-tipo-outdoor {
+  border-radius: 16px;
+}
+
+.banner-tipo-destaque {
+  border-radius: 12px;
+}
+
+.banner-tipo-compacto {
+  border-radius: 8px;
+}
+
+.banner-tipo-compacto .banner-conteudo h2 { font-size: 1.2rem; }
+.banner-tipo-compacto .banner-texto       { display: none; }
+
+
+/* ── Aviso legal ───────────────────────────────────────────────────────────── */
+.banner-aviso {
+  position: absolute;
+  bottom: 8px;
+  left: 14px;
+  z-index: 25;
+  font-size: 0.62rem;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: 0.3px;
+  pointer-events: none;
+  user-select: none;
+}

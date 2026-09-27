@@ -5,7 +5,6 @@
 import { useState, useEffect, Fragment } from 'react';
 import { FeedItem, AdItem } from '../page';
 import FooterSite from '../FooterSite';
-import BannerDestaque from '../banners/BannerDestaque';
 
 // ─── CARD DE VIAGEM NO GRID ───────────────────────────────────────────────
 function ViagemNoticiaCard({ viagem }: { viagem: any }) {
@@ -249,13 +248,11 @@ export default function NoticiasClient({
   ads,
   ofertasMix,
   viagensNoticias,
-  bannerSlides,
 }: {
   posts: FeedItem[];
   ads: AdItem[];
   ofertasMix: any[];
   viagensNoticias: any[];
-  bannerSlides?: any[];
 }) {
   const safePosts = posts ?? [];
   const safeAds = ads ?? [];
@@ -299,18 +296,6 @@ export default function NoticiasClient({
         </div>
       </header>
 
-      {/* Banner outdoor carrossel misto */}
-      {bannerSlides && bannerSlides.length > 0 && (
-        <BannerDestaque
-          tipo="outdoor"
-          posicao="topo"
-          altura="grande"
-          overlay="medio"
-          intervalMs={6000}
-          slides={bannerSlides}
-        />
-      )}
-
       {/* Filtro de categorias */}
       <nav style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '24px' }}>
         {categories.map((cat) => {
@@ -333,7 +318,7 @@ export default function NoticiasClient({
             <Fragment key={`noticia-${index}`}>
               {index > 0 && index % 6 === 0 && (() => {
                 const ofertaIndex = Math.floor(index / 6) - 1;
-                const oferta = safeOfertasMix[ofertaIndex % Math.max(safeOfertasMix.length, 1)];
+                const oferta = safeOfertasMix[ofertaIndex] ?? null;
                 return oferta ? <OfertaCard item={oferta} /> : null;
               })()}
               {index > 0 && index % 9 === 0 && (() => {

@@ -372,7 +372,7 @@ async function getOfertasMix(): Promise<any[]> {
       } catch {}
     }
 
-      const [campData, brandData] = await Promise.all([
+    const [campData, brandData] = await Promise.all([
       fetch(`${BASE_URL}/affiliate/campaigns?limit=20`, {
         headers: { 'x-api-key': API_KEY },
         next: { revalidate: 900 },
@@ -429,9 +429,42 @@ async function getOfertasMix(): Promise<any[]> {
   }
 }
 
+async function getBannerData(): Promise<{ slidesEditoriais: any[]; produtosBanner: any[] }> {
+  try {
+    const [slidesEditoriais, produtosPinados] = await Promise.all([
+      kv.get<any[]>('banner:slides').then(v => v || []),
+      kv.get<any[]>('produtos:pinados').then(v => v || []),
+    ]);
+
+    const produtosBanner = produtosPinados
+      .filter((p: any) => p.bannerDestaque === true)
+      .map((p: any) => ({
+        tipo: 'oferta' as const,
+        imagem: p.imagem || p.foto || p.thumbnail || '',
+        nome: p.nome || '',
+        loja: p.lojaNome || p.loja || '',
+        precoTipo: (p.precoTipo as 'valor' | 'parcela') || 'valor',
+        preco: p.preco,
+        valorParcela: p.valorParcela,
+        textoParcelamento: (p.textoParcelamento as 'confira' | 'a partir de') || 'a partir de',
+        link: p.link,
+        novaAba: true,
+      }));
+
+    return { slidesEditoriais, produtosBanner };
+  } catch {
+    return { slidesEditoriais: [], produtosBanner: [] };
+  }
+}
+
 export default async function Home() {
-      const [posts, ads, editorial, sabores, ofertasMix, artigosProduto, viagemDestaque, viagensNoticias, comPalavraDestaque] = await Promise.all([
-    getNews(), getAds(), getEditorial(), getSabores(), getOfertasMix(), getArtigosProduto(), getViagemDestaque(), getViagensNoticias(), getComPalavraDestaque()
+  const [posts, ads, editorial, sabores, ofertasMix, artigosProduto, viagemDestaque, viagensNoticias, comPalavraDestaque, bannerData] = await Promise.all([
+    getNews(), getAds(), getEditorial(), getSabores(), getOfertasMix(), getArtigosProduto(), getViagemDestaque(), getViagensNoticias(), getComPalavraDestaque(), getBannerData()
   ]);
-  return <NewsClient posts={posts} ads={ads} editorial={editorial} sabores={sabores} ofertasMix={ofertasMix} artigosProduto={artigosProduto} viagemDestaque={viagemDestaque} viagensNoticias={viagensNoticias} comPalavraDestaque={comPalavraDestaque} />
+
+  // Mescla slides editoriais + produtos de oferta e embaralha
+  const bannerSlides = [...bannerData.slidesEditoriais, ...bannerData.produtosBanner]
+    .sort(() => Math.random() - 0.5);
+
+  return <NewsClient posts={posts} ads={ads} editorial={editorial} sabores={sabores} ofertasMix={ofertasMix} artigosProduto={artigosProduto} viagemDestaque={viagemDestaque} viagensNoticias={viagensNoticias} comPalavraDestaque={comPalavraDestaque} bannerSlides={bannerSlides} />
 }

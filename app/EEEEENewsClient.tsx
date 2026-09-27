@@ -6,7 +6,7 @@ import FooterSite from './FooterSite';
 import OfertaDestaque from './OfertaDestaque';
 import ArtigosProdutoSection from './ArtigosProdutoSection';
 import ViagemDestaque from './ViagemDestaque';
-import BannerDestaque from './banners/BannerDestaque';
+import BannerDestaque from "./banners/BannerDestaque";
 
 // ─── GRID DAS 5 PÁGINAS DE PRODUTOS ──────────────────────────────────────────
 const PAGINAS_PRODUTOS = [
@@ -793,7 +793,7 @@ function NewsCard({ item }: { item: FeedItem }) {
 }
 
 // ─── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────
-export default function NewsClient({ posts, ads, editorial, sabores, ofertasMix, artigosProduto, viagemDestaque, viagensNoticias, comPalavraDestaque, bannerSlides }: { posts: FeedItem[]; ads: AdItem[]; editorial: EditorialItem[]; sabores: SaboresItem[]; ofertasMix: any[]; artigosProduto?: any[]; viagemDestaque?: any; viagensNoticias?: any[]; comPalavraDestaque?: any; bannerSlides?: any[] }) {
+export default function NewsClient({ posts, ads, editorial, sabores, ofertasMix, artigosProduto, viagemDestaque, viagensNoticias, comPalavraDestaque }: { posts: FeedItem[]; ads: AdItem[]; editorial: EditorialItem[]; sabores: SaboresItem[]; ofertasMix: any[]; artigosProduto?: any[]; viagemDestaque?: any; viagensNoticias?: any[]; comPalavraDestaque?: any }) {
   const safePosts = posts ?? [];
   const safeAds = ads ?? [];
   const safeEditorial = editorial ?? [];
@@ -850,16 +850,35 @@ export default function NewsClient({ posts, ads, editorial, sabores, ofertasMix,
         </div>
       )}
 
-      {/* Banner outdoor carrossel misto (editorial + ofertas) */}
-      {bannerSlides && bannerSlides.length > 0 && (
-        <BannerDestaque
-          tipo="outdoor"
-          posicao="topo"
-          altura="grande"
-          overlay="medio"
-          intervalMs={6000}
-          slides={bannerSlides}
-        />
+<BannerDestaque
+  tipo="outdoor"
+  posicao="topo"
+  altura="grande"
+  overlay="medio"
+  intervalMs={6000}
+  slides={[
+    {
+      imagem: "/banners/images/banner1.jpg",
+      etiqueta: "DESTAQUE",
+      titulo: "Primeiro título",
+      texto: "Primeira mensagem.",
+      botao: "Saiba mais",
+      link: "/",
+    },
+    {
+      imagem: "/banners/images/banner2.jpg",
+      etiqueta: "NOVIDADE",
+      titulo: "Segundo título",
+      texto: "Segunda mensagem.",
+      botao: "Ver mais",
+      link: "/ofertas",
+    },
+  ]}
+/>
+
+      {/* Ticker de ofertas */}
+      {ofertasMix && ofertasMix.length > 0 && (
+        <TickerOfertas itens={ofertasMix} />
       )}
 
       {/* Grid das 5 páginas de produtos */}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 type Categoria = 'ambiente' | 'vistaSe' | 'beleza' | 'momento' | 'mercado' | null;
 
@@ -11,7 +11,6 @@ interface Produto {
   imagem?: string;
   foto?: string;
   thumbnail?: string;
-  preco?: number;
   ambiente?: string;
   tipoAmbiente?: string;
   momento?: string;
@@ -24,10 +23,6 @@ interface Produto {
   tipoMercado?: string;
   aCatalogar?: boolean;
   lojaNome?: string;
-  // Banner
-  bannerDestaque?: boolean;
-  precoTipo?: 'valor' | 'parcela';
-  textoParcelamento?: 'confira' | 'a partir de';
 }
 
 const BADGE_COLORS: Record<string, string> = {
@@ -50,9 +45,8 @@ const CATEGORIA_LABELS: Record<string, string> = {
 const AMBIENTES = ['Sala', 'Quarto', 'Escritório', 'Cozinha', 'Banheiro', 'Área externa'];
 const TIPOS_AMBIENTE = ['Iluminação', 'Climatização', 'Móveis', 'Decoração', 'Organização', 'Eletrônicos'];
 
-// Momento: primeiro nível = clima, segundo nível = tipo
 const MOMENTOS = ['Café da manhã', 'Vinho', 'Churrasco', 'Lareira', 'Domingo relaxado', 'Festa em Casa'];
-const TIPOS_MOMENTO = ['Eletro', 'Móveis', 'Acessórios', 'Alimentos', 'Bebidas', 'Vinho'];
+const TIPOS_MOMENTO = ['Eletro', 'Móveis', 'Acessórios', 'Alimentos', 'Bebidas', 'Vinhos'];
 
 const TIPOS_MERCADO = ['Bebidas', 'Alimentos', 'Café', 'Snacks', 'Hortifruti', 'Limpeza', 'Pet'];
 
@@ -87,435 +81,6 @@ function getImageSrc(p: Produto): string {
   return p.imagem || p.foto || p.thumbnail || '';
 }
 
-// ─── COMPONENTE BANNER ADMIN ───────────────────────────────────────────────────
-interface SlideEditorial {
-  id: string;
-  etiqueta?: string;
-  titulo: string;
-  texto?: string;
-  botao?: string;
-  link?: string;
-  imagem: string;
-  imagemMobile?: string;
-  novaAba?: boolean;
-}
-
-function BannerAdmin({ produtos, onProdutoUpdate }: {
-  produtos: Produto[];
-  onProdutoUpdate: (id: string, campos: Partial<Produto & { bannerDestaque: boolean; precoTipo: string; textoParcelamento: string }>) => void;
-}) {
-  const [slides, setSlides] = useState<SlideEditorial[]>([]);
-  const [saving, setSaving] = useState(false);
-  const [savingProdId, setSavingProdId] = useState<string | null>(null);
-  const [msg, setMsg] = useState('');
-  const [editandoIdx, setEditandoIdx] = useState<number | null>(null);
-  const [novoSlide, setNovoSlide] = useState<Partial<SlideEditorial>>({});
-  const [busca, setBusca] = useState('');
-
-  // Carrega slides editoriais do KV
-  useEffect(() => {
-    fetch('/api/admin/banner', { credentials: 'include' })
-      .then(r => r.json())
-      .then(d => { if (Array.isArray(d)) setSlides(d); })
-      .catch(() => {});
-  }, []);
-
-  function flashMsg(t: string) {
-    setMsg(t);
-    setTimeout(() => setMsg(''), 3000);
-  }
-
-  async function salvarSlides(lista: SlideEditorial[]) {
-    setSaving(true);
-    try {
-      await fetch('/api/admin/banner', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(lista),
-      });
-      setSlides(lista);
-      flashMsg('✅ Slides salvos!');
-    } catch {
-      flashMsg('❌ Erro ao salvar');
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  function adicionarSlide() {
-    if (!novoSlide.titulo || !novoSlide.imagem) {
-      flashMsg('Preencha título e imagem');
-      return;
-    }
-    const novo: SlideEditorial = {
-      id: Date.now().toString(),
-      titulo: novoSlide.titulo!,
-      imagem: novoSlide.imagem!,
-      imagemMobile: novoSlide.imagemMobile,
-      etiqueta: novoSlide.etiqueta || 'DESTAQUE',
-      texto: novoSlide.texto,
-      botao: novoSlide.botao,
-      link: novoSlide.link,
-      novaAba: novoSlide.novaAba || false,
-    };
-    const lista = [...slides, novo];
-    salvarSlides(lista);
-    setNovoSlide({});
-  }
-
-  function removerSlide(id: string) {
-    const lista = slides.filter(s => s.id !== id);
-    salvarSlides(lista);
-  }
-
-  function salvarEdicaoSlide(idx: number, dados: Partial<SlideEditorial>) {
-    const lista = slides.map((s, i) => i === idx ? { ...s, ...dados } : s);
-    salvarSlides(lista);
-    setEditandoIdx(null);
-  }
-
-  async function toggleBannerProduto(p: Produto & any) {
-    const novoValor = !p.bannerDestaque;
-    setSavingProdId(p.id);
-    try {
-      await fetch('/api/admin/produtos', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ id: p.id, bannerDestaque: novoValor }),
-      });
-      onProdutoUpdate(p.id, { bannerDestaque: novoValor } as any);
-      flashMsg(novoValor ? `✅ ${p.nome} adicionado ao banner` : `Removido do banner`);
-    } catch {
-      flashMsg('❌ Erro');
-    } finally {
-      setSavingProdId(null);
-    }
-  }
-
-   async function salvarPrecoTipo(p: Produto & any, precoTipo: string, textoParcelamento: string, valorParcela?: number) {
-    setSavingProdId(p.id);
-    try {
-      await fetch('/api/admin/produtos', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ id: p.id, precoTipo, textoParcelamento, valorParcela }),
-      });
-      onProdutoUpdate(p.id, { precoTipo, textoParcelamento, valorParcela } as any);
-      flashMsg('✅ Opção de preço salva');
-    } catch {
-      flashMsg('❌ Erro');
-    } finally {
-      setSavingProdId(null);
-    }
-  }
-
-  const produtosParaBanner = produtos.filter(p =>
-    busca ? p.nome?.toLowerCase().includes(busca.toLowerCase()) : true
-  );
-  const produtosMarcados = produtos.filter((p: any) => p.bannerDestaque);
-
-  const inputStyle: React.CSSProperties = {
-    padding: '7px 10px',
-    border: '1px solid #d1d5db',
-    borderRadius: 6,
-    fontSize: 13,
-    width: '100%',
-    boxSizing: 'border-box',
-  };
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-
-      {msg && (
-        <div style={{ padding: '10px 16px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, fontSize: 13, color: '#166534' }}>
-          {msg}
-        </div>
-      )}
-
-      {/* ── Slides editoriais ────────────────────────────────────────────── */}
-      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e5e7eb', padding: 24 }}>
-        <h2 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700 }}>📝 Slides Editoriais</h2>
-        <p style={{ margin: '0 0 16px', fontSize: 13, color: '#6b7280' }}>
-          Imagens e mensagens que você gerencia. Serão misturadas com as ofertas no banner.
-        </p>
-
-        {/* Lista de slides */}
-        {slides.length === 0 && (
-          <p style={{ color: '#9ca3af', fontSize: 13, marginBottom: 16 }}>Nenhum slide editorial cadastrado.</p>
-        )}
-        {slides.map((s, idx) => (
-          <div key={s.id} style={{ border: '1px solid #e5e7eb', borderRadius: 8, marginBottom: 12, overflow: 'hidden' }}>
-            {editandoIdx === idx ? (
-              <EditarSlide slide={s} onSalvar={d => salvarEdicaoSlide(idx, d)} onCancelar={() => setEditandoIdx(null)} />
-            ) : (
-              <div style={{ display: 'flex', gap: 14, padding: '12px 16px', alignItems: 'center' }}>
-                {s.imagem && (
-                  <img src={s.imagem} alt={s.titulo} style={{ width: 80, height: 50, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} />
-                )}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  {s.etiqueta && <span style={{ fontSize: 10, fontWeight: 700, color: '#7c3aed', letterSpacing: 1, textTransform: 'uppercase' }}>{s.etiqueta}</span>}
-                  <div style={{ fontWeight: 700, fontSize: 14, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.titulo}</div>
-                  {s.texto && <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.texto}</div>}
-                  {s.link && <div style={{ fontSize: 11, color: '#3b82f6', marginTop: 2, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{s.link}</div>}
-                </div>
-                <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                  <button onClick={() => setEditandoIdx(idx)} style={{ padding: '5px 12px', fontSize: 12, border: '1px solid #d1d5db', borderRadius: 6, cursor: 'pointer', background: '#f9fafb' }}>Editar</button>
-                  <button onClick={() => removerSlide(s.id)} style={{ padding: '5px 12px', fontSize: 12, border: '1px solid #fca5a5', borderRadius: 6, cursor: 'pointer', background: '#fff5f5', color: '#dc2626' }}>Remover</button>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-
-        {/* Novo slide */}
-        <details style={{ marginTop: 12 }}>
-          <summary style={{ cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#7c3aed', userSelect: 'none', padding: '8px 0' }}>
-            + Adicionar novo slide editorial
-          </summary>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 12 }}>
-            <div>
-              <label style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>Título *</label>
-              <input style={inputStyle} value={novoSlide.titulo || ''} onChange={e => setNovoSlide(p => ({ ...p, titulo: e.target.value }))} placeholder="Título do slide" />
-            </div>
-            <div>
-              <label style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>Etiqueta</label>
-              <input style={inputStyle} value={novoSlide.etiqueta || ''} onChange={e => setNovoSlide(p => ({ ...p, etiqueta: e.target.value }))} placeholder="DESTAQUE" />
-            </div>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>Imagem (URL) *</label>
-              <input style={inputStyle} value={novoSlide.imagem || ''} onChange={e => setNovoSlide(p => ({ ...p, imagem: e.target.value }))} placeholder="https://... ou /banners/images/..." />
-            </div>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>Imagem Mobile (URL)</label>
-              <input style={inputStyle} value={novoSlide.imagemMobile || ''} onChange={e => setNovoSlide(p => ({ ...p, imagemMobile: e.target.value }))} placeholder="Opcional — usa a imagem desktop se vazio" />
-            </div>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>Texto (subtítulo)</label>
-              <input style={inputStyle} value={novoSlide.texto || ''} onChange={e => setNovoSlide(p => ({ ...p, texto: e.target.value }))} placeholder="Subtítulo ou descrição" />
-            </div>
-            <div>
-              <label style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>Texto do botão</label>
-              <input style={inputStyle} value={novoSlide.botao || ''} onChange={e => setNovoSlide(p => ({ ...p, botao: e.target.value }))} placeholder="Saiba mais" />
-            </div>
-            <div>
-              <label style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>Link</label>
-              <input style={inputStyle} value={novoSlide.link || ''} onChange={e => setNovoSlide(p => ({ ...p, link: e.target.value }))} placeholder="https://..." />
-            </div>
-            <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input type="checkbox" id="nova-aba" checked={!!novoSlide.novaAba} onChange={e => setNovoSlide(p => ({ ...p, novaAba: e.target.checked }))} />
-              <label htmlFor="nova-aba" style={{ fontSize: 13 }}>Abrir em nova aba</label>
-            </div>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <button
-                onClick={adicionarSlide}
-                disabled={saving}
-                style={{ padding: '8px 20px', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
-              >
-                {saving ? 'Salvando...' : 'Adicionar slide'}
-              </button>
-            </div>
-          </div>
-        </details>
-      </div>
-
-      {/* ── Produtos no banner ───────────────────────────────────────────── */}
-      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e5e7eb', padding: 24 }}>
-        <h2 style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 700 }}>🏷️ Produtos no Banner</h2>
-        <p style={{ margin: '0 0 16px', fontSize: 13, color: '#6b7280' }}>
-          Selecione os produtos que aparecem como slides de oferta. Configure se exibe o preço ou as parcelas.
-        </p>
-
-        {/* Atualmente marcados */}
-        {produtosMarcados.length > 0 && (
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              No banner agora ({produtosMarcados.length})
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {produtosMarcados.map((p: any) => (
-                <ProdutoBannerCard
-                  key={p.id}
-                  produto={p}
-                  saving={savingProdId === p.id}
-                  onToggle={() => toggleBannerProduto(p)}
-                  onSalvarPreco={(precoTipo, textoParcelamento, valorParcela) => salvarPrecoTipo(p, precoTipo, textoParcelamento, valorParcela)}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Busca e adicionar */}
-        <div style={{ marginBottom: 12 }}>
-          <input
-            style={{ ...inputStyle, maxWidth: 320 }}
-            value={busca}
-            onChange={e => setBusca(e.target.value)}
-            placeholder="Buscar produto para adicionar..."
-          />
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 400, overflowY: 'auto' }}>
-          {produtosParaBanner
-            .filter((p: any) => !p.bannerDestaque)
-            .slice(0, 40)
-            .map((p: any) => (
-              <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', border: '1px solid #f3f4f6', borderRadius: 8 }}>
-                {getImageSrc(p) && (
-                  <img src={getImageSrc(p)} alt={p.nome} style={{ width: 48, height: 36, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }} />
-                )}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.nome}</div>
-                  {p.preco && <div style={{ fontSize: 12, color: '#059669' }}>R$ {Number(p.preco).toFixed(2).replace('.', ',')}</div>}
-                </div>
-                <button
-                  onClick={() => toggleBannerProduto(p)}
-                  disabled={savingProdId === p.id}
-                  style={{ padding: '5px 12px', fontSize: 12, border: '1px solid #7c3aed', borderRadius: 6, cursor: 'pointer', background: '#f5f3ff', color: '#7c3aed', fontWeight: 600, flexShrink: 0 }}
-                >
-                  {savingProdId === p.id ? '...' : '+ Banner'}
-                </button>
-              </div>
-            ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Card de produto marcado no banner ─────────────────────────────────────────
-function ProdutoBannerCard({ produto, saving, onToggle, onSalvarPreco }: {
-  produto: any;
-  saving: boolean;
-  onToggle: () => void;
-  onSalvarPreco: (precoTipo: string, textoParcelamento: string, valorParcela?: number) => void;
-}) {
-  const [precoTipo, setPrecoTipo] = useState<string>(produto.precoTipo || 'valor');
-  const [textoParcelamento, setTextoParcelamento] = useState<string>(produto.textoParcelamento || 'a partir de');
-  const [valorParcela, setValorParcela] = useState<string>(produto.valorParcela != null ? String(produto.valorParcela) : '');
-
-  return (
-    <div style={{ border: '1px solid #ddd6fe', borderRadius: 8, background: '#f5f3ff', padding: '10px 14px', display: 'flex', gap: 12, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-      {getImageSrc(produto) && (
-        <img src={getImageSrc(produto)} alt={produto.nome} style={{ width: 60, height: 44, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} />
-      )}
-      <div style={{ flex: 1, minWidth: 200 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>{produto.nome}</div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          <label style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>Exibir:</label>
-          <select
-            value={precoTipo}
-            onChange={e => setPrecoTipo(e.target.value)}
-            style={{ fontSize: 12, padding: '4px 8px', borderRadius: 6, border: '1px solid #d1d5db' }}
-          >
-            <option value="valor">Preço (ex: R$ 129,90)</option>
-            <option value="parcela">Parcelas</option>
-          </select>
-                    {precoTipo === 'parcela' && (
-            <>
-              <select
-                value={textoParcelamento}
-                onChange={e => setTextoParcelamento(e.target.value)}
-                style={{ fontSize: 12, padding: '4px 8px', borderRadius: 6, border: '1px solid #d1d5db' }}
-              >
-                <option value="a partir de">Parcelas a partir de R$ X</option>
-                <option value="confira">Confira (sem valor)</option>
-              </select>
-              {textoParcelamento === 'a partir de' && (
-                <input
-                  type="number"
-                  placeholder="Valor da parcela"
-                  value={valorParcela}
-                  onChange={e => setValorParcela(e.target.value)}
-                  style={{ fontSize: 12, padding: '4px 8px', borderRadius: 6, border: '1px solid #d1d5db', width: 120 }}
-                />
-              )}
-            </>
-          )}
-          <button
-            onClick={() => onSalvarPreco(precoTipo, textoParcelamento, valorParcela ? parseFloat(valorParcela) : undefined)}
-            disabled={saving}
-            style={{ fontSize: 11, padding: '4px 10px', borderRadius: 6, border: '1px solid #7c3aed', background: '#ede9fe', color: '#7c3aed', cursor: 'pointer', fontWeight: 600 }}
-          >
-            {saving ? '...' : 'Salvar'}
-          </button>
-        </div>
-      </div>
-      <button
-        onClick={onToggle}
-        disabled={saving}
-        style={{ padding: '5px 12px', fontSize: 12, border: '1px solid #fca5a5', borderRadius: 6, cursor: 'pointer', background: '#fff5f5', color: '#dc2626', fontWeight: 600, flexShrink: 0 }}
-      >
-        {saving ? '...' : 'Remover'}
-      </button>
-    </div>
-  );
-}
-
-// ── Editar slide editorial ─────────────────────────────────────────────────────
-function EditarSlide({ slide, onSalvar, onCancelar }: {
-  slide: SlideEditorial;
-  onSalvar: (dados: Partial<SlideEditorial>) => void;
-  onCancelar: () => void;
-}) {
-  const [form, setForm] = useState<Partial<SlideEditorial>>({ ...slide });
-
-  const inputStyle: React.CSSProperties = {
-    padding: '7px 10px',
-    border: '1px solid #d1d5db',
-    borderRadius: 6,
-    fontSize: 13,
-    width: '100%',
-    boxSizing: 'border-box',
-  };
-
-  return (
-    <div style={{ padding: '16px 20px', background: '#fafafa' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
-        <div>
-          <label style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>Título *</label>
-          <input style={inputStyle} value={form.titulo || ''} onChange={e => setForm(p => ({ ...p, titulo: e.target.value }))} />
-        </div>
-        <div>
-          <label style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>Etiqueta</label>
-          <input style={inputStyle} value={form.etiqueta || ''} onChange={e => setForm(p => ({ ...p, etiqueta: e.target.value }))} />
-        </div>
-        <div style={{ gridColumn: '1 / -1' }}>
-          <label style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>Imagem (URL) *</label>
-          <input style={inputStyle} value={form.imagem || ''} onChange={e => setForm(p => ({ ...p, imagem: e.target.value }))} />
-        </div>
-        <div style={{ gridColumn: '1 / -1' }}>
-          <label style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>Imagem Mobile (URL)</label>
-          <input style={inputStyle} value={form.imagemMobile || ''} onChange={e => setForm(p => ({ ...p, imagemMobile: e.target.value }))} />
-        </div>
-        <div style={{ gridColumn: '1 / -1' }}>
-          <label style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>Texto (subtítulo)</label>
-          <input style={inputStyle} value={form.texto || ''} onChange={e => setForm(p => ({ ...p, texto: e.target.value }))} />
-        </div>
-        <div>
-          <label style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>Texto do botão</label>
-          <input style={inputStyle} value={form.botao || ''} onChange={e => setForm(p => ({ ...p, botao: e.target.value }))} />
-        </div>
-        <div>
-          <label style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>Link</label>
-          <input style={inputStyle} value={form.link || ''} onChange={e => setForm(p => ({ ...p, link: e.target.value }))} />
-        </div>
-        <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <input type="checkbox" id={`nova-aba-${slide.id}`} checked={!!form.novaAba} onChange={e => setForm(p => ({ ...p, novaAba: e.target.checked }))} />
-          <label htmlFor={`nova-aba-${slide.id}`} style={{ fontSize: 13 }}>Abrir em nova aba</label>
-        </div>
-      </div>
-      <div style={{ display: 'flex', gap: 8 }}>
-        <button onClick={() => onSalvar(form)} style={{ padding: '7px 18px', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Salvar</button>
-        <button onClick={onCancelar} style={{ padding: '7px 18px', background: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
-      </div>
-    </div>
-  );
-}
-
 export default function AdminProdutosPage() {
   const [authed, setAuthed] = useState(false);
   const [loginError, setLoginError] = useState('');
@@ -529,26 +94,21 @@ export default function AdminProdutosPage() {
 
   const [savingId, setSavingId] = useState<string | null>(null);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [subCategoria, setSubCategoria] = useState<Categoria>(null);
-  const [subAmbienteNome, setSubAmbienteNome] = useState<string | null>(null);
-  const [subMomentoNome, setSubMomentoNome] = useState<string | null>(null);
+  const [subCategoria, setSubCategoria] = useState<Categoria>(null); // qual cat está expandida no submenu
+  const [subAmbienteNome, setSubAmbienteNome] = useState<string | null>(null); // cômodo escolhido → mostra tipos
+  const [subMomentoNome, setSubMomentoNome] = useState<string | null>(null);   // clima escolhido → mostra tipoMomento
+  const [loteMomentoNome, setLoteMomentoNome] = useState<string | null>(null);
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
   const [movendoLote, setMovendoLote] = useState(false);
   const [loteSubCategoria, setLoteSubCategoria] = useState<Categoria>(null);
   const [loteAmbienteNome, setLoteAmbienteNome] = useState<string | null>(null);
-  const [loteMomentoNome, setLoteMomentoNome] = useState<string | null>(null);
-
-  // Aba "A catalogar"
   const [abaCatalogar, setAbaCatalogar] = useState(false);
-  // Aba "Banner"
-  const [abaBanner, setAbaBanner] = useState(false);
   const [filtroCatalogarLoja, setFiltroCatalogarLoja] = useState('');
   const [selCatalogar, setSelCatalogar] = useState<Set<string>>(new Set());
   const [movendoCatalogar, setMovendoCatalogar] = useState(false);
   const [subCatalogar, setSubCatalogar] = useState<Categoria>(null);
   const [subCatalogarAmbNome, setSubCatalogarAmbNome] = useState<string | null>(null);
   const [subCatalogarMomNome, setSubCatalogarMomNome] = useState<string | null>(null);
-
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Fecha dropdown ao clicar fora
@@ -589,7 +149,7 @@ export default function AdminProdutosPage() {
     if (authed) fetchProdutos();
   }, [authed, fetchProdutos]);
 
-  // Filtragem
+  // Filtragem (declarada cedo para uso nas funções abaixo)
   const produtosFiltradosBase = produtos.filter(p => {
     const matchBusca =
       !busca ||
@@ -605,6 +165,7 @@ export default function AdminProdutosPage() {
   const paginaAtualBase = Math.min(pagina, totalPaginasBase);
   const produtosPagina = produtosFiltradosBase.slice((paginaAtualBase - 1) * PAGE_SIZE, paginaAtualBase * PAGE_SIZE);
 
+  // Reset page on filter/search change
   useEffect(() => {
     setPagina(1);
     setSelecionados(new Set());
@@ -629,22 +190,19 @@ export default function AdminProdutosPage() {
     });
   }
 
-  // moverLote: ambiente(cômodo→tipo), momento(clima→tipo), outros(tipo direto)
   async function moverLote(novaCategoria: Categoria, tipo?: string, nomeAmb?: string) {
     if (!novaCategoria || selecionados.size === 0) return;
-
+    // Ambiente: passo 1 = escolher cômodo, passo 2 = escolher tipo
     if (novaCategoria === 'ambiente') {
       if (!nomeAmb) { setLoteSubCategoria('ambiente'); setLoteAmbienteNome(null); return; }
       if (!tipo) { setLoteAmbienteNome(nomeAmb); return; }
-    } else if (novaCategoria === 'momento') {
-      // nomeAmb = clima, tipo = tipoMomento
-      if (!nomeAmb) { setLoteSubCategoria('momento'); setLoteMomentoNome(null); return; }
-      if (!tipo) { setLoteMomentoNome(nomeAmb); return; }
+        } else if (novaCategoria === 'momento') {
+      if (!tipo) { setLoteSubCategoria('momento'); setLoteMomentoNome(null); return; }
+      if (!nomeAmb) { setLoteMomentoNome(tipo); return; }
     } else if (TIPOS_POR_CATEGORIA[novaCategoria].length > 0 && !tipo) {
       setLoteSubCategoria(novaCategoria);
       return;
     }
-
     setMovendoLote(true);
     setLoteSubCategoria(null);
     setLoteAmbienteNome(null);
@@ -653,19 +211,11 @@ export default function AdminProdutosPage() {
     setProdutos(prev => prev.map(p => !selecionados.has(p.id) ? p : aplicarCategoria(p, novaCategoria, tipo, nomeAmb)));
 
     try {
+      // Um único PATCH com todos os ids — evita race condition no KV
       await fetch('/api/admin/produtos', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ids: [...selecionados],
-          categoria: novaCategoria,
-          nomeAmbiente: nomeAmb,
-          tipoAmbiente: tipo,
-          tipoMomento: tipo,
-          tipoVistaSe: tipo,
-          tipoBeleza: tipo,
-          tipoMercado: tipo,
-        }),
+       body: JSON.stringify({ ids: [...selecionados], categoria: novaCategoria, nomeAmbiente: nomeAmb, tipoAmbiente: tipo, tipoMomento: tipo, tipoVistaSe: tipo, tipoBeleza: tipo, tipoMercado: tipo }),
       });
       setSelecionados(new Set());
     } catch {
@@ -682,43 +232,32 @@ export default function AdminProdutosPage() {
     delete novo.vistaSe; delete novo.tipoVistaSe;
     delete novo.beleza; delete novo.tipoBeleza;
     delete novo.mercado; delete novo.tipoMercado;
-
     if (novaCategoria === 'ambiente') {
       novo.ambiente = nomeAmb || 'Sala';
       novo.tipoAmbiente = tipo || 'Organização';
-    } else if (novaCategoria === 'momento') {
-      // nomeAmb = clima, tipo = tipoMomento
-      novo.momento = nomeAmb || 'Café da manhã';
-      novo.tipoMomento = tipo || 'Acessórios';
-    } else if (novaCategoria === 'vistaSe') {
-      novo.vistaSe = true;
-      novo.tipoVistaSe = tipo || 'Roupas';
-    } else if (novaCategoria === 'beleza') {
-      novo.beleza = true;
-      novo.tipoBeleza = tipo || 'Cuidados';
-    } else if (novaCategoria === 'mercado') {
-      novo.mercado = true;
-      novo.tipoMercado = tipo || 'Alimentos';
     }
+    else if (novaCategoria === 'momento') { novo.momento = tipo || 'Café da manhã'; novo.tipoMomento = nomeAmb || 'Acessórios'; }
+    else if (novaCategoria === 'vistaSe') { novo.vistaSe = true; novo.tipoVistaSe = tipo || 'Roupas'; }
+    else if (novaCategoria === 'beleza') { novo.beleza = true; novo.tipoBeleza = tipo || 'Cuidados'; }
+    else if (novaCategoria === 'mercado') { novo.mercado = true; novo.tipoMercado = tipo || 'Alimentos'; }
     return novo;
   }
 
-  // moverCategoria: mesmo padrão que moverLote mas individual
   async function moverCategoria(produto: Produto, novaCategoria: Categoria, tipo?: string, nomeAmb?: string) {
     if (!novaCategoria) return;
-
+    // Ambiente: passo 1 = escolher cômodo, passo 2 = escolher tipo
     if (novaCategoria === 'ambiente') {
       if (!nomeAmb) { setSubCategoria('ambiente'); setSubAmbienteNome(null); return; }
       if (!tipo) { setSubAmbienteNome(nomeAmb); return; }
-    } else if (novaCategoria === 'momento') {
-      // nomeAmb = clima, tipo = tipoMomento
-      if (!nomeAmb) { setSubCategoria('momento'); setSubMomentoNome(null); return; }
-      if (!tipo) { setSubMomentoNome(nomeAmb); return; }
+       } else if (novaCategoria === 'momento') {
+      if (!tipo) { setSubCategoria('momento'); setSubMomentoNome(null); return; }
+      // tipo = clima (Vinho), ainda precisa do tipoMomento
+      // nomeAmb reaproveitado como tipoMomento aqui
+      if (!nomeAmb) { setSubMomentoNome(tipo); return; }
     } else if (TIPOS_POR_CATEGORIA[novaCategoria].length > 0 && !tipo) {
       setSubCategoria(novaCategoria);
       return;
     }
-
     setSavingId(produto.id);
     setOpenDropdown(null);
     setSubCategoria(null);
@@ -731,16 +270,7 @@ export default function AdminProdutosPage() {
       await fetch('/api/admin/produtos', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: produto.id,
-          categoria: novaCategoria,
-          nomeAmbiente: nomeAmb,
-          tipoAmbiente: tipo,
-          tipoMomento: tipo,
-          tipoVistaSe: tipo,
-          tipoBeleza: tipo,
-          tipoMercado: tipo,
-        }),
+       body: JSON.stringify({ id: produto.id, categoria: novaCategoria, nomeAmbiente: nomeAmb, tipoAmbiente: tipo, tipoMomento: tipo, tipoVistaSe: tipo, tipoBeleza: tipo, tipoMercado: tipo }),
       });
     } catch {
       await fetchProdutos();
@@ -749,16 +279,16 @@ export default function AdminProdutosPage() {
     }
   }
 
-  const produtosFiltrados = produtosFiltradosBase;
+   const produtosFiltrados = produtosFiltradosBase;
   const totalPaginas = totalPaginasBase;
   const paginaAtual = paginaAtualBase;
 
-  // Produtos "a catalogar"
-  const produtosACatalogar = produtos.filter(p =>
-    p.aCatalogar === true &&
-    (!filtroCatalogarLoja || (p.lojaNome || p.loja || '').toLowerCase().includes(filtroCatalogarLoja.toLowerCase()))
+  // "A catalogar"
+  const aCatalogarTodos = produtos.filter((p: any) => p.aCatalogar);
+  const lojasCatalogar = [...new Set(aCatalogarTodos.map((p: any) => p.lojaNome || '').filter(Boolean))];
+  const aCatalogarFiltrados = aCatalogarTodos.filter((p: any) =>
+    !filtroCatalogarLoja || p.lojaNome === filtroCatalogarLoja
   );
-  const lojasACatalogar = Array.from(new Set(produtos.filter(p => p.aCatalogar).map(p => p.lojaNome || p.loja || '')));
 
   async function moverCatalogar(novaCategoria: Categoria, tipo?: string, nomeAmb?: string) {
     if (!novaCategoria || selCatalogar.size === 0) return;
@@ -796,8 +326,6 @@ export default function AdminProdutosPage() {
         }),
       });
       setSelCatalogar(new Set());
-      await fetchProdutos();
-    } catch {
       await fetchProdutos();
     } finally {
       setMovendoCatalogar(false);
@@ -868,261 +396,116 @@ export default function AdminProdutosPage() {
           </p>
         </div>
 
-        {/* Tabs: Catalogados / A catalogar */}
-        <div style={{ display: 'flex', gap: 4, marginBottom: 20 }}>
-          <button
-            onClick={() => { setAbaCatalogar(false); setAbaBanner(false); setSelCatalogar(new Set()); setSubCatalogar(null); }}
-            style={{
-              padding: '8px 18px',
-              borderRadius: '8px 8px 0 0',
-              border: '1.5px solid #e5e7eb',
-              borderBottom: abaCatalogar ? '1.5px solid #e5e7eb' : '1.5px solid #fff',
-              background: abaCatalogar ? '#f9fafb' : '#fff',
-              fontSize: 14,
-              fontWeight: abaCatalogar ? 400 : 700,
-              color: abaCatalogar ? '#6b7280' : '#111',
-              cursor: 'pointer',
-              marginBottom: -1,
-            }}
-          >
-            Catalogados ({produtosFiltradosBase.filter(p => !p.aCatalogar).length})
-          </button>
-          <button
-            onClick={() => { setAbaCatalogar(true); setAbaBanner(false); setSelecionados(new Set()); setLoteSubCategoria(null); }}
-            style={{
-              padding: '8px 18px',
-              borderRadius: '8px 8px 0 0',
-              border: '1.5px solid #e5e7eb',
-              borderBottom: abaCatalogar ? '1.5px solid #fff' : '1.5px solid #e5e7eb',
-              background: abaCatalogar ? '#fff' : '#f9fafb',
-              fontSize: 14,
-              fontWeight: abaCatalogar ? 700 : 400,
-              color: abaCatalogar ? '#d97706' : '#6b7280',
-              cursor: 'pointer',
-              marginBottom: -1,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-            }}
-          >
+               {/* Abas */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+          <button onClick={() => setAbaCatalogar(false)} style={{
+            padding: '8px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 14,
+            background: !abaCatalogar ? '#111' : '#e5e7eb', color: !abaCatalogar ? '#fff' : '#374151',
+          }}>Catalogados ({produtos.filter((p: any) => !p.aCatalogar).length})</button>
+          <button onClick={() => setAbaCatalogar(true)} style={{
+            padding: '8px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 14,
+            background: abaCatalogar ? '#d97706' : '#e5e7eb', color: abaCatalogar ? '#fff' : '#374151',
+            position: 'relative',
+          }}>
             A catalogar
-            {produtosACatalogar.length > 0 && !filtroCatalogarLoja && (
-              <span style={{
-                background: '#d97706',
-                color: '#fff',
-                fontSize: 11,
-                fontWeight: 700,
-                borderRadius: 20,
-                padding: '1px 7px',
-                minWidth: 20,
-                textAlign: 'center',
-              }}>
-                {produtos.filter(p => p.aCatalogar).length}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => { setAbaBanner(true); setAbaCatalogar(false); setSelecionados(new Set()); }}
-            style={{
-              padding: '8px 18px',
-              borderRadius: '8px 8px 0 0',
-              border: '1.5px solid #e5e7eb',
-              borderBottom: abaBanner ? '1.5px solid #fff' : '1.5px solid #e5e7eb',
-              background: abaBanner ? '#fff' : '#f9fafb',
-              fontSize: 14,
-              fontWeight: abaBanner ? 700 : 400,
-              color: abaBanner ? '#7c3aed' : '#6b7280',
-              cursor: 'pointer',
-              marginBottom: -1,
-            }}
-          >
-            🖼️ Banner
+            {aCatalogarTodos.length > 0 && <span style={{ marginLeft: 6, background: '#dc2626', color: '#fff', borderRadius: 999, padding: '1px 7px', fontSize: 12 }}>{aCatalogarTodos.length}</span>}
           </button>
         </div>
 
-        {/* Seção Banner */}
-        {abaBanner && (
-          <BannerAdmin produtos={produtos} onProdutoUpdate={(id, campos) => {
-            setProdutos(prev => prev.map(p => p.id === id ? { ...p, ...campos } : p));
-          }} />
-        )}
-
         {/* Seção A catalogar */}
         {abaCatalogar && (
-          <>
+          <div>
             {/* Filtro por loja */}
-            <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb', padding: '14px 20px', marginBottom: 16, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>Filtrar por loja:</span>
-              <button
-                onClick={() => setFiltroCatalogarLoja('')}
-                style={{ padding: '5px 12px', borderRadius: 7, border: '1.5px solid ' + (!filtroCatalogarLoja ? '#d97706' : '#e5e7eb'), background: !filtroCatalogarLoja ? '#fef3c7' : '#fff', fontSize: 13, fontWeight: !filtroCatalogarLoja ? 700 : 400, color: !filtroCatalogarLoja ? '#d97706' : '#374151', cursor: 'pointer' }}
-              >
-                Todas
-              </button>
-              {lojasACatalogar.map(loja => (
-                <button
-                  key={loja}
-                  onClick={() => setFiltroCatalogarLoja(loja)}
-                  style={{ padding: '5px 12px', borderRadius: 7, border: '1.5px solid ' + (filtroCatalogarLoja === loja ? '#d97706' : '#e5e7eb'), background: filtroCatalogarLoja === loja ? '#fef3c7' : '#fff', fontSize: 13, fontWeight: filtroCatalogarLoja === loja ? 700 : 400, color: filtroCatalogarLoja === loja ? '#d97706' : '#374151', cursor: 'pointer' }}
-                >
-                  {loja}
-                </button>
-              ))}
-            </div>
+            {lojasCatalogar.length > 1 && (
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                <button onClick={() => setFiltroCatalogarLoja('')} style={{ padding: '5px 14px', borderRadius: 7, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13, background: !filtroCatalogarLoja ? '#111' : '#e5e7eb', color: !filtroCatalogarLoja ? '#fff' : '#374151' }}>Todas</button>
+                {lojasCatalogar.map(l => (
+                  <button key={l} onClick={() => setFiltroCatalogarLoja(l)} style={{ padding: '5px 14px', borderRadius: 7, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13, background: filtroCatalogarLoja === l ? '#111' : '#e5e7eb', color: filtroCatalogarLoja === l ? '#fff' : '#374151' }}>{l}</button>
+                ))}
+              </div>
+            )}
 
-            {/* Barra de ação em lote para A catalogar */}
+            {/* Barra de ação lote */}
             {selCatalogar.size > 0 && (
-              <div style={{ background: '#92400e', color: '#fff', borderRadius: 10, padding: '12px 20px', marginBottom: 12 }}>
+              <div style={{ background: '#d97706', color: '#fff', borderRadius: 10, padding: '12px 20px', marginBottom: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                   <span style={{ fontSize: 14, fontWeight: 600 }}>{selCatalogar.size} selecionado{selCatalogar.size !== 1 ? 's' : ''}</span>
-                  <span style={{ color: '#fde68a', fontSize: 13 }}>Mover para:</span>
+                  <span style={{ opacity: 0.8, fontSize: 13 }}>Mover para:</span>
                   {MOVER_OPTIONS.map(opt => (
-                    <button
-                      key={opt.value}
-                      onClick={() => moverCatalogar(opt.value)}
-                      disabled={movendoCatalogar}
-                      style={{ padding: '5px 14px', borderRadius: 7, border: subCatalogar === opt.value ? '2px solid #fff' : 'none', background: BADGE_COLORS[opt.value!], color: '#fff', fontSize: 13, fontWeight: 600, cursor: movendoCatalogar ? 'not-allowed' : 'pointer', opacity: movendoCatalogar ? 0.6 : 1 }}
-                    >
+                    <button key={opt.value} onClick={() => moverCatalogar(opt.value)} disabled={movendoCatalogar} style={{ padding: '5px 14px', borderRadius: 7, border: subCatalogar === opt.value ? '2px solid #fff' : 'none', background: BADGE_COLORS[opt.value!], color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                       {opt.label} {TIPOS_POR_CATEGORIA[opt.value!].length > 0 ? '▾' : ''}
                     </button>
                   ))}
-                  <button onClick={() => { setSelCatalogar(new Set()); setSubCatalogar(null); }} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#fde68a', cursor: 'pointer', fontSize: 13 }}>
-                    Cancelar
-                  </button>
+                  <button onClick={() => { setSelCatalogar(new Set()); setSubCatalogar(null); }} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: 13 }}>✕ Limpar</button>
                 </div>
 
-                {/* Submenu catalogar: ambiente nível 2 */}
                 {subCatalogar === 'ambiente' && !subCatalogarAmbNome && (
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, paddingTop: 10, borderTop: '1px solid #78350f' }}>
-                    <span style={{ color: '#fde68a', fontSize: 13, alignSelf: 'center' }}>Cômodo:</span>
-                    {AMBIENTES.map(amb => (
-                      <button key={amb} onClick={() => moverCatalogar('ambiente', undefined, amb)} disabled={movendoCatalogar}
-                        style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid #78350f', background: '#7c2d12', color: '#fff', fontSize: 13, cursor: 'pointer' }}>
-                        {amb}
-                      </button>
-                    ))}
-                    <button onClick={() => setSubCatalogar(null)} style={{ background: 'none', border: 'none', color: '#fde68a', cursor: 'pointer', fontSize: 12 }}>✕</button>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.3)' }}>
+                    <span style={{ fontSize: 13, alignSelf: 'center', opacity: 0.8 }}>Cômodo:</span>
+                    {AMBIENTES.map(a => <button key={a} onClick={() => moverCatalogar('ambiente', undefined, a)} style={{ padding: '4px 12px', borderRadius: 6, border: 'none', background: '#fff', color: '#7c3aed', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{a}</button>)}
                   </div>
                 )}
-
-                {/* Submenu catalogar: ambiente nível 3 */}
                 {subCatalogar === 'ambiente' && subCatalogarAmbNome && (
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, paddingTop: 10, borderTop: '1px solid #78350f' }}>
-                    <span style={{ color: '#fde68a', fontSize: 13, alignSelf: 'center' }}>{subCatalogarAmbNome} →</span>
-                    {TIPOS_AMBIENTE.map(tipo => (
-                      <button key={tipo} onClick={() => moverCatalogar('ambiente', tipo, subCatalogarAmbNome)} disabled={movendoCatalogar}
-                        style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid #78350f', background: '#7c2d12', color: '#fff', fontSize: 13, cursor: 'pointer' }}>
-                        {tipo}
-                      </button>
-                    ))}
-                    <button onClick={() => setSubCatalogarAmbNome(null)} style={{ background: 'none', border: 'none', color: '#fde68a', cursor: 'pointer', fontSize: 12 }}>← voltar</button>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.3)' }}>
+                    <span style={{ fontSize: 13, alignSelf: 'center', opacity: 0.8 }}>{subCatalogarAmbNome} →</span>
+                    {TIPOS_AMBIENTE.map(t => <button key={t} onClick={() => moverCatalogar('ambiente', t, subCatalogarAmbNome)} style={{ padding: '4px 12px', borderRadius: 6, border: 'none', background: '#fff', color: '#7c3aed', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{t}</button>)}
                   </div>
                 )}
-
-                {/* Submenu catalogar: momento nível 2 */}
                 {subCatalogar === 'momento' && !subCatalogarMomNome && (
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, paddingTop: 10, borderTop: '1px solid #78350f' }}>
-                    <span style={{ color: '#fde68a', fontSize: 13, alignSelf: 'center' }}>Clima:</span>
-                    {MOMENTOS.map(m => (
-                      <button key={m} onClick={() => moverCatalogar('momento', undefined, m)} disabled={movendoCatalogar}
-                        style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid #78350f', background: '#7c2d12', color: '#fff', fontSize: 13, cursor: 'pointer' }}>
-                        {m}
-                      </button>
-                    ))}
-                    <button onClick={() => setSubCatalogar(null)} style={{ background: 'none', border: 'none', color: '#fde68a', cursor: 'pointer', fontSize: 12 }}>✕</button>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.3)' }}>
+                    <span style={{ fontSize: 13, alignSelf: 'center', opacity: 0.8 }}>Clima:</span>
+                    {MOMENTOS.map(m => <button key={m} onClick={() => moverCatalogar('momento', undefined, m)} style={{ padding: '4px 12px', borderRadius: 6, border: 'none', background: '#fff', color: '#d97706', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{m}</button>)}
                   </div>
                 )}
-
-                {/* Submenu catalogar: momento nível 3 */}
                 {subCatalogar === 'momento' && subCatalogarMomNome && (
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, paddingTop: 10, borderTop: '1px solid #78350f' }}>
-                    <span style={{ color: '#fde68a', fontSize: 13, alignSelf: 'center' }}>{subCatalogarMomNome} →</span>
-                    {TIPOS_MOMENTO.map(t => (
-                      <button key={t} onClick={() => moverCatalogar('momento', t, subCatalogarMomNome)} disabled={movendoCatalogar}
-                        style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid #78350f', background: '#7c2d12', color: '#fff', fontSize: 13, cursor: 'pointer' }}>
-                        {t}
-                      </button>
-                    ))}
-                    <button onClick={() => setSubCatalogarMomNome(null)} style={{ background: 'none', border: 'none', color: '#fde68a', cursor: 'pointer', fontSize: 12 }}>← voltar</button>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.3)' }}>
+                    <span style={{ fontSize: 13, alignSelf: 'center', opacity: 0.8 }}>{subCatalogarMomNome} →</span>
+                    {TIPOS_MOMENTO.map(t => <button key={t} onClick={() => moverCatalogar('momento', t, subCatalogarMomNome)} style={{ padding: '4px 12px', borderRadius: 6, border: 'none', background: '#fff', color: '#d97706', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{t}</button>)}
                   </div>
                 )}
-
-                {/* Submenu catalogar: outros tipos */}
                 {subCatalogar && subCatalogar !== 'ambiente' && subCatalogar !== 'momento' && (
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, paddingTop: 10, borderTop: '1px solid #78350f' }}>
-                    <span style={{ color: '#fde68a', fontSize: 13, alignSelf: 'center' }}>Tipo:</span>
-                    {TIPOS_POR_CATEGORIA[subCatalogar].map(tipo => (
-                      <button key={tipo} onClick={() => moverCatalogar(subCatalogar, tipo)} disabled={movendoCatalogar}
-                        style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid #78350f', background: '#7c2d12', color: '#fff', fontSize: 13, cursor: 'pointer' }}>
-                        {tipo}
-                      </button>
-                    ))}
-                    <button onClick={() => setSubCatalogar(null)} style={{ background: 'none', border: 'none', color: '#fde68a', cursor: 'pointer', fontSize: 12 }}>✕</button>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.3)' }}>
+                    <span style={{ fontSize: 13, alignSelf: 'center', opacity: 0.8 }}>Tipo:</span>
+                    {TIPOS_POR_CATEGORIA[subCatalogar].map(t => <button key={t} onClick={() => moverCatalogar(subCatalogar, t)} style={{ padding: '4px 12px', borderRadius: 6, border: 'none', background: '#fff', color: '#111', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{t}</button>)}
                   </div>
                 )}
               </div>
             )}
 
-            {/* Grid de cards a catalogar */}
-            {produtosACatalogar.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 60, color: '#9ca3af', fontSize: 14, background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb' }}>
-                {filtroCatalogarLoja ? `Nenhum produto de "${filtroCatalogarLoja}" para catalogar.` : 'Nenhum produto pendente de catalogação. ✓'}
+            {/* Grid de produtos a catalogar */}
+            {aCatalogarFiltrados.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 60, color: '#9ca3af', fontSize: 15 }}>
+                {aCatalogarTodos.length === 0 ? '✅ Nenhum produto aguardando catalogação.' : 'Nenhum produto para esta loja.'}
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
-                {produtosACatalogar.map(p => {
-                  const imgSrc = getImageSrc(p);
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+                {aCatalogarFiltrados.map((p: any) => {
                   const sel = selCatalogar.has(p.id);
+                  const imgSrc = getImageSrc(p);
                   return (
-                    <div
-                      key={p.id}
-                      onClick={() => setSelCatalogar(prev => {
-                        const n = new Set(prev);
-                        if (n.has(p.id)) n.delete(p.id); else n.add(p.id);
-                        return n;
-                      })}
-                      style={{
-                        background: sel ? '#fef3c7' : '#fff',
-                        border: sel ? '2px solid #d97706' : '1.5px solid #e5e7eb',
-                        borderRadius: 10,
-                        cursor: 'pointer',
-                        overflow: 'hidden',
-                        transition: 'all 0.15s',
-                        userSelect: 'none',
-                      }}
-                    >
-                      <div style={{ width: '100%', aspectRatio: '1', background: '#f3f4f6', position: 'relative', overflow: 'hidden' }}>
-                        {imgSrc ? (
-                          <img src={imgSrc} alt={p.nome} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                        ) : (
-                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: '#d1d5db' }}>□</div>
-                        )}
-                        {sel && (
-                          <div style={{ position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: '50%', background: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 13, fontWeight: 700 }}>✓</div>
-                        )}
+                    <div key={p.id} onClick={() => {
+                      setSelCatalogar(prev => { const n = new Set(prev); sel ? n.delete(p.id) : n.add(p.id); return n; });
+                    }} style={{
+                      background: '#fff', borderRadius: 10, border: `2px solid ${sel ? '#d97706' : '#e5e7eb'}`,
+                      boxShadow: sel ? '0 0 0 3px rgba(217,119,6,0.15)' : '0 1px 4px rgba(0,0,0,0.05)',
+                      overflow: 'hidden', cursor: 'pointer', transition: 'all 0.15s',
+                    }}>
+                      <div style={{ height: 140, background: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 8, position: 'relative' }}>
+                        {imgSrc ? <img src={imgSrc} alt={p.nome} style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} /> : <span style={{ fontSize: 28, color: '#d1d5db' }}>□</span>}
+                        {sel && <div style={{ position: 'absolute', top: 6, right: 6, background: '#d97706', color: '#fff', borderRadius: '50%', width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700 }}>✓</div>}
                       </div>
                       <div style={{ padding: '8px 10px' }}>
-                        <p style={{ fontSize: 12, color: '#111', fontWeight: 500, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.3 }} title={p.nome}>
-                          {p.nome || '—'}
-                        </p>
-                        <p style={{ fontSize: 11, color: '#9ca3af', margin: '3px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {p.lojaNome || p.loja || ''}
-                        </p>
-                        {!!p.preco && p.preco > 0 && (
-                          <p style={{ fontSize: 12, color: '#059669', fontWeight: 600, margin: '3px 0 0' }}>
-                            R$ {p.preco.toFixed(2).replace('.', ',')}
-                          </p>
-                        )}
+                        <div style={{ fontSize: 12, fontWeight: 600, color: '#111', lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', marginBottom: 4 }}>{p.nome}</div>
+                        {p.lojaNome && <div style={{ fontSize: 11, color: '#6b7280' }}>🏪 {p.lojaNome}</div>}
+                                              <div style={{ fontSize: 13, fontWeight: 800, color: '#dc2626', marginTop: 4 }}>R$ {(p.preco || 0).toFixed(2).replace('.', ',')}</div>
                       </div>
                     </div>
                   );
                 })}
               </div>
             )}
-          </>
+                           </div>
         )}
-
-        {!abaCatalogar && (<>
 
         {/* Barra de seleção em lote */}
         {selecionados.size > 0 && (
@@ -1163,7 +546,6 @@ export default function AdminProdutosPage() {
                 Cancelar
               </button>
             </div>
-
             {/* Submenu lote: ambiente nível 2 — cômodos */}
             {loteSubCategoria === 'ambiente' && !loteAmbienteNome && (
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, paddingTop: 10, borderTop: '1px solid #333' }}>
@@ -1197,7 +579,7 @@ export default function AdminProdutosPage() {
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, paddingTop: 10, borderTop: '1px solid #333' }}>
                 <span style={{ color: '#9ca3af', fontSize: 13, alignSelf: 'center' }}>Clima:</span>
                 {MOMENTOS.map(m => (
-                  <button key={m} onClick={() => moverLote('momento', undefined, m)} disabled={movendoLote}
+                  <button key={m} onClick={() => moverLote('momento', m)} disabled={movendoLote}
                     style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid #444', background: '#222', color: '#fff', fontSize: 13, cursor: 'pointer' }}>
                     {m}
                   </button>
@@ -1211,7 +593,7 @@ export default function AdminProdutosPage() {
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, paddingTop: 10, borderTop: '1px solid #333' }}>
                 <span style={{ color: '#9ca3af', fontSize: 13, alignSelf: 'center' }}>{loteMomentoNome} →</span>
                 {TIPOS_MOMENTO.map(t => (
-                  <button key={t} onClick={() => moverLote('momento', t, loteMomentoNome)} disabled={movendoLote}
+                  <button key={t} onClick={() => moverLote('momento', loteMomentoNome, t)} disabled={movendoLote}
                     style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid #444', background: '#222', color: '#fff', fontSize: 13, cursor: 'pointer' }}>
                     {t}
                   </button>
@@ -1219,8 +601,7 @@ export default function AdminProdutosPage() {
                 <button onClick={() => setLoteMomentoNome(null)} style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: 12 }}>← voltar</button>
               </div>
             )}
-
-            {/* Submenu lote: outros tipos (vistaSe, beleza, mercado) */}
+          {/* Submenu lote: outros tipos (vistaSe, beleza) */}
             {loteSubCategoria && loteSubCategoria !== 'ambiente' && loteSubCategoria !== 'momento' && TIPOS_POR_CATEGORIA[loteSubCategoria].length > 0 && (
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, paddingTop: 10, borderTop: '1px solid #333' }}>
                 <span style={{ color: '#9ca3af', fontSize: 13, alignSelf: 'center' }}>Tipo:</span>
@@ -1235,6 +616,8 @@ export default function AdminProdutosPage() {
             )}
           </div>
         )}
+
+            {!abaCatalogar && (<>
 
         {/* Filtros */}
         <div style={{
@@ -1436,6 +819,7 @@ export default function AdminProdutosPage() {
                             }}>
                               {CATEGORIA_LABELS[cat]}
                             </span>
+                            {/* Detalhe: Sala / Eletrônicos, Vinho, Roupas, etc. */}
                             {cat === 'ambiente' && (produto.ambiente || produto.tipoAmbiente) && (
                               <span style={{ fontSize: 12, color: '#374151', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                 {[produto.ambiente, produto.tipoAmbiente].filter(Boolean).join(' / ')}
@@ -1443,7 +827,7 @@ export default function AdminProdutosPage() {
                             )}
                             {cat === 'momento' && produto.momento && (
                               <span style={{ fontSize: 12, color: '#374151', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                {[produto.momento, produto.tipoMomento].filter(Boolean).join(' / ')}
+                                {produto.momento}
                               </span>
                             )}
                             {cat === 'vistaSe' && produto.tipoVistaSe && (
@@ -1451,7 +835,7 @@ export default function AdminProdutosPage() {
                                 {produto.tipoVistaSe}
                               </span>
                             )}
-                            {cat === 'beleza' && produto.tipoBeleza && (
+                                                       {cat === 'beleza' && produto.tipoBeleza && (
                               <span style={{ fontSize: 12, color: '#374151', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                 {produto.tipoBeleza}
                               </span>
@@ -1481,7 +865,7 @@ export default function AdminProdutosPage() {
                       {/* Botão mover */}
                       <div style={{ position: 'relative' }} ref={isOpen ? dropdownRef : undefined}>
                         <button
-                          onClick={() => { setOpenDropdown(isOpen ? null : produto.id); setSubCategoria(null); setSubAmbienteNome(null); setSubMomentoNome(null); }}
+                          onClick={() => { setOpenDropdown(isOpen ? null : produto.id); setSubCategoria(null); }}
                           disabled={isSaving}
                           style={{
                             padding: '5px 12px',
@@ -1594,7 +978,7 @@ export default function AdminProdutosPage() {
                                   ← Momento
                                 </button>
                                 {MOMENTOS.map(m => (
-                                  <button key={m} onClick={() => moverCategoria(produto, 'momento', undefined, m)}
+                                  <button key={m} onClick={() => moverCategoria(produto, 'momento', m)}
                                     style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', background: '#fff', border: 'none', borderBottom: '1px solid #f3f4f6', fontSize: 14, color: '#111', cursor: 'pointer', textAlign: 'left' }}
                                     onMouseEnter={e => (e.currentTarget.style.background = '#f3f4f6')}
                                     onMouseLeave={e => (e.currentTarget.style.background = '#fff')}>
@@ -1612,7 +996,7 @@ export default function AdminProdutosPage() {
                                   ← {subMomentoNome}
                                 </button>
                                 {TIPOS_MOMENTO.map(t => (
-                                  <button key={t} onClick={() => moverCategoria(produto, 'momento', t, subMomentoNome)}
+                                  <button key={t} onClick={() => moverCategoria(produto, 'momento', subMomentoNome, t)}
                                     style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', background: '#fff', border: 'none', borderBottom: '1px solid #f3f4f6', fontSize: 14, color: '#111', cursor: 'pointer', textAlign: 'left' }}
                                     onMouseEnter={e => (e.currentTarget.style.background = '#f3f4f6')}
                                     onMouseLeave={e => (e.currentTarget.style.background = '#fff')}>
@@ -1622,8 +1006,10 @@ export default function AdminProdutosPage() {
                               </>
                             )}
 
-                            {/* Nível 2: tipos das outras categorias (vistaSe, beleza, mercado) */}
-                            {subCategoria && subCategoria !== 'ambiente' && subCategoria !== 'momento' && (
+
+
+                            {/* Nível 2: tipos das outras categorias */}
+                            {subCategoria && subCategoria !== 'ambiente' && (
                               <>
                                 <button onClick={() => setSubCategoria(null)}
                                   style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', padding: '8px 14px', background: '#f9fafb', border: 'none', borderBottom: '1px solid #e5e7eb', fontSize: 13, color: '#6b7280', cursor: 'pointer' }}>
@@ -1666,6 +1052,7 @@ export default function AdminProdutosPage() {
                   ← Anterior
                 </button>
 
+                {/* Páginas numeradas */}
                 {getPaginasVisiveis(paginaAtual, totalPaginas).map((p, i) =>
                   p === '...' ? (
                     <span key={`dots-${i}`} style={{ color: '#9ca3af', padding: '0 4px' }}>…</span>
@@ -1690,7 +1077,8 @@ export default function AdminProdutosPage() {
               </div>
             )}
 
-            <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, marginTop: 12 }}>
+            {/* Info paginação */}
+                       <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, marginTop: 12 }}>
               Página {paginaAtual} de {totalPaginas} —{' '}
               mostrando {(paginaAtual - 1) * PAGE_SIZE + 1}–{Math.min(paginaAtual * PAGE_SIZE, produtosFiltrados.length)} de {produtosFiltrados.length}
             </p>
