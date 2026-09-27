@@ -46,6 +46,7 @@ async function fetchAndParseFeed(url: string) {
       'Accept': 'application/rss+xml, application/xml, text/xml, */*;q=0.8',
       'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
     },
+    signal: AbortSignal.timeout(8000),
   });
 
   if (!response.ok) throw new Error(`Status code ${response.status}`);
@@ -371,14 +372,16 @@ async function getOfertasMix(): Promise<any[]> {
       } catch {}
     }
 
-    const [campData, brandData] = await Promise.all([
+      const [campData, brandData] = await Promise.all([
       fetch(`${BASE_URL}/affiliate/campaigns?limit=20`, {
         headers: { 'x-api-key': API_KEY },
         next: { revalidate: 900 },
+        signal: AbortSignal.timeout(8000),
       }).then(r => r.json()),
       fetch(`${BASE_URL}/affiliate/brands?limit=20`, {
         headers: { 'x-api-key': API_KEY },
         next: { revalidate: 900 },
+        signal: AbortSignal.timeout(8000),
       }).then(r => r.json()),
     ]);
 
