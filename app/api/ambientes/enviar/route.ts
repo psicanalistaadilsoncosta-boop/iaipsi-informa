@@ -14,6 +14,30 @@ function criarTransporter() {
   });
 }
 
+
+type Secao = { titulo: string; emoji: string };
+
+const SECOES: Record<string, Secao> = {
+  'monte-seu-ambiente': { titulo: 'Monte seu Ambiente', emoji: '🏠🪴' },
+  'monte-seu-momento':  { titulo: 'Monte seu Momento',  emoji: '🍷☕' },
+  'vista-se':           { titulo: 'Vista-se',           emoji: '👔👗' },
+  'vista-seu-filho':    { titulo: 'Vista seu Filho',    emoji: '👶👟' },
+  'beleza':             { titulo: 'Beleza',             emoji: '🧴💄' },
+  'mercado':            { titulo: 'Mercado',            emoji: '🛒🧺' },
+};
+
+const SECAO_PADRAO: Secao = { titulo: 'Seu Universo', emoji: '✨' };
+
+function identificarSecao(referer: string | null): Secao {
+  try {
+    const pagina = new URL(referer || '').pathname.split('/')[1];
+    return SECOES[pagina] || SECAO_PADRAO;
+  } catch {
+    return SECAO_PADRAO;
+  }
+}
+
+
 interface ProdutoLista {
   nome: string;
   preco: number;
@@ -28,7 +52,7 @@ interface ProdutoLista {
   loja?: string;
 }
 
-function gerarHtml(produtos: ProdutoLista[]): string {
+function gerarHtml(produtos: ProdutoLista[], secao: Secao): string {
   const itens = produtos.map(p => `
     <tr>
       <td style="padding:12px;border-bottom:1px solid #f3f4f6;vertical-align:top;width:70px">
@@ -62,7 +86,7 @@ function gerarHtml(produtos: ProdutoLista[]): string {
 
     <!-- Header -->
     <div style="background:linear-gradient(135deg,#7c3aed 0%,#2563eb 100%);padding:32px 24px;text-align:center">
-      <h1 style="color:#fff;margin:0 0 8px;font-size:22px;font-weight:900">🏠 Sua lista de ambiente</h1>
+      <h1 style="color:#fff;margin:0 0 8px;font-size:22px;font-weight:900">${secao.emoji} Sua lista · ${secao.titulo}</h1>
       <p style="color:rgba(255,255,255,0.85);margin:0;font-size:14px">Produtos selecionados com links de oferta</p>
     </div>
 
@@ -105,12 +129,13 @@ export async function POST(req: NextRequest) {
       .filter(Boolean);
     const destinatarios = [email, ...extras].join(', ');
 
-     const html = gerarHtml(produtos);
+    const secao = identificarSecao(req.headers.get('referer'));
+    const html = gerarHtml(produtos, secao);
 
     await criarTransporter().sendMail({
-            from: `"Monte seu Ambiente · Com a Lupa" <${process.env.ZOHO_FROM || process.env.ZOHO_SMTP_USER}>`,
+            from: `"${secao.titulo} · Com a Lupa" <${process.env.ZOHO_FROM || process.env.ZOHO_SMTP_USER}>`,
       to: destinatarios,
-      subject: `🏠 Sua lista de ambiente — ${produtos.length} produto${produtos.length > 1 ? 's' : ''} selecionado${produtos.length > 1 ? 's' : ''}`,
+      subject: `${secao.emoji} Sua lista · ${secao.titulo} — ${produtos.length} produto${produtos.length > 1 ? 's' : ''} selecionado${produtos.length > 1 ? 's' : ''}`,
       html,
     });
 
