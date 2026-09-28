@@ -46,7 +46,22 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+           <body>
+        <div
+          style={{
+            background: '#5B3E96',
+            color: '#FFFFFF',
+            textAlign: 'center',
+            padding: '8px 16px',
+            fontSize: '14px',
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            letterSpacing: '0.3px',
+          }}
+        >
+          🔍 Você está <strong>Com a Lupa</strong> · notícias e ofertas vistas de perto
+        </div>
+        {children}
+      </body>
     </html>
   );
 }

@@ -828,7 +828,23 @@ export default function NewsClient({ posts, ads, editorial, sabores, ofertasMix,
       <header style={{ backgroundColor: '#fff', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: '16px', borderTop: '6px solid #2563eb' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <h1 style={{ fontSize: '2.1rem', color: '#111827', margin: 0, fontWeight: 800 }}>IAIPSI Informa</h1>
+                       <h1 style={{ fontSize: '2.1rem', color: '#111827', margin: 0, fontWeight: 800, display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <svg
+                width="38"
+                height="38"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#5B3E96"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                aria-hidden="true"
+                style={{ flexShrink: 0 }}
+              >
+                <circle cx="10.5" cy="10.5" r="6.5" />
+                <line x1="15.5" y1="15.5" x2="21" y2="21" />
+              </svg>
+              IAIPSI Informa
+            </h1>
             <p style={{ color: '#6b7280', fontSize: '1rem', margin: '6px 0 0' }}>
               Política · Economia · Esportes · Saúde Mental · Ciência · Psicanálise · Tecnologia · Liderança · Mundo · Compras · Turismo 
             </p>
