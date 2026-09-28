@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { kv } from '@/lib/kv';
+import { isAdmin } from '@/lib/adminAuth';
 
 export interface SaboresItem {
   id: string;
@@ -26,6 +27,7 @@ async function read(): Promise<SaboresItem[]> {
 }
 
 export async function POST(req: NextRequest) {
+  if (!isAdmin(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
   try {
     const item = await req.json();
     const existing = await read();
@@ -54,6 +56,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  if (!isAdmin(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
   try {
     const { id, imageUrl } = await req.json();
     const existing = await read();
@@ -66,6 +69,7 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  if (!isAdmin(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
   try {
     const { id } = await req.json();
     const existing = await read();

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isAdmin } from '@/lib/adminAuth';
 
 async function fetchFromMealDB(prato: string): Promise<any | null> {
   try {
@@ -26,6 +27,7 @@ function extractIngredients(meal: any): string {
 }
 
 export async function POST(req: NextRequest) {
+  if (!isAdmin(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
   try {
     const { prato, destino } = await req.json();
 

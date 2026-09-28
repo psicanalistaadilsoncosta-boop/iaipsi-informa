@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
+import { isAdmin } from '@/lib/adminAuth';
 
 export async function POST(req: NextRequest) {
+  if (!isAdmin(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
   try {
     const data = await req.json();
     const filePath = path.join(process.cwd(), 'public', 'oferta-do-dia.json');

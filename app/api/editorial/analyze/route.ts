@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isAdmin } from '@/lib/adminAuth';
 
 const SYSTEM_PROMPT = `Você é o assistente editorial de Adilson Costa — psicanalista, consultor organizacional e especialista em Liderança Consciente, com mais de 30 anos de experiência no mercado financeiro e corporativo brasileiro.
 
@@ -49,6 +50,7 @@ A lógica de cada análise segue esta sequência:
 - Sem introdução, sem fechamento, sem "Análise de Adilson Costa" — isso será adicionado pelo sistema`;
 
 export async function POST(req: NextRequest) {
+  if (!isAdmin(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
   try {
     const { title, snippet, link } = await req.json();
 

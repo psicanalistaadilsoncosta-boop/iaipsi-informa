@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { kv } from '@/lib/kv';
+import { isAdmin } from '@/lib/adminAuth';
 
 export async function GET() {
   const produtos = (await kv.get<any[]>('produtos:pinados')) || [];
@@ -39,6 +40,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  if (!isAdmin(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
   const { id, ambiente, tipoAmbiente, momento, tipoMomento, destinos } = await req.json();
   const produtos = (await kv.get<any[]>('produtos:pinados')) || [];
 

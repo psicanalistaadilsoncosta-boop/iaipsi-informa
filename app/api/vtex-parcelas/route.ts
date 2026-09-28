@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isAdmin } from '@/lib/adminAuth';
 
 export async function POST(req: NextRequest) {
+  if (!isAdmin(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
   const { lojaUrl, skuId } = await req.json();
 
   try {

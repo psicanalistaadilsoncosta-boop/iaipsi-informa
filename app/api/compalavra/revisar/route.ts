@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { isAdmin } from '@/lib/adminAuth';
 
 const anthropic = new Anthropic({ apiKey: process.env.comApalavra_ANTHROPIC });
 
 export async function POST(req: NextRequest) {
+  if (!isAdmin(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
   try {
     const { conteudo } = await req.json();
     if (!conteudo) return NextResponse.json({ error: 'Conteúdo ausente' }, { status: 400 });

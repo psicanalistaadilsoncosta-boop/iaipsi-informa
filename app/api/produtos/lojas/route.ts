@@ -1,6 +1,7 @@
 // app/api/produtos/lojas/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { kv } from '@/lib/kv';
+import { isAdmin } from '@/lib/adminAuth';
 
 const KV_KEY = 'lojas:cadastradas';
 
@@ -35,6 +36,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  if (!isAdmin(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
   const loja: Loja = await req.json();
   const lojas = (await kv.get<Loja[]>(KV_KEY)) || [];
 
@@ -51,6 +53,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  if (!isAdmin(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
   const { url, tipo } = await req.json();
   const lojas = (await kv.get<Loja[]>(KV_KEY)) || [];
   const novas = lojas.filter(l => !(l.url === url && l.tipo === tipo));

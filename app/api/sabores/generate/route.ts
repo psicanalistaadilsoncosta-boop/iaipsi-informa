@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isAdmin } from '@/lib/adminAuth';
 
 const SYSTEM_PROMPT = `Você é o assistente editorial de Adilson Costa — psicanalista, consultor organizacional e especialista em Liderança Consciente.
 
@@ -33,6 +34,7 @@ Retorne APENAS um JSON válido, sem markdown, sem backticks, neste formato exato
 }`;
 
 export async function POST(req: NextRequest) {
+  if (!isAdmin(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
   try {
     const { prato, destino, dificuldade } = await req.json();
 

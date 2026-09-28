@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { kv } from '@/lib/kv';
+import { isAdmin } from '@/lib/adminAuth';
 
 const KV_KEY = 'artigos:viagens';
 
@@ -15,6 +16,7 @@ export async function GET() {
 
 // ─── POST — cria ou atualiza um passeio pinado ────────────────────────────────
 export async function POST(req: NextRequest) {
+  if (!isAdmin(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
   try {
     const payload = await req.json();
     const { id } = payload;
@@ -39,6 +41,7 @@ export async function POST(req: NextRequest) {
 
 // ─── DELETE — remove um passeio pinado ───────────────────────────────────────
 export async function DELETE(req: NextRequest) {
+  if (!isAdmin(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
   try {
     const { id } = await req.json();
     if (!id) return NextResponse.json({ error: 'id obrigatório' }, { status: 400 });
