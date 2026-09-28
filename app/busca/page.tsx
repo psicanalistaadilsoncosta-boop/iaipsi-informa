@@ -223,7 +223,7 @@ export default async function BuscaPage({
                       >
                         Ver oferta →
                       </div>
-                      <BotaoWhatsApp nome={p.nome || ''} link={p.link || ''} imagem={imagem} preco={p.preco} />
+                      <BotaoWhatsApp id={p.id ? String(p.id) : undefined} nome={p.nome || ''} link={p.link || ''} imagem={imagem} preco={p.preco} />
                     </div>
                   </article>
                 </a>

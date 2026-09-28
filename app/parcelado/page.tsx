@@ -157,7 +157,7 @@ export default async function ParceladoPage({ searchParams }: { searchParams: Pr
                     <div style={{ backgroundColor: '#047857', color: '#fff', padding: '10px', borderRadius: '8px', fontWeight: 700, fontSize: '0.88rem', textAlign: 'center' }}>
                       Comprar parcelado →
                     </div>
-                    <BotaoWhatsApp nome={p.nome} link={p.link} imagem={p.imagem} preco={p.preco} />
+                    <BotaoWhatsApp id={p.id} nome={p.nome} link={p.link} imagem={p.imagem} preco={p.preco} />
                   </div>
                 </article>
               </a>

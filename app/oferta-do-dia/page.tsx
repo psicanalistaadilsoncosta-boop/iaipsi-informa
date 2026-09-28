@@ -172,7 +172,7 @@ function CardOferta({ p }: { p: ProdutoPinado }) {
         }}>
           Ver oferta →
         </a>
-        <BotaoWhatsApp nome={p.nome} link={p.link} imagem={p.imagem} preco={p.preco} destaque />
+        <BotaoWhatsApp id={p.id} nome={p.nome} link={p.link} imagem={p.imagem} preco={p.preco} destaque />
 
         <p style={{ fontSize: '0.65rem', color: '#9ca3af', margin: 0, textAlign: 'center' }}>
           Link de afiliado

@@ -1,7 +1,8 @@
 'use client';
 
 // Botão "Mandar no WhatsApp" para qualquer oferta.
-// O link compartilhado passa pela página /ir do Com a Lupa, então a comissão do afiliado é mantida.
+// O link compartilhado passa pela página /ir do Com a Lupa (direto ou via link curto /o/<id>),
+// então a comissão do afiliado é mantida.
 
 const SITE = 'https://comlupa.com.br';
 
@@ -12,12 +13,14 @@ function formatarPreco(preco: number | string | undefined | null): string | null
 }
 
 export default function BotaoWhatsApp({
+  id,
   nome,
   link,
   imagem,
   preco,
   destaque = false,
 }: {
+  id?: string;
   nome: string;
   link: string;
   imagem?: string;
@@ -29,7 +32,10 @@ export default function BotaoWhatsApp({
     e.preventDefault();
     e.stopPropagation();
 
-    const urlOferta = `${SITE}/ir?url=${encodeURIComponent(link)}&nome=${encodeURIComponent(nome)}&imagem=${encodeURIComponent(imagem || '')}`;
+    // Com o id do produto pinado, usa o link curto (com foto na prévia); sem id, o link completo
+    const urlOferta = id
+      ? `${SITE}/o/${encodeURIComponent(id)}`
+      : `${SITE}/ir?url=${encodeURIComponent(link)}&nome=${encodeURIComponent(nome)}&imagem=${encodeURIComponent(imagem || '')}`;
     const precoTexto = formatarPreco(preco);
     const mensagem =
       `🔍 Olha essa que achei no Com a Lupa:\n` +
