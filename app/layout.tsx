@@ -1,28 +1,28 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://informa.iaipsi.com'),
+  metadataBase: new URL('https://comlupa.com.br'),
   title: {
-    default: 'IAIPSI — Notícias, Análises e Sabores',
-    template: '%s | IAIPSI Informa',
+    default: 'Com a Lupa — notícias e ofertas vistas de perto',
+    template: '%s | Com a Lupa',
   },
   description: 'Notícias de política, economia, saúde mental e psicanálise com análises editoriais de Adilson Costa — psicanalista e consultor organizacional.',
-  keywords: ['psicanálise', 'saúde mental', 'liderança', 'notícias', 'análise editorial', 'Adilson Costa', 'IAIPSI'],
+  keywords: ['Com a Lupa', 'ofertas', 'cupons', 'notícias', 'análise editorial', 'psicanálise', 'saúde mental', 'liderança', 'Adilson Costa', 'IAIPSI'],
   authors: [{ name: 'Adilson Costa', url: 'https://iaipsi.com' }],
   creator: 'Adilson Costa',
   openGraph: {
     type: 'website',
     locale: 'pt_BR',
-    url: 'https://informa.iaipsi.com',
-    siteName: 'IAIPSI Informa',
-    title: 'IAIPSI — Notícias, Análises e Sabores',
-    description: 'Notícias com análises editoriais de Adilson Costa — psicanalista e consultor organizacional.',
-    images: [{ url: '/og-image.jpg', width: 1200, height: 630, alt: 'IAIPSI Informa' }],
+    url: 'https://comlupa.com.br',
+    siteName: 'Com a Lupa',
+    title: 'Com a Lupa — notícias e ofertas vistas de perto',
+    description: 'Notícias com análises editoriais de Adilson Costa e ofertas selecionadas a dedo.',
+    images: [{ url: '/og-image.jpg', width: 1200, height: 630, alt: 'Com a Lupa' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'IAIPSI — Notícias, Análises e Sabores',
-    description: 'Notícias com análises editoriais de Adilson Costa.',
+    title: 'Com a Lupa — notícias e ofertas vistas de perto',
+    description: 'Notícias com análises editoriais de Adilson Costa e ofertas selecionadas a dedo.',
     images: ['/og-image.jpg'],
   },
   robots: {

@@ -50,7 +50,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const artigo = await getArtigo(slug);
   if (!artigo) return { title: 'Produto não encontrado' };
   return {
-    title: `${artigo.titulo} — IAIPSI Informa`,
+    title: `${artigo.titulo} — Com a Lupa`,
     description: artigo.descricaoCurta,
     openGraph: {
       title: artigo.titulo,
@@ -249,7 +249,7 @@ export default async function ArtigoProdutoPage({ params }: { params: Promise<{ 
 
       <footer style={{ marginTop: '32px', textAlign: 'center' }}>
         <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: 0 }}>
-          © {new Date().getFullYear()} IAIPSI Informa ·
+          © {new Date().getFullYear()} Com a Lupa ·
           <Link href="/termos" style={{ color: '#9ca3af', marginLeft: '4px' }}>Termos e Privacidade</Link>
         </p>
       </footer>

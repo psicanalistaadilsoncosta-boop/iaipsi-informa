@@ -843,7 +843,7 @@ export default function NewsClient({ posts, ads, editorial, sabores, ofertasMix,
                 <circle cx="10.5" cy="10.5" r="6.5" />
                 <line x1="15.5" y1="15.5" x2="21" y2="21" />
               </svg>
-              IAIPSI Informa
+              Com a Lupa
             </h1>
             <p style={{ color: '#6b7280', fontSize: '1rem', margin: '6px 0 0' }}>
               Política · Economia · Esportes · Saúde Mental · Ciência · Psicanálise · Tecnologia · Liderança · Mundo · Compras · Turismo 

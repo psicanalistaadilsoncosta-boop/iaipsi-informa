@@ -489,7 +489,7 @@ export default function OfertasPage() {
       <footer style={{ borderTop: '1px solid #e8e8e8', backgroundColor: '#fafafa' }}>
         <div style={{ maxWidth: '1160px', margin: '0 auto', padding: '28px 20px 40px', textAlign: 'center' }}>
           <p style={{ fontSize: '0.74rem', color: '#6b7280', margin: 0, lineHeight: 1.7, maxWidth: '640px', marginInline: 'auto' }}>
-            Links de afiliado — ao comprar através deles você apoia o IAIPSI Informa sem custo adicional. Ofertas sujeitas a disponibilidade e prazo.
+            Links de afiliado — ao comprar através deles você apoia o site Com a Lupa sem custo adicional. Ofertas sujeitas a disponibilidade e prazo.
           </p>
         </div>
       </footer>

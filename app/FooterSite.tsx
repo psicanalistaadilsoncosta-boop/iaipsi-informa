@@ -14,7 +14,8 @@ export default function FooterSite() {
 
           {/* Coluna 1 — Marca */}
           <div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#111827', margin: '0 0 10px' }}>IAIPSI Informa</h3>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#111827', margin: '0 0 2px' }}>🔍 Com a Lupa</h3>
+            <p style={{ fontSize: '0.7rem', color: '#9ca3af', margin: '0 0 10px' }}>por IAIPSI</p>
             <p style={{ fontSize: '0.65rem', color: '#6b7280', lineHeight: 1.6, margin: '0 0 16px' }}>
               Agregador de notícias com curadoria editorial, análises psicanalíticas e seleção de ofertas.
             </p>
@@ -76,13 +77,13 @@ export default function FooterSite() {
       <div style={{ borderTop: '1px solid #f3f4f6', backgroundColor: '#f9fafb' }}>
         <div style={{ maxWidth: '1060px', margin: '0 auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: 0, lineHeight: 1.6 }}>
-            <strong style={{ color: '#6b7280' }}>Notícias:</strong> Coletadas automaticamente dos principais portais de comunicação do Brasil e do mundo via feeds RSS públicos. O IAIPSI Informa não é autor das matérias jornalísticas exibidas.
+            <strong style={{ color: '#6b7280' }}>Notícias:</strong> Coletadas automaticamente dos principais portais de comunicação do Brasil e do mundo via feeds RSS públicos. O site Com a Lupa não é autor das matérias jornalísticas exibidas.
           </p>
           <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: 0, lineHeight: 1.6 }}>
             <strong style={{ color: '#6b7280' }}>Análises editoriais e Sabores & Destinos:</strong> Elaboradas com auxílio de inteligência artificial e revisadas.
           </p>
           <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: 0, lineHeight: 1.6 }}>
-            <strong style={{ color: '#6b7280' }}>Ofertas e afiliados:</strong> Os produtos, ofertas e cupons exibidos são de responsabilidade exclusiva dos respectivos anunciantes. Preços, condições e disponibilidade estão sujeitos a alteração. Confira sempre o valor final no site do anunciante antes de concluir a compra. Links de afiliado — ao comprar através deles você apoia o IAIPSI Informa sem custo adicional para você.
+            <strong style={{ color: '#6b7280' }}>Ofertas e afiliados:</strong> Os produtos, ofertas e cupons exibidos são de responsabilidade exclusiva dos respectivos anunciantes. Preços, condições e disponibilidade estão sujeitos a alteração. Confira sempre o valor final no site do anunciante antes de concluir a compra. Links de afiliado — ao comprar através deles você apoia o site Com a Lupa sem custo adicional para você.
           </p>
         </div>
       </div>
@@ -91,7 +92,7 @@ export default function FooterSite() {
       <div style={{ borderTop: '1px solid #e5e7eb', backgroundColor: '#fff' }}>
         <div style={{ maxWidth: '1060px', margin: '0 auto', padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
           <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: 0 }}>
-            © {ano} IAIPSI Informa · Todos os direitos reservados
+            © {ano} Com a Lupa · por IAIPSI · Todos os direitos reservados
           </p>
           <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: 0 }}>
             Desenvolvido por <a href="https://iaipsi.com" target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'none' }}>Adilson Costa</a>

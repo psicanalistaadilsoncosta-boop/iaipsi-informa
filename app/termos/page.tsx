@@ -12,7 +12,7 @@ export default function TermosPrivacidadePage() {
 
         <div style={{ backgroundColor: '#2563eb', padding: '32px' }}>
           <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fff', margin: '0 0 6px' }}>Termos de Uso e Privacidade</h1>
-          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.9rem', margin: 0 }}>IAIPSI Informa — informa.iaipsi.com</p>
+          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.9rem', margin: 0 }}>Com a Lupa — comlupa.com.br</p>
         </div>
 
         <div style={{ padding: '40px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
@@ -20,14 +20,14 @@ export default function TermosPrivacidadePage() {
           {/* Seção */}
           {[
             {
-              titulo: '1. Sobre o IAIPSI Informa',
+              titulo: '1. Sobre o Com a Lupa',
               icone: '🌐',
-              texto: `O IAIPSI Informa (informa.iaipsi.com) é um agregador de notícias e curadoria de conteúdo mantido por Adilson Costa — Psicanalista, Consultor Organizacional e Desenvolvedor. O site reúne notícias de portais públicos via feeds RSS, análises editoriais elaboradas com auxílio de inteligência artificial e revisadas pelo autor, posts da seção Sabores & Destinos, e uma seleção curada de ofertas e produtos de parceiros afiliados.`,
+              texto: `O Com a Lupa (comlupa.com.br) é um agregador de notícias e curadoria de conteúdo mantido por Adilson Costa — Psicanalista, Consultor Organizacional e Desenvolvedor. O site reúne notícias de portais públicos via feeds RSS, análises editoriais elaboradas com auxílio de inteligência artificial e revisadas pelo autor, posts da seção Sabores & Destinos, e uma seleção curada de ofertas e produtos de parceiros afiliados.`,
             },
             {
               titulo: '2. Notícias e Conteúdo Jornalístico',
               icone: '📰',
-              texto: `As notícias exibidas no IAIPSI Informa são coletadas automaticamente de feeds RSS públicos de portais de comunicação como G1, CNN Brasil, BBC Brasil, UOL, Folha de S.Paulo, entre outros. O IAIPSI Informa não é autor, responsável editorial ou proprietário dessas matérias. Todo o crédito pertence aos veículos originais. Os links sempre redirecionam para a fonte original.`,
+              texto: `As notícias exibidas no site Com a Lupa são coletadas automaticamente de feeds RSS públicos de portais de comunicação como G1, CNN Brasil, BBC Brasil, UOL, Folha de S.Paulo, entre outros. O site Com a Lupa não é autor, responsável editorial ou proprietário dessas matérias. Todo o crédito pertence aos veículos originais. Os links sempre redirecionam para a fonte original.`,
             },
             {
               titulo: '3. Análises Editoriais e Sabores & Destinos',
@@ -37,12 +37,12 @@ export default function TermosPrivacidadePage() {
             {
               titulo: '4. Ofertas, Cupons e Links de Afiliado',
               icone: '🛍',
-              texto: `O IAIPSI Informa participa de programas de afiliados (Lomadee, Awin, Rakuten e outros). Isso significa que ao clicar em certos links e realizar uma compra, o site pode receber uma comissão sem custo adicional para você.\n\nOs preços, condições de parcelamento e disponibilidade dos produtos são de responsabilidade exclusiva dos anunciantes e podem ser alterados a qualquer momento sem aviso prévio. Sempre confirme as condições finais no site do anunciante e no carrinho de compras antes de finalizar a compra.\n\nO IAIPSI Informa não se responsabiliza por divergências de preço, cancelamentos, atrasos ou problemas na entrega dos produtos adquiridos, visto que é somente um agregador de ofertas.`,
+              texto: `O site Com a Lupa participa de programas de afiliados (Lomadee, Awin, Rakuten e outros). Isso significa que ao clicar em certos links e realizar uma compra, o site pode receber uma comissão sem custo adicional para você.\n\nOs preços, condições de parcelamento e disponibilidade dos produtos são de responsabilidade exclusiva dos anunciantes e podem ser alterados a qualquer momento sem aviso prévio. Sempre confirme as condições finais no site do anunciante e no carrinho de compras antes de finalizar a compra.\n\nO site Com a Lupa não se responsabiliza por divergências de preço, cancelamentos, atrasos ou problemas na entrega dos produtos adquiridos, visto que é somente um agregador de ofertas.`,
             },
             {
   titulo: '5. Cookies e Dados Pessoais',
   icone: '🍪',
-  texto: `O IAIPSI Informa não utiliza cookies de rastreamento, pixels de publicidade ou ferramentas de coleta de dados pessoais próprias.\n\nNão coletamos nome, e-mail, CPF ou qualquer dado pessoal dos visitantes. Não há cadastro, login ou área de membros.\n\n⚠️ Exceção: Seu Universo. Ao montar sua lista de produtos e ofertas e solicitar o envio por email, o endereço de email informado por você é armazenado em nossa newsletter para que você receba novidades e curadoria selecionada. Você pode solicitar a remoção a qualquer momento.\n\nOs sites externos acessados via links (lojas, portais de notícias, parceiros afiliados) possuem suas próprias políticas de privacidade e uso de cookies, sobre as quais não temos controle.`,
+  texto: `O site Com a Lupa não utiliza cookies de rastreamento, pixels de publicidade ou ferramentas de coleta de dados pessoais próprias.\n\nNão coletamos nome, e-mail, CPF ou qualquer dado pessoal dos visitantes. Não há cadastro, login ou área de membros.\n\n⚠️ Exceção: Seu Universo. Ao montar sua lista de produtos e ofertas e solicitar o envio por email, o endereço de email informado por você é armazenado em nossa newsletter para que você receba novidades e curadoria selecionada. Você pode solicitar a remoção a qualquer momento.\n\nOs sites externos acessados via links (lojas, portais de notícias, parceiros afiliados) possuem suas próprias políticas de privacidade e uso de cookies, sobre as quais não temos controle.`,
 },
             {
               titulo: '6. Inteligência Artificial',
@@ -52,12 +52,12 @@ export default function TermosPrivacidadePage() {
             {
               titulo: '7. Propriedade Intelectual',
               icone: '©️',
-              texto: `O conteúdo original do IAIPSI Informa — análises editoriais, posts Sabores & Destinos, curadoria de ofertas e design do site — é de propriedade de Adilson Costa e protegido por direitos autorais. As notícias exibidas pertencem aos seus respectivos veículos. As imagens de produtos pertencem aos respectivos anunciantes.`,
+              texto: `O conteúdo original do site Com a Lupa — análises editoriais, posts Sabores & Destinos, curadoria de ofertas e design do site — é de propriedade de Adilson Costa e protegido por direitos autorais. As notícias exibidas pertencem aos seus respectivos veículos. As imagens de produtos pertencem aos respectivos anunciantes.`,
             },
             {
               titulo: '8. Contato',
               icone: '✉️',
-              texto: `Para dúvidas, solicitações ou sugestões, entre em contato através do site principal: iaipsi.com`,
+              texto: `Para dúvidas, solicitações ou sugestões, entre em contato pelo e-mail contato@comlupa.com.br`,
             },
           ].map(({ titulo, icone, texto }) => (
             <div key={titulo}>

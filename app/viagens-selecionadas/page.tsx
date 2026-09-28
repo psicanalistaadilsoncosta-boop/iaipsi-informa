@@ -190,7 +190,7 @@ export default async function ViagensSelecionadasPage({ searchParams }: { search
 
       <footer style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #e5e7eb', textAlign: 'center' }}>
         <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: 0, lineHeight: 1.6 }}>
-          Links de afiliado Viator — ao reservar através deles você apoia o IAIPSI Informa sem custo adicional.<br />
+          Links de afiliado Viator — ao reservar através deles você apoia o site Com a Lupa sem custo adicional.<br />
           Preços e condições expressos nos respectivos sites dos operadores. Confira sempre o valor antes de reservar.
         </p>
       </footer>

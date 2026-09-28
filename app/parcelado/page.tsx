@@ -187,7 +187,7 @@ export default async function ParceladoPage({ searchParams }: { searchParams: Pr
 
       <footer style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #e5e7eb', textAlign: 'center' }}>
         <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: 0, lineHeight: 1.6 }}>
-          Links de afiliado — ao comprar através deles você apoia o IAIPSI Informa sem custo adicional.<br />
+          Links de afiliado — ao comprar através deles você apoia o site Com a Lupa sem custo adicional.<br />
           Condições de parcelamento sujeitas a confirmação no site do anunciante e no carrinho de compras.
         </p>
       </footer>

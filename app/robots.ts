@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/editorial', '/sabores', '/api/'],
     },
-    sitemap: 'https://informa.iaipsi.com/sitemap.xml',
+    sitemap: 'https://comlupa.com.br/sitemap.xml',
   };
 }

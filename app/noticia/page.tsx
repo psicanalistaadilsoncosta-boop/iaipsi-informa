@@ -186,7 +186,7 @@ function NoticiaContent() {
 
       <footer style={{ marginTop: '24px', textAlign: 'center' }}>
         <p style={{ fontSize: '0.7rem', color: '#9ca3af', margin: 0 }}>
-          © {new Date().getFullYear()} IAIPSI Informa
+          © {new Date().getFullYear()} Com a Lupa
         </p>
       </footer>
 

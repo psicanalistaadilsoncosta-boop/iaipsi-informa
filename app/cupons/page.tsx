@@ -130,7 +130,7 @@ export default function CuponsPage() {
 
       <footer style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #e5e7eb', textAlign: 'center' }}>
         <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: 0 }}>
-          Cupons sujeitos a disponibilidade e prazo. Links de afiliado — ao comprar você apoia o IAIPSI Informa.
+          Cupons sujeitos a disponibilidade e prazo. Links de afiliado — ao comprar você apoia o site Com a Lupa.
         </p>
       </footer>
     </main>

@@ -76,7 +76,7 @@ interface ProdutoPinado {
 
 const LOJAS_KEY = 'lojas:cadastradas';
 const PINADOS_KEY = 'produtos:pinados';
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://informa.iaipsi.com';
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://comlupa.com.br';
 
 function diasDesdeUltima(ultimaAtualizacao: string | null): number {
   if (!ultimaAtualizacao) return 999;

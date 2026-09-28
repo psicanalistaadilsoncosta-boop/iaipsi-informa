@@ -3,7 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = 'https://informa.iaipsi.com';
+  const base = 'https://comlupa.com.br';
 
   // Páginas fixas
   const static_pages: MetadataRoute.Sitemap = [
