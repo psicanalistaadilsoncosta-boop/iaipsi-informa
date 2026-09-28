@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import BotaoWhatsApp from '../BotaoWhatsApp';
 
 interface ProdutoPinado {
   id: string;
@@ -171,6 +172,7 @@ function CardOferta({ p }: { p: ProdutoPinado }) {
         }}>
           Ver oferta →
         </a>
+        <BotaoWhatsApp nome={p.nome} link={p.link} imagem={p.imagem} preco={p.preco} destaque />
 
         <p style={{ fontSize: '0.65rem', color: '#9ca3af', margin: 0, textAlign: 'center' }}>
           Link de afiliado

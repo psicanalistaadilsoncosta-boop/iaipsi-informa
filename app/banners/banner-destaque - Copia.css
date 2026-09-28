@@ -48,13 +48,6 @@
   .banner-imagem-mobile  { display: block; }
 }
 
-/* ── Filtro de LED para as imagens ────────────────────────────────────────── */
-.banner-imagem,
-.banner-oferta-img {
-  filter: contrast(115%) brightness(105%) saturate(120%);
-  image-rendering: pixelated; /* Deixa os contornos da imagem alinhados aos pixels */
-}
-
 /* ── Overlay ───────────────────────────────────────────────────────────────── */
 .banner-overlay {
   position: absolute;
@@ -81,14 +74,16 @@
   z-index: 2;
 }
 
-/* ── Painel de LED (Matriz de Pixels) ─────────────────────────────────────── */
 .banner-scanlines {
- display: none; /* <── Adicione esta linha aqui para desligar o efeito */
   position: absolute;
   inset: 0;
-  /* Cria uma malha circular de pontos pretos imitando os LEDs do painel */
-  background-image: radial-gradient(circle, transparent 65%, rgba(0, 0, 0, 0.75) 50%);
-  background-size: 4px 4px;
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(0,0,0,0.03) 0px,
+    rgba(0,0,0,0.03) 1px,
+    transparent 1px,
+    transparent 3px
+  );
   pointer-events: none;
   z-index: 3;
 }

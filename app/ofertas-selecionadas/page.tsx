@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import Link from 'next/link';
 import { kv } from '@/lib/kv';
+import BotaoWhatsApp from '../BotaoWhatsApp';
 
 interface ProdutoPinado {
   id: string;
@@ -143,6 +144,7 @@ export default async function OfertasSelecionadasPage({ searchParams }: { search
                     <div style={{ backgroundColor: '#2563eb', color: '#fff', padding: '10px', borderRadius: '8px', fontWeight: 700, fontSize: '0.88rem', textAlign: 'center' }}>
                       Ver oferta →
                     </div>
+                    <BotaoWhatsApp nome={p.nome} link={p.link} imagem={p.imagem} preco={p.preco} />
                   </div>
                 </article>
               </a>

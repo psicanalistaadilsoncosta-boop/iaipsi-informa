@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { kv } from '@/lib/kv';
+import BotaoWhatsApp from '../BotaoWhatsApp';
 
 export const dynamic = 'force-dynamic';
 
@@ -222,6 +223,7 @@ export default async function BuscaPage({
                       >
                         Ver oferta →
                       </div>
+                      <BotaoWhatsApp nome={p.nome || ''} link={p.link || ''} imagem={imagem} preco={p.preco} />
                     </div>
                   </article>
                 </a>
