@@ -47,18 +47,52 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
            <body>
-        <div
+                <div
           style={{
             background: '#5B3E96',
             color: '#FFFFFF',
-            textAlign: 'center',
             padding: '8px 16px',
             fontSize: '14px',
             fontFamily: 'system-ui, -apple-system, sans-serif',
             letterSpacing: '0.3px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px 16px',
+            flexWrap: 'wrap',
           }}
         >
-          🔍 Você está <strong>Com a Lupa</strong> · notícias e ofertas vistas de perto
+          <span>🔍 Você está <strong>Com a Lupa</strong> · notícias e ofertas vistas de perto</span>
+          <form action="/busca" method="get" style={{ display: 'flex', gap: '4px', margin: 0 }}>
+            <input
+              type="search"
+              name="q"
+              placeholder="Buscar ofertas..."
+              aria-label="Buscar ofertas"
+              style={{
+                padding: '5px 10px',
+                borderRadius: '6px',
+                border: 'none',
+                fontSize: '13px',
+                width: '180px',
+              }}
+            />
+            <button
+              type="submit"
+              style={{
+                background: '#FFFFFF',
+                color: '#5B3E96',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '5px 12px',
+                fontWeight: 700,
+                fontSize: '13px',
+                cursor: 'pointer',
+              }}
+            >
+              Buscar
+            </button>
+          </form>
         </div>
         {children}
       </body>
