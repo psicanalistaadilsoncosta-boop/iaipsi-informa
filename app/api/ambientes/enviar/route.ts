@@ -82,7 +82,7 @@ function gerarHtml(produtos: ProdutoLista[]): string {
     <!-- Rodapé -->
     <div style="padding:20px 24px;background:#f9fafb;border-top:1px solid #e5e7eb;text-align:center">
       <p style="font-size:12px;color:#9ca3af;margin:0">
-        Lista gerada em <a href="https://informa.iaipsi.com/monte-seu-ambiente" style="color:#7c3aed">iaipsi.com</a> · Os links são de afiliado e podem mudar de preço a qualquer momento.
+      Lista gerada em <a href="https://comlupa.com.br" style="color:#7c3aed">comlupa.com.br</a> · Os links são de afiliado e podem mudar de preço a qualquer momento.
       </p>
     </div>
 
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
      const html = gerarHtml(produtos);
 
     await criarTransporter().sendMail({
-      from: `"Monte seu Ambiente · iaipsi" <${process.env.ZOHO_SMTP_USER}>`,
+            from: `"Monte seu Ambiente · Com a Lupa" <${process.env.ZOHO_FROM || process.env.ZOHO_SMTP_USER}>`,
       to: destinatarios,
       subject: `🏠 Sua lista de ambiente — ${produtos.length} produto${produtos.length > 1 ? 's' : ''} selecionado${produtos.length > 1 ? 's' : ''}`,
       html,
