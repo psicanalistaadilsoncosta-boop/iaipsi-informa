@@ -1,10 +1,11 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { kv } from '@/lib/kv';
+import { isAdmin } from '@/lib/adminAuth';
 
 export const dynamic = 'force-dynamic';
 
 function checkAuth(req: NextRequest) {
-  return req.cookies.get('editorial_auth')?.value === 'true';
+  return isAdmin(req);
 }
 
 // GET — retorna todos os produtos
