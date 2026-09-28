@@ -137,13 +137,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     }));
 
-  // Categorias e lojas que têm produtos pinados
-  const categorias = new Set<string>();
-  const lojas = new Set<string>();
+    // Categorias e lojas com pelo menos 3 produtos pinados
+  // (páginas com 1 ou 2 produtos o Google vê como conteúdo fraco)
+  const MINIMO_PRODUTOS = 3;
+  const contaCategorias = new Map<string, number>();
+  const contaLojas = new Map<string, number>();
   for (const p of pinados as any[]) {
-    if (p?.categoria) categorias.add(paraSlug(String(p.categoria)));
-    if (p?.loja) lojas.add(paraSlug(String(p.loja)));
+    if (p?.categoria) {
+      const slug = paraSlug(String(p.categoria));
+      contaCategorias.set(slug, (contaCategorias.get(slug) || 0) + 1);
+    }
+    if (p?.loja) {
+      const slug = paraSlug(String(p.loja));
+      contaLojas.set(slug, (contaLojas.get(slug) || 0) + 1);
+    }
   }
+  const categorias = [...contaCategorias].filter(([, n]) => n >= MINIMO_PRODUTOS).map(([slug]) => slug);
+  const lojas = [...contaLojas].filter(([, n]) => n >= MINIMO_PRODUTOS).map(([slug]) => slug);
+
 
   const paginasCategorias: MetadataRoute.Sitemap = [...categorias].filter(Boolean).map((slug) => ({
     url: `${BASE}/categorias/${slug}`,

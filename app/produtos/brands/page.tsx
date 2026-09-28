@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import AdminGate from '../../AdminGate';
 
 interface Marca {
   id: string;
@@ -9,7 +10,7 @@ interface Marca {
   logo?: string;
 }
 
-export default function BrandsPage() {
+function Brands() {
   const [marcas, setMarcas] = useState<Marca[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtro, setFiltro] = useState('');
@@ -152,5 +153,13 @@ export default function BrandsPage() {
         </>
       )}
     </main>
+  );
+}
+
+export default function BrandsPage() {
+  return (
+    <AdminGate titulo="Marcas">
+      <Brands />
+    </AdminGate>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import AdminGate from '../../AdminGate';
 
 type Categoria = 'ambiente' | 'vistaSe' | 'beleza' | 'momento' | 'mercado' | null;
 
@@ -516,7 +517,7 @@ function EditarSlide({ slide, onSalvar, onCancelar }: {
   );
 }
 
-export default function AdminProdutosPage() {
+function AdminProdutos() {
   const [authed, setAuthed] = useState(false);
   const [loginError, setLoginError] = useState('');
 
@@ -1735,4 +1736,12 @@ function getPaginasVisiveis(atual: number, total: number): (number | '...')[] {
     pages.push(1, '...', atual - 1, atual, atual + 1, '...', total);
   }
   return pages;
+}
+
+export default function AdminProdutosPage() {
+  return (
+    <AdminGate titulo="Admin de Produtos">
+      <AdminProdutos />
+    </AdminGate>
+  );
 }
