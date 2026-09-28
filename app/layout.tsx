@@ -31,14 +31,20 @@ export const metadata: Metadata = {
     googleBot: { index: true, follow: true },
   },
   verification: {
-     '1cHg7n-AwRyL02QBJbB24LjNz-GuZCMHsxsjYKC1U0Y',
+    google: [
+      '1cHg7n-AwRyL02QBJbB24LjNz-GuZCMHsxsjYKC1U0Y',
       'OXdN9to7m306Es3y8zOYiNKNYcRotHuuL-BhknAovmU',
+    ],
     other: {
       'mitgo-verification': '184e98de-443a-47c6-8afa-e3317f0c1980',
       'lomadee': '2324685',
     },
   },
 };
+
+
+
+
 
 export default function RootLayout({
   children,
