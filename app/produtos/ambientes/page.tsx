@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import AdminGate from '../../AdminGate';
 
 const AMBIENTES = ['Sala', 'Quarto', 'Escritório', 'Cozinha', 'Banheiro', 'Área externa'];
 const TIPOS_AMBIENTE = ['Iluminação', 'Climatização', 'Móveis', 'Decoração', 'Organização', 'Eletrônicos'];
@@ -29,7 +30,7 @@ interface MapaAmbientes {
 
 type Aba = 'cobertura' | 'leads';
 
-export default function AmbientesPainelPage() {
+function AmbientesPainel() {
   const [mapa, setMapa] = useState<MapaAmbientes>({});
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -265,5 +266,13 @@ export default function AmbientesPainelPage() {
 
       </div>
     </main>
+  );
+}
+
+export default function AmbientesPainelPage() {
+  return (
+    <AdminGate titulo="Painel de Ambientes">
+      <AmbientesPainel />
+    </AdminGate>
   );
 }
