@@ -8,7 +8,7 @@ import { kv } from '@/lib/kv';
 import { FeedItem, AdItem } from '../page';
 
 export const revalidate = 900;
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 const parser = new Parser({
   customFields: {
