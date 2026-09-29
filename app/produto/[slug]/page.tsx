@@ -124,7 +124,32 @@ export default async function ArtigoProdutoPage({ params }: { params: Promise<{ 
 
           {/* Imagem */}
           <div className="produto-imagem">
-            <GaleriaImagens imagem={artigo.imagem} gallery={artigo.gallery || []} titulo={artigo.titulo} />
+            <script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: artigo.titulo,
+      image: artigo.imagem,
+      description: artigo.descricaoCurta,
+      ...(artigo.marca ? { brand: { '@type': 'Brand', name: artigo.marca } } : {}),
+      ...(artigo.gtin ? { gtin: String(artigo.gtin) } : {}),
+      ...((artigo.ofertas || []).filter(o => o.preco > 0).length > 0
+        ? {
+            offers: {
+              '@type': 'AggregateOffer',
+              priceCurrency: 'BRL',
+              lowPrice: Math.min(...artigo.ofertas.filter(o => o.preco > 0).map(o => o.preco)),
+              highPrice: Math.max(...artigo.ofertas.filter(o => o.preco > 0).map(o => o.preco)),
+              offerCount: artigo.ofertas.filter(o => o.preco > 0).length,
+            },
+          }
+        : {}),
+    }).replace(/</g, '\\u003c'),
+  }}
+/>
+<GaleriaImagens imagem={artigo.imagem} gallery={artigo.gallery || []} titulo={artigo.titulo} />
           </div>
 
           {/* Dados */}
