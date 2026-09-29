@@ -27,8 +27,9 @@ export async function POST(req: NextRequest) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 4000,
+        model: 'claude-sonnet-5-5',
+        max_tokens: 5500,
+        thinking: { type: 'between_tools' },
         messages: [{
           role: 'user',
           content: `Você é um redator editorial de viagem com voz reflexiva, inteligente e acolhedora, alinhado com a marca Liderança Consciente / IAIPSI. Seu texto conecta experiências de viagem com autoconhecimento, presença e expansão de perspectiva. Escreva em português brasileiro.
@@ -75,7 +76,11 @@ Regras obrigatórias:
     });
 
     const data = await res.json();
-    const conteudo = data.content?.[0]?.text || '';
+    const conteudo = (data.content || [])
+      .filter((b: { type: string }) => b.type === 'text')
+      .map((b: { text: string }) => b.text)
+      .join('')
+      .trim();
     return NextResponse.json({ conteudo });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });

@@ -18,8 +18,9 @@ export async function POST(req: NextRequest) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 4000,
+        model: 'claude-sonnet-5-5',
+        max_tokens: 5500,
+        thinking: { type: 'between_tools' },
         messages: [{
           role: 'user',
           content: `Você é um redator especialista em tecnologia e produtos de consumo. Escreva um artigo editorial completo em português brasileiro sobre o produto abaixo.
@@ -56,7 +57,11 @@ Evite o uso de travessão (—). Prefira dois-pontos (:) ou ponto e vírgula (;)
     });
 
     const data = await res.json();
-    const conteudo = data.content?.[0]?.text || '';
+        const conteudo = (data.content || [])
+      .filter((b: { type: string }) => b.type === 'text')
+      .map((b: { text: string }) => b.text)
+      .join('')
+      .trim();
     return NextResponse.json({ conteudo });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });

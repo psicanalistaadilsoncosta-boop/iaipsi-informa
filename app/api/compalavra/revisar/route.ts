@@ -11,8 +11,8 @@ export async function POST(req: NextRequest) {
     if (!conteudo) return NextResponse.json({ error: 'Conteúdo ausente' }, { status: 400 });
 
     const message = await anthropic.messages.create({
-      model: 'claude-opus-4-5',
-      max_tokens: 4000,
+      model: 'claude-opus-5-5',
+      max_tokens: 8000,
       messages: [
         {
           role: 'user',
@@ -54,7 +54,11 @@ ${conteudo}`,
       ],
     });
 
-    const revisado = message.content[0].type === 'text' ? message.content[0].text.trim() : '';
+       const revisado = message.content
+      .filter((b) => b.type === 'text')
+      .map((b) => (b as { text: string }).text)
+      .join('')
+      .trim();
     return NextResponse.json({ revisado });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });

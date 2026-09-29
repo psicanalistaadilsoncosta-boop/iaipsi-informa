@@ -50,15 +50,20 @@ export async function POST(req: NextRequest) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1500,
+        model: 'claude-sonnet-5-5',
+        max_tokens: 2000,
+        thinking: { type: 'between_tools' },
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: `Crie um post para: Prato — ${prato} | Destino — ${destino}${dificuldade ? ` | Nível de preparo — ${dificuldade}` : ''}` }],
       }),
     });
 
     const data = await response.json();
-    const text = data.content?.[0]?.text || '';
+       const text = (data.content || [])
+      .filter((b: { type: string }) => b.type === 'text')
+      .map((b: { text: string }) => b.text)
+      .join('')
+      .trim();
 
     let parsed;
     try {

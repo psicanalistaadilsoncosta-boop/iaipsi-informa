@@ -74,15 +74,20 @@ Gere a análise editorial seguindo exatamente a estrutura e o tom definidos.`;
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1024,
+        model: 'claude-sonnet-5-5',
+        max_tokens: 1400,
+        thinking: { type: 'between_tools' },
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userMessage }],
       }),
     });
 
     const data = await response.json();
-    const analysis = data.content?.[0]?.text || '';
+        const analysis = (data.content || [])
+      .filter((b: { type: string }) => b.type === 'text')
+      .map((b: { text: string }) => b.text)
+      .join('')
+      .trim();
 
     return NextResponse.json({ analysis });
   } catch (error) {

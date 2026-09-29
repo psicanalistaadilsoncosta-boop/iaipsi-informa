@@ -14,8 +14,9 @@ export async function POST(req: NextRequest) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 400,
+        model: 'claude-sonnet-5-5',
+        max_tokens: 550,
+        thinking: { type: 'between_tools' },
         system: `Você sugere combinações criativas de prato típico + destino de viagem para uma seção editorial chamada "Sabores & Destinos". 
 Evite combinações óbvias e batidas. Prefira pratos menos conhecidos do grande público, destinos surpreendentes, combinações que provoquem curiosidade.
 ${usados?.length ? `Já foram usados: ${usados.join(', ')}. Não repita nenhum desses.` : ''}
@@ -31,7 +32,11 @@ Retorne APENAS um JSON válido, sem markdown, sem backticks:
     });
 
     const data = await response.json();
-    const text = data.content?.[0]?.text || '';
+    const text = (data.content || [])
+      .filter((b: { type: string }) => b.type === 'text')
+      .map((b: { text: string }) => b.text)
+      .join('')
+      .trim();
 
     let parsed;
     try {

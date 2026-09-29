@@ -13,8 +13,9 @@ export async function POST(req: NextRequest) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 100,
+        model: 'claude-sonnet-5-5',
+        max_tokens: 150,
+        thinking: { type: 'between_tools' },
         messages: [{
           role: 'user',
           content: `Crie UMA frase editorial curta (máximo 15 palavras) justificando por que este produto merece atenção: "${nome}" - categoria: ${categoria || 'produto'}. Sem aspas, sem ponto final, sem explicações adicionais.`
@@ -22,7 +23,12 @@ export async function POST(req: NextRequest) {
       })
     });
     const data = await res.json();
-    return NextResponse.json({ frase: data.content?.[0]?.text || '' });
+        const frase = (data.content || [])
+      .filter((b: { type: string }) => b.type === 'text')
+      .map((b: { text: string }) => b.text)
+      .join('')
+      .trim();
+    return NextResponse.json({ frase });
   } catch {
     return NextResponse.json({ frase: '' });
   }

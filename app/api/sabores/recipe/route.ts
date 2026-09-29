@@ -87,14 +87,19 @@ Retorne APENAS um JSON válido, sem markdown, sem backticks:
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1500,
+        model: 'claude-sonnet-5-5',
+        max_tokens: 2000,
+        thinking: { type: 'between_tools' },
         messages: [{ role: 'user', content: prompt }],
       }),
     });
 
     const data = await response.json();
-    const text = data.content?.[0]?.text || '';
+    const text = (data.content || [])
+      .filter((b: { type: string }) => b.type === 'text')
+      .map((b: { text: string }) => b.text)
+      .join('')
+      .trim();
 
     let parsed;
     try {
