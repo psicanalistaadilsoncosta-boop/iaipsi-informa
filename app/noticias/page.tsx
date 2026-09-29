@@ -269,7 +269,8 @@ async function getOfertasMix(): Promise<any[]> {
       } catch {}
     }
 
-   const [campData, brandData] = !API_KEY ? [{ data: [] }, { data: [] }] : await Promise.all([
+   // Lomadee desligada aqui: /noticias usa só os produtos pinados do KV (a Lomadee cai com frequência)
+    const [campData, brandData] = true ? [{ data: [] as any[] }, { data: [] as any[] }] : await Promise.all([
            comTempoLimite(fetch(`${BASE_URL}/affiliate/campaigns?limit=20`, {
         headers: { 'x-api-key': API_KEY },
         

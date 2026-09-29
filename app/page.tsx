@@ -462,7 +462,7 @@ async function getBannerData(): Promise<{ slidesEditoriais: any[]; produtosBanne
 
 export default async function Home() {
   const [posts, ads, editorial, sabores, ofertasMix, artigosProduto, viagemDestaque, viagensNoticias, comPalavraDestaque, bannerData] = await Promise.all([
-    getNews(), getAds(), getEditorial(), getSabores(), getOfertasMix(), getArtigosProduto(), getViagemDestaque(), getViagensNoticias(), getComPalavraDestaque(), getBannerData()
+    getNews(), getAds(), getEditorial(), getSabores(), Promise.resolve([] as any[]), getArtigosProduto(), getViagemDestaque(), getViagensNoticias(), getComPalavraDestaque(), getBannerData()
   ]);
 
   // Mescla slides editoriais + produtos de oferta e embaralha
