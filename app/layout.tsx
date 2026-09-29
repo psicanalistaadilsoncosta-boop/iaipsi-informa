@@ -8,9 +8,7 @@ export const metadata: Metadata = {
   },
   description: 'Notícias de política, economia, saúde mental e psicanálise com análises editoriais de Adilson Costa — psicanalista e consultor organizacional.',
   keywords: ['Com a Lupa', 'ofertas', 'cupons', 'notícias', 'análise editorial', 'psicanálise', 'saúde mental', 'liderança', 'Adilson Costa', 'IAIPSI'],
-  authors: [{ name: 'Adilson Costa', url: 'https://iaipsi.com' }],
-  creator: 'Adilson Costa',
-  openGraph: {
+   openGraph: {
     type: 'website',
     locale: 'pt_BR',
     url: 'https://comlupa.com.br',

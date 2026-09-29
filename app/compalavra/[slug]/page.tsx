@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title: artigo.titulo,
     description: artigo.resumo,
     alternates: { canonical: `/compalavra/${artigo.slug}` },
-    authors: [{ name: 'Adilson Costa', url: 'https://iaipsi.com' }],
+    authors: [{ name: 'Adilson Costa', url: 'https://www.psicanalistaadilsoncosta.com' }],
     openGraph: {
       type: 'article',
       title: artigo.titulo,
@@ -74,7 +74,7 @@ export default async function ArtigoComPalavraPage({ params }: { params: Promise
             ...(artigo.imagem ? { image: artigo.imagem } : {}),
             datePublished: artigo.createdAt,
             dateModified: artigo.updatedAt || artigo.createdAt,
-            author: { '@type': 'Person', name: 'Adilson Costa', url: 'https://iaipsi.com', jobTitle: 'Psicanalista' },
+            author: { '@type': 'Person', name: 'Adilson Costa', url: 'https://www.psicanalistaadilsoncosta.com', jobTitle: 'Psicanalista', sameAs: ['https://iaipsi.com'] },
             publisher: { '@type': 'Organization', name: 'Com a Lupa', url: 'https://comlupa.com.br' },
             mainEntityOfPage: `https://comlupa.com.br/compalavra/${artigo.slug}`,
           }).replace(/</g, '\\u003c'),
