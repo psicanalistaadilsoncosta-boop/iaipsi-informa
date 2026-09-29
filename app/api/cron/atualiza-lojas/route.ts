@@ -148,7 +148,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const lojas = (await kv.get<Loja[]>(LOJAS_KEY)) || [];
+  let lojas = (await kv.get<Loja[]>(LOJAS_KEY)) || [];
   const pinados = (await kv.get<ProdutoPinado[]>(PINADOS_KEY)) || [];
 
   const lojasParaAtualizar = lojas.filter(l => l.cron?.ativo && precisaAtualizar(l.cron));
@@ -191,8 +191,9 @@ export async function GET(req: NextRequest) {
       };
 
       // Remove apenas os "a_catalogar" desta loja (catalogados ficam intactos)
-      const removidos = pinadosAtualizados.filter(p => isDaLoja(p) && !temCategoria(p));
-      pinadosAtualizados = pinadosAtualizados.filter(p => !(isDaLoja(p) && !temCategoria(p)));
+      const daMesmaBusca = (p: any) => isDaLoja(p) && !temCategoria(p) && (!p.origemUrl || p.origemUrl === loja.url);
+      const removidos = pinadosAtualizados.filter(daMesmaBusca);
+      pinadosAtualizados = pinadosAtualizados.filter(p => !daMesmaBusca(p));
 
       // Catalogados desta loja (para match automático)
       const catalogadosDaLoja = pinadosAtualizados.filter(p => isDaLoja(p) && temCategoria(p));
@@ -254,6 +255,7 @@ export async function GET(req: NextRequest) {
             pinedAt: new Date().toISOString(),
             aCatalogar: true,
             lojaNome: loja.nome,
+            origemUrl: loja.url,
             ...(loja.moedaUSD ? { moedaUSD: true } : {}),
           } as any);
         }
@@ -262,13 +264,13 @@ export async function GET(req: NextRequest) {
       pinadosAtualizados = [...pinadosAtualizados, ...novos];
 
       // 4. Atualiza ultimaAtualizacao da loja no KV
-      const lojasAtualizadas = lojas.map(l => {
+        lojas = lojas.map(l => {
         if (l.url === loja.url && l.tipo === loja.tipo && l.cron) {
           return { ...l, cron: { ...l.cron, ultimaAtualizacao: new Date().toISOString() } };
         }
         return l;
       });
-      await kv.set(LOJAS_KEY, lojasAtualizadas);
+      await kv.set(LOJAS_KEY, lojas);
 
       resultados[loja.nome] = { pinados: novos.length };
     } catch (err: any) {
