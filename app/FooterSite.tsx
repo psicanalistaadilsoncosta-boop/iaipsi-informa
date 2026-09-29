@@ -95,7 +95,7 @@ export default function FooterSite() {
             © {ano} Com a Lupa · por IAIPSI · Todos os direitos reservados
           </p>
           <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: 0 }}>
-            Desenvolvido por <a href="https://iaipsi.com" target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'none' }}>Adilson Costa</a>
+            
           </p>
         </div>
       </div>
