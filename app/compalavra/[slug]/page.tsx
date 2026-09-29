@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { kv } from '@/lib/kv';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -27,6 +28,34 @@ function renderConteudo(texto: string) {
   });
 }
 
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const artigo = await getArtigo(slug);
+  if (!artigo) return {};
+  return {
+    title: artigo.titulo,
+    description: artigo.resumo,
+    alternates: { canonical: `/compalavra/${artigo.slug}` },
+    authors: [{ name: 'Adilson Costa', url: 'https://iaipsi.com' }],
+    openGraph: {
+      type: 'article',
+      title: artigo.titulo,
+      description: artigo.resumo,
+      url: `/compalavra/${artigo.slug}`,
+      publishedTime: artigo.createdAt,
+      modifiedTime: artigo.updatedAt,
+      authors: ['Adilson Costa'],
+      ...(artigo.imagem ? { images: [artigo.imagem] } : {}),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: artigo.titulo,
+      description: artigo.resumo,
+      ...(artigo.imagem ? { images: [artigo.imagem] } : {}),
+    },
+  };
+}
+
 export default async function ArtigoComPalavraPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const artigo = await getArtigo(slug);
@@ -34,6 +63,23 @@ export default async function ArtigoComPalavraPage({ params }: { params: Promise
 
   return (
     <main style={{ maxWidth: '720px', margin: '0 auto', padding: '24px 16px' }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Article',
+            headline: artigo.titulo,
+            description: artigo.resumo,
+            ...(artigo.imagem ? { image: artigo.imagem } : {}),
+            datePublished: artigo.createdAt,
+            dateModified: artigo.updatedAt || artigo.createdAt,
+            author: { '@type': 'Person', name: 'Adilson Costa', url: 'https://iaipsi.com', jobTitle: 'Psicanalista' },
+            publisher: { '@type': 'Organization', name: 'Com a Lupa', url: 'https://comlupa.com.br' },
+            mainEntityOfPage: `https://comlupa.com.br/compalavra/${artigo.slug}`,
+          }).replace(/</g, '\\u003c'),
+        }}
+      />
       <nav style={{ marginBottom: '24px', fontSize: '0.8rem', color: '#6b7280' }}>
         <Link href="/" style={{ color: '#0f766e', textDecoration: 'none' }}>Início</Link>
         {' / '}
