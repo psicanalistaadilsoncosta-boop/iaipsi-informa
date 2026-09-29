@@ -53,10 +53,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   if (!item) return {};
   return {
     title: item.title,
-    description: item.analysis.replace(/\*\*/g, '').split('\n').find((l: string) => l.trim()) || '',
+    description: item.analysis.replace(/\*\*/g, '').split('\n').find((l: string) => l.trim().length > 60) || '',
     openGraph: {
       title: item.title,
-      description: item.analysis.replace(/\*\*/g, '').split('\n').find((l: string) => l.trim()) || '',
+      description: item.analysis.replace(/\*\*/g, '').split('\n').find((l: string) => l.trim().length > 60) || '',
       type: 'article',
       publishedTime: item.publishedAt,
       authors: ['Adilson Costa'],
@@ -77,7 +77,22 @@ export default async function EditorialPostPage({ params }: { params: Promise<{ 
 
   return (
     <main style={{ maxWidth: '780px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
-
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Article',
+            headline: item.title,
+            description: item.analysis.replace(/\*\*/g, '').split('\n').find((l: string) => l.trim().length > 60) || '',
+            datePublished: item.publishedAt,
+            ...(item.category ? { articleSection: item.category } : {}),
+            author: { '@type': 'Person', name: 'Adilson Costa', url: 'https://www.psicanalistaadilsoncosta.com', jobTitle: 'Psicanalista', sameAs: ['https://iaipsi.com'] },
+            publisher: { '@type': 'Organization', name: 'Com a Lupa', url: 'https://comlupa.com.br' },
+            mainEntityOfPage: `https://comlupa.com.br/editorial/${item.id}`,
+          }).replace(/</g, '\\u003c'),
+        }}
+      />
       <Link href="/arquivo-editorial" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#be185d', fontWeight: 600, fontSize: '0.85rem', textDecoration: 'none', marginBottom: '24px' }}>
         ← Todas as análises
       </Link>
