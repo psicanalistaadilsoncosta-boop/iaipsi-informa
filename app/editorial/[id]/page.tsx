@@ -87,6 +87,7 @@ export default async function EditorialPostPage({ params }: { params: Promise<{ 
             description: item.analysis.replace(/\*\*/g, '').split('\n').find((l: string) => l.trim().length > 60) || '',
             datePublished: item.publishedAt,
             ...(item.category ? { articleSection: item.category } : {}),
+            image: 'https://comlupa.com.br/og-image.jpg',
             author: { '@type': 'Person', name: 'Adilson Costa', url: 'https://www.psicanalistaadilsoncosta.com', jobTitle: 'Psicanalista', sameAs: ['https://iaipsi.com'] },
             publisher: { '@type': 'Organization', name: 'Com a Lupa', url: 'https://comlupa.com.br' },
             mainEntityOfPage: `https://comlupa.com.br/editorial/${item.id}`,
