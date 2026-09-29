@@ -21,8 +21,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Caso contrário usa Lomadee
-    const res = await fetch('https://api-beta.lomadee.com.br/affiliate/shortener/url', {
+        const res = await fetch('https://api-beta.lomadee.com.br/affiliate/shortener/url', {
       method: 'POST',
+      signal: AbortSignal.timeout(10000),
       headers: {
         'x-api-key': API_KEY,
         'Content-Type': 'application/json',
@@ -35,7 +36,12 @@ export async function POST(req: NextRequest) {
     });
 
     const data = await res.json();
-    const shortUrl = data?.[0]?.shortUrls?.[0] || null;
+        const shortUrl = data?.[0]?.shortUrls?.[0] || null;
+
+    // Sem link de afiliado: avisa com erro, para ninguém gravar o link sem comissão
+    if (!shortUrl) {
+      return NextResponse.json({ shortUrl: null, error: 'Lomadee não gerou o link de afiliado', raw: data }, { status: 502 });
+    }
 
     return NextResponse.json({ shortUrl, raw: data });
   } catch (e) {

@@ -6,11 +6,13 @@ const API_KEY = process.env.LOMADEE_API_KEY || '';
 const BASE_URL = 'https://api.lomadee.com.br';
 
 async function fetchLomadee(endpoint: string) {
-  const res = await fetch(`${BASE_URL}${endpoint}`, {
+  // Tempo limite garantido: se a Lomadee não responder em 8 s, segue sem os dados dela
+  const chamada = fetch(`${BASE_URL}${endpoint}`, {
     headers: { 'x-api-key': API_KEY },
     signal: AbortSignal.timeout(8000),
-  });
-  return res.json();
+  }).then(r => r.json());
+  const reserva = new Promise<any>(resolve => setTimeout(() => resolve({ data: [] }), 8000));
+  return Promise.race([chamada, reserva]).catch(() => ({ data: [] }));
 }
 
 export async function GET() {

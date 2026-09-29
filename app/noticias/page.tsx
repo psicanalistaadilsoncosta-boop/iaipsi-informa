@@ -5,6 +5,11 @@ import iconv from 'iconv-lite';
 import fs from 'fs/promises';
 import path from 'path';
 import { kv } from '@/lib/kv';
+
+// Tempo limite garantido: se a API não responder, devolve o valor reserva em vez de travar
+function comTempoLimite<T>(p: Promise<T>, ms: number, reserva: T): Promise<T> {
+  return Promise.race([p, new Promise<T>(resolve => setTimeout(() => resolve(reserva), ms))]).catch(() => reserva);
+}
 import { FeedItem, AdItem } from '../page';
 
 export const revalidate = 900;
@@ -105,13 +110,13 @@ function deduplicateByLink(items: FeedItem[]): FeedItem[] {
 async function resolveGoogleNewsUrl(url: string): Promise<string> {
   if (!url.includes('news.google.com')) return url;
   try {
-    const res = await fetch(url, {
+        const res = await comTempoLimite<Response | null>(fetch(url, {
       method: 'GET',
       redirect: 'follow',
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0)' },
       signal: AbortSignal.timeout(4000),
-    });
-    return res.url || url;
+    }), 4000, null);
+    return res?.url || url;
   } catch {
     return url;
   }
@@ -128,7 +133,7 @@ async function getNews(): Promise<FeedItem[]> {
     const feedResults = await Promise.all(
       feeds.map(async (feed) => {
         try {
-          const res = await fetchAndParseFeed(feed.url);
+         const res = await comTempoLimite<Awaited<ReturnType<typeof fetchAndParseFeed>>>(fetchAndParseFeed(feed.url), 8000, { items: [] } as any);
           const items = res.items.slice(0, ITEMS_PER_FEED);
 
           return await Promise.all(items.map(async (item) => {
@@ -264,17 +269,17 @@ async function getOfertasMix(): Promise<any[]> {
       } catch {}
     }
 
-    const [campData, brandData] = await Promise.all([
-      fetch(`${BASE_URL}/affiliate/campaigns?limit=20`, {
+   const [campData, brandData] = !API_KEY ? [{ data: [] }, { data: [] }] : await Promise.all([
+           comTempoLimite(fetch(`${BASE_URL}/affiliate/campaigns?limit=20`, {
         headers: { 'x-api-key': API_KEY },
-        next: { revalidate: 900 },
+        
         signal: AbortSignal.timeout(8000),
-      }).then(r => r.json()),
-      fetch(`${BASE_URL}/affiliate/brands?limit=20`, {
+      }).then(r => r.json()), 8000, { data: [] }),
+      comTempoLimite(fetch(`${BASE_URL}/affiliate/brands?limit=20`, {
         headers: { 'x-api-key': API_KEY },
-        next: { revalidate: 900 },
+        
         signal: AbortSignal.timeout(8000),
-      }).then(r => r.json()),
+      }).then(r => r.json()), 8000, { data: [] }),
     ]);
 
     const SHOPEE_ID = '124df9f6-2449-4bf5-ae80-dfc1fac6d46a';

@@ -127,17 +127,19 @@ async function scrapeLojaAwin(loja: LojaAwin, limite = 20): Promise<any[]> {
   }
 }
 
-async function gerarLinkAfiliado(produto: any): Promise<string> {
+// Devolve null quando não consegue o link de afiliado: nunca grava link sem comissão
+async function gerarLinkAfiliado(produto: any): Promise<string | null> {
   try {
     const res = await fetch(`${BASE_URL}/api/produtos/shorten`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: produto.link, organizationId: produto.organizationId }),
+      signal: AbortSignal.timeout(15000),
     });
     const data = await res.json();
-    return data.shortUrl || produto.link;
+    return data.shortUrl || null;
   } catch {
-    return produto.link;
+    return null;
   }
 }
 
@@ -210,10 +212,12 @@ export async function GET(req: NextRequest) {
 
       // 3. Pina novos produtos
       const novos: ProdutoPinado[] = [];
+      let falhasLink = 0;
       const limite = Math.min(produtos.length, limiteConfigured);
       for (let i = 0; i < limite; i++) {
         const produto = produtos[i];
         const linkAfiliado = await gerarLinkAfiliado(produto);
+        if (!linkAfiliado) { falhasLink++; continue; }
 
         // Tenta match com catalogado existente (similaridade > 0.5)
         let matchIdx = -1;
@@ -238,6 +242,8 @@ export async function GET(req: NextRequest) {
             link: linkAfiliado,
             linkOriginal: produto.link,
             pinedAt: new Date().toISOString(),
+            loja: loja.nome,
+            lojaNome: loja.nome,
             ...(loja.moedaUSD ? { moedaUSD: true } : {}),
           };
           // Substitui no array principal
@@ -255,6 +261,7 @@ export async function GET(req: NextRequest) {
             pinedAt: new Date().toISOString(),
             aCatalogar: true,
             lojaNome: loja.nome,
+            loja: loja.nome,
             origemUrl: loja.url,
             ...(loja.moedaUSD ? { moedaUSD: true } : {}),
           } as any);
@@ -264,7 +271,7 @@ export async function GET(req: NextRequest) {
       pinadosAtualizados = [...pinadosAtualizados, ...novos];
 
       // 4. Atualiza ultimaAtualizacao da loja no KV
-        lojas = lojas.map(l => {
+        if (falhasLink < limite) lojas = lojas.map(l => {
         if (l.url === loja.url && l.tipo === loja.tipo && l.cron) {
           return { ...l, cron: { ...l.cron, ultimaAtualizacao: new Date().toISOString() } };
         }
@@ -272,7 +279,10 @@ export async function GET(req: NextRequest) {
       });
       await kv.set(LOJAS_KEY, lojas);
 
-      resultados[loja.nome] = { pinados: novos.length };
+        resultados[loja.nome] = {
+        pinados: novos.length,
+        ...(falhasLink ? { erro: `${falhasLink} produto(s) sem link de afiliado (Lomadee fora?)` } : {}),
+      };
     } catch (err: any) {
       resultados[loja.nome] = { removidos: 0, pinados: 0, erro: err?.message || 'Erro desconhecido' };
     }

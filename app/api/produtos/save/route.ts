@@ -33,10 +33,29 @@ async function read(): Promise<ProdutoPinado[]> {
   } catch { return []; }
 }
 
+// Acha o nome da loja cadastrada pelo domínio do link original do produto
+async function nomeLojaCadastrada(link: string | undefined): Promise<string | null> {
+  if (!link) return null;
+  try {
+    const lojas = (await kv.get<{ nome: string; url: string }[]>('lojas:cadastradas')) || [];
+    const dominio = new URL(link).hostname.replace(/^www\./, '');
+    const achada = lojas.find(l => {
+      try { return new URL(l.url).hostname.replace(/^www\./, '') === dominio; }
+      catch { return false; }
+    });
+    return achada?.nome || null;
+  } catch { return null; }
+}
+
 export async function POST(req: NextRequest) {
   if (!isAdmin(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
   try {
     const produto: ProdutoPinado = await req.json();
+    const nomeCadastrado = await nomeLojaCadastrada(produto.linkOriginal || produto.link);
+    if (nomeCadastrado) {
+      produto.loja = nomeCadastrado;
+      (produto as any).lojaNome = nomeCadastrado;
+    }
     let existing = await read();
     const idx = existing.findIndex(p => p.id === produto.id);
 
