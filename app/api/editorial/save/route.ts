@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 import { kv } from '@/lib/kv';
 import { isAdmin } from '@/lib/adminAuth';
@@ -43,7 +44,7 @@ export async function POST(req: NextRequest) {
     const updated = [newItem, ...existing].slice(0, 20);
     await kv.set(KEY, updated);
 
-    return NextResponse.json({ success: true, item: newItem });
+    revalidatePath('/'); return NextResponse.json({ success: true, item: newItem });
   } catch (error) {
     console.error('Erro ao salvar:', error);
     return NextResponse.json({ error: 'Erro ao salvar análise' }, { status: 500 });
@@ -57,7 +58,7 @@ export async function DELETE(req: NextRequest) {
     const existing = await read();
     const updated = existing.filter(item => item.id !== id);
     await kv.set(KEY, updated);
-    return NextResponse.json({ success: true });
+    revalidatePath('/'); return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: 'Erro ao deletar' }, { status: 500 });
   }

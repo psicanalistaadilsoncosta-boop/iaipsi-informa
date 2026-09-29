@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 import { kv } from '@/lib/kv';
 import { isAdmin } from '@/lib/adminAuth';
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
       if (body.destaque) lista = artigos.map(a => ({ ...a, destaque: false }));
       lista[idx] = { ...lista[idx], ...body, updatedAt: agora };
       await kv.set('artigos:compalavra', lista);
-      return NextResponse.json(lista[idx]);
+      revalidatePath('/'); return NextResponse.json(lista[idx]);
     } else {
       const slug = gerarSlug(body.titulo || 'artigo');
       const slugFinal = artigos.some(a => a.slug === slug) ? `${slug}-${Date.now()}` : slug;
@@ -67,7 +68,7 @@ export async function POST(req: NextRequest) {
         updatedAt: agora,
       };
       await kv.set('artigos:compalavra', [...lista, novo]);
-      return NextResponse.json(novo);
+      revalidatePath('/'); return NextResponse.json(novo);
     }
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
@@ -80,7 +81,7 @@ export async function DELETE(req: NextRequest) {
     const { id } = await req.json();
     const artigos = await kv.get<ArtigoComPalavra[]>('artigos:compalavra') || [];
     await kv.set('artigos:compalavra', artigos.filter(a => a.id !== id));
-    return NextResponse.json({ ok: true });
+    revalidatePath('/'); return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }

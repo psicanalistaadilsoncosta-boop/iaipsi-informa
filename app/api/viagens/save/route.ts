@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 import { kv } from '@/lib/kv';
 import { isAdmin } from '@/lib/adminAuth';
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest) {
     }
 
     await kv.set(KV_KEY, artigos);
-    return NextResponse.json({ ok: true });
+    revalidatePath('/'); return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }
@@ -49,7 +50,7 @@ export async function DELETE(req: NextRequest) {
     const artigos = await kv.get<any[]>(KV_KEY) || [];
     const filtrados = artigos.filter(a => a.id !== id);
     await kv.set(KV_KEY, filtrados);
-    return NextResponse.json({ ok: true });
+    revalidatePath('/'); return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }

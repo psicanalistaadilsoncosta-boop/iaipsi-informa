@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache';
 import { NextResponse, NextRequest } from 'next/server';
 import { kv } from '@/lib/kv';
 import { isAdmin } from '@/lib/adminAuth';
@@ -21,5 +22,5 @@ export async function PUT(req: NextRequest) {
   const slides = await req.json();
   if (!Array.isArray(slides)) return NextResponse.json({ error: 'array esperado' }, { status: 400 });
   await kv.set('banner:slides', slides);
-  return NextResponse.json({ ok: true });
+  revalidatePath('/'); return NextResponse.json({ ok: true });
 }

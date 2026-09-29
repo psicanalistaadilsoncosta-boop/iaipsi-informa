@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache';
 import { NextResponse, NextRequest } from 'next/server';
 import { kv } from '@/lib/kv';
 import { isAdmin } from '@/lib/adminAuth';
@@ -59,7 +60,7 @@ export async function PATCH(req: NextRequest) {
 if ('textoParcelamento' in body) produtos[idx].textoParcelamento = body.textoParcelamento;
 if ('valorParcela' in body) produtos[idx].valorParcela = body.valorParcela; // valor da parcela em número
     await kv.set('produtos:pinados', produtos);
-    return NextResponse.json({ ok: true });
+    revalidatePath('/'); return NextResponse.json({ ok: true });
   }
 
   const { categoria, nomeAmbiente, tipoAmbiente, tipoMomento, tipoVistaSe, tipoBeleza } = body;
@@ -77,5 +78,5 @@ if ('valorParcela' in body) produtos[idx].valorParcela = body.valorParcela; // v
   }
 
   await kv.set('produtos:pinados', produtos);
-  return NextResponse.json({ ok: true, atualizados: ids.length });
+  revalidatePath('/'); return NextResponse.json({ ok: true, atualizados: ids.length });
 }
