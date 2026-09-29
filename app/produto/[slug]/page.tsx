@@ -127,7 +127,7 @@ export default async function ArtigoProdutoPage({ params }: { params: Promise<{ 
             <script
   type="application/ld+json"
   dangerouslySetInnerHTML={{
-    __html: JSON.stringify({
+       __html: JSON.stringify((artigo.ofertas || []).filter(o => o.preco > 0).length > 0 ? {
       '@context': 'https://schema.org',
       '@type': 'Product',
       name: artigo.titulo,
@@ -146,6 +146,15 @@ export default async function ArtigoProdutoPage({ params }: { params: Promise<{ 
             },
           }
         : {}),
+       } : {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: artigo.titulo,
+      image: artigo.imagem,
+      description: artigo.descricaoCurta,
+      datePublished: artigo.createdAt,
+      author: { '@type': 'Organization', name: 'Com a Lupa', url: 'https://comlupa.com.br' },
+      publisher: { '@type': 'Organization', name: 'Com a Lupa', url: 'https://comlupa.com.br' },
     }).replace(/</g, '\\u003c'),
   }}
 />
