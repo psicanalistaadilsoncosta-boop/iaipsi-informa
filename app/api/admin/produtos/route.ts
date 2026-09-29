@@ -73,7 +73,8 @@ if ('valorParcela' in body) produtos[idx].valorParcela = body.valorParcela; // v
   for (const id of ids) {
     const idx = produtos.findIndex((p: any) => p.id === id);
     if (idx !== -1) {
-      produtos[idx] = aplicarCat(produtos[idx], categoria, nomeAmbiente, tipoAmbiente, tipoMomento, tipoVistaSe, tipoBeleza);
+            produtos[idx] = aplicarCat(produtos[idx], categoria, nomeAmbiente, tipoAmbiente, tipoMomento, tipoVistaSe, tipoBeleza);
+      if (body.limparACatalogar) produtos[idx].aCatalogar = false;
     }
   }
 
