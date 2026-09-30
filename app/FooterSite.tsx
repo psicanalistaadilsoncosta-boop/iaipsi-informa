@@ -15,7 +15,8 @@ export default function FooterSite() {
           {/* Coluna 1 — Marca */}
           <div>
             <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#111827', margin: '0 0 2px' }}>🔍 Com a Lupa</h3>
-            <p style={{ fontSize: '0.7rem', color: '#9ca3af', margin: '0 0 10px' }}>por IAIPSI</p>
+            <p style={{ fontSize: '0.7rem', color: '#9ca3af', margin: '0 0 6px' }}>por IAIPSI</p>
+<p style={{ fontSize: '0.8rem', color: '#5B3E96', fontStyle: 'italic', fontWeight: 600, margin: '0 0 10px' }}>Tem coisa que só aparece quando você olha de perto.</p>
             <p style={{ fontSize: '0.65rem', color: '#6b7280', lineHeight: 1.6, margin: '0 0 16px' }}>
               Agregador de notícias com curadoria editorial, análises psicanalíticas e seleção de ofertas.
             </p>

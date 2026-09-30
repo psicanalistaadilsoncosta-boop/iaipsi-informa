@@ -67,7 +67,7 @@ export default function RootLayout({
             flexWrap: 'wrap',
           }}
         >
-          <span>🔍 Você está <strong>Com a Lupa</strong> · notícias e ofertas vistas de perto</span>
+          <span>🔍 <strong>Com a Lupa</strong> · Tem coisa que só aparece quando você olha de perto.</span>
           <form action="/busca" method="get" style={{ display: 'flex', gap: '4px', margin: 0 }}>
             <input
               type="search"
