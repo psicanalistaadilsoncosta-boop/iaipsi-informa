@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+import { kv } from '@/lib/kv';
+
 export const revalidate = 900; // 15 min
 
 const API_KEY = process.env.LOMADEE_API_KEY || '';
@@ -99,13 +101,37 @@ const SEGMENTO_PARA_CATEGORIA: Record<string, string> = {
   'outros ': 'Outros',
 };
 
+// Reserva no KV: guarda a última resposta boa da Lomadee e usa quando ela estiver fora do ar.
+// Só para campanhas e marcas (o que /ofertas e o cron usam); no máximo 1 gravação a cada 15 min por consulta.
+const ultimaGravacao = new Map<string, number>();
+const usaReserva = (path: string) => path.startsWith('/affiliate/campaigns') || path.startsWith('/affiliate/brands');
+
 async function fetchLomadee(path: string, revalidate = 900) {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { 'x-api-key': API_KEY },
-    signal: AbortSignal.timeout(10000),
-    next: { revalidate },
-  });
-  return res.json();
+  const chave = `lomadee:reserva:${path}`;
+  try {
+    const chamada = fetch(`${BASE_URL}${path}`, {
+      headers: { 'x-api-key': API_KEY },
+      signal: AbortSignal.timeout(10000),
+      next: { revalidate },
+    }).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); });
+    const limite = new Promise<never>((_, rej) => setTimeout(() => rej(new Error('tempo esgotado')), 10000));
+    const dados = await Promise.race([chamada, limite]);
+
+    if (usaReserva(path) && Array.isArray(dados?.data) && dados.data.length > 0) {
+      const agora = Date.now();
+      if (agora - (ultimaGravacao.get(chave) || 0) > 15 * 60 * 1000) {
+        ultimaGravacao.set(chave, agora);
+        kv.set(chave, dados).catch(() => {});
+      }
+    }
+    return dados;
+  } catch (e) {
+    if (usaReserva(path)) {
+      const reserva = await kv.get<any>(chave).catch(() => null);
+      if (reserva) return reserva;
+    }
+    throw e;
+  }
 }
 
 // Busca todas as páginas de campanhas em paralelo (até 5 = 100 campanhas)
