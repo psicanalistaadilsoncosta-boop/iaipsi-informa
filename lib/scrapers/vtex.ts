@@ -22,7 +22,7 @@ export async function fetchVtex(baseUrl: string, limit = 400) {
       !max || inst.NumberOfInstallments > max.NumberOfInstallments ? inst : max, null);
 
     return {
-      id: String(p.productId),
+      id: `${baseUrl.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0]}-${p.productId}`,
       ean: sku?.ean || sku?.referenceId?.[0]?.Value || '',
       nome: p.productName,
       imagem,

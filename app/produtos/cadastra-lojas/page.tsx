@@ -511,7 +511,7 @@ export default function CadastraLojasPage() {
           🌐 Lomadee ({lojas.filter(l => l.tipo === 'lomadee').length})
         </button>
         <button onClick={() => setAba('awin')} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', backgroundColor: aba === 'awin' ? '#f59e0b' : '#fff', color: aba === 'awin' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-          🏷 Awin ({lojas.filter(l => l.tipo === 'awin').length})
+          🏷 Awin / Rakuten ({lojas.filter(l => l.tipo === 'awin').length})
         </button>
       </div>
 
@@ -566,7 +566,7 @@ export default function CadastraLojasPage() {
               </div>
               <div style={{ flex: 1, minWidth: '160px' }}>
                 <label style={labelStyle}>ID do anunciante Awin</label>
-                <input value={anuncianteId} onChange={e => setAnuncianteId(e.target.value)} placeholder="ex: awin-arno" style={inputStyle} required />
+                <input value={anuncianteId} onChange={e => setAnuncianteId(e.target.value)} placeholder="ex: awin-arno ou rakuten-54237" style={inputStyle} required />
               </div>
             </div>
             <div style={{ marginBottom: '12px' }}>
@@ -605,7 +605,7 @@ export default function CadastraLojasPage() {
                   <div style={{ fontWeight: 700, color: '#111827', fontSize: '0.95rem' }}>{loja.nome}</div>
                   <div style={{ fontSize: '0.78rem', color: '#6b7280', marginTop: '2px' }}>{loja.url}</div>
                   <div style={{ fontSize: '0.72rem', color: loja.tipo === 'awin' ? '#f59e0b' : '#be185d', fontWeight: 600, marginTop: '2px' }}>
-                    {loja.tipo === 'awin' ? `Awin ID: ${(loja as LojaAwin).anuncianteId}` : 'Lomadee'}
+                    {loja.tipo === 'awin' ? ((loja as LojaAwin).anuncianteId?.startsWith('rakuten-') ? `Rakuten ID: ${(loja as LojaAwin).anuncianteId}` : `Awin ID: ${(loja as LojaAwin).anuncianteId}`) : 'Lomadee'}
                     {loja.moedaUSD && <span style={{ marginLeft: '6px', color: '#92400e', backgroundColor: '#fef3c7', padding: '1px 5px', borderRadius: '3px' }}>💵 USD</span>}
                   </div>
                   <CatBadges loja={loja} />
