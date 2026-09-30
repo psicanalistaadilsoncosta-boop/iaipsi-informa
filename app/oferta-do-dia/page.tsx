@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import BotaoWhatsApp from '../BotaoWhatsApp';
+import Mascote from '../Mascote';
 
 interface ProdutoPinado {
   id: string;
@@ -55,10 +56,10 @@ function Countdown({ endAt }: { endAt: string }) {
 }
 
 function formatarPreco(valor: number) {
-  return valor.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+return valor.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
 
-function CardOferta({ p }: { p: ProdutoPinado }) {
+function CardOferta({ p, comMascote = false }: { p: ProdutoPinado; comMascote?: boolean }) {
   const [copiado, setCopiado] = useState(false);
   const [imagemAtiva, setImagemAtiva] = useState(0);
   const todasImagens = [p.imagem, ...(p.imagens || [])].filter(Boolean);
@@ -67,11 +68,15 @@ function CardOferta({ p }: { p: ProdutoPinado }) {
     : p.desconto || 0;
 
   return (
-    <div style={{ backgroundColor: '#fff', borderRadius: '16px', overflow: 'hidden', border: '1px solid #e5e7eb', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}>
-
+    <div style={{ backgroundColor: '#fff', borderRadius: '16px', overflow: 'hidden', border: comMascote ? '2px solid #dc2626' : '1px solid #e5e7eb', boxShadow: '0 4px 16px rgba(0,0,0,0.06)', ...(comMascote ? { gridColumn: '1 / -1' } : {}) }}>
       {/* Imagem */}
       <div style={{ position: 'relative', backgroundColor: '#f9fafb', padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-        <div style={{ width: '100%', height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #f3f4f6', overflow: 'hidden', padding: '12px' }}>
+               {comMascote && (
+                    <div style={{ position: 'absolute', left: '12px', top: '150px', zIndex: 2 }}>
+            <Mascote nome="lupa-apresenta" altura={220} />
+          </div>
+        )}
+        <div style={{ width: '100%', height: comMascote ? '360px' : '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #f3f4f6', overflow: 'hidden', padding: '12px', ...(comMascote ? { paddingLeft: '140px' } : {}) }}>
           {todasImagens[imagemAtiva] ? (
             <img src={todasImagens[imagemAtiva]} alt={p.nome} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
           ) : (
@@ -215,7 +220,7 @@ export default function OfertasDoDiaPage() {
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '24px' }}>
-          {ofertas.map(p => <CardOferta key={p.id} p={p} />)}
+         {ofertas.map((p, i) => <CardOferta key={p.id} p={p} comMascote={i === 0} />)}
         </div>
       )}
 

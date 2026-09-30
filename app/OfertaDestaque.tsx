@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Mascote from './Mascote';
 
 interface ProdutoPinado {
   id: string;
@@ -134,6 +135,9 @@ export default function OfertaDestaque() {
 
           {/* Esquerda — imagem */}
           <div style={{ backgroundColor: '#f9fafb', padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', borderRight: '1px solid #f3f4f6', position: 'relative' }}>
+          <div style={{ position: 'absolute', left: '8px', top: '110px', zIndex: 2 }}>
+            <Mascote nome="lupa-apresenta" altura={180} />
+          </div>
 
             {/* Badge desconto */}
             {desconto > 0 && (
@@ -143,7 +147,7 @@ export default function OfertaDestaque() {
             )}
 
             {/* Imagem principal */}
-            <div style={{ width: '100%', height: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', overflow: 'hidden', padding: '16px' }}>
+           <div style={{ width: '100%', height: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', overflow: 'hidden', padding: '16px', paddingLeft: '115px' }}>
               {todasImagens[imagemAtiva] ? (
                 <img src={todasImagens[imagemAtiva]} alt={oferta.nome}
                   style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
