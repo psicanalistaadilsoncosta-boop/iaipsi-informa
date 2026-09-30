@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Mascote from './Mascote';
+import SeloLoja from './SeloLoja';
 
 interface ProdutoPinado {
   id: string;
@@ -178,6 +179,7 @@ export default function OfertaDestaque() {
             {/* Loja e categoria */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               {oferta.loja && <span style={{ fontSize: '0.82rem', color: '#6b7280', fontWeight: 500 }}>🏪 {oferta.loja}</span>}
+<SeloLoja loja={oferta.loja} />
               {oferta.categoria && (
                 <span style={{ fontSize: '0.68rem', color: '#9ca3af', backgroundColor: '#f3f4f6', padding: '2px 8px', borderRadius: '20px' }}>
                   {oferta.categoria}

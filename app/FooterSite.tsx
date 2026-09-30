@@ -86,6 +86,9 @@ export default function FooterSite() {
           <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: 0, lineHeight: 1.6 }}>
             <strong style={{ color: '#6b7280' }}>Ofertas e afiliados:</strong> Os produtos, ofertas e cupons exibidos são de responsabilidade exclusiva dos respectivos anunciantes. Preços, condições e disponibilidade estão sujeitos a alteração. Confira sempre o valor final no site do anunciante antes de concluir a compra. Links de afiliado — ao comprar através deles você apoia o site Com a Lupa sem custo adicional para você.
           </p>
+          <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: 0, lineHeight: 1.6 }}>
+            <strong style={{ color: '#6b7280' }}>Reputação das lojas:</strong> Os selos &quot;RA&quot; indicam a reputação da loja no Reclame AQUI (Boa, Ótima ou RA1000) e se ela foi campeã do Prêmio Reclame AQUI 2025, conforme consulta feita pelo Com a Lupa em setembro de 2026. A reputação pode mudar: clique no selo para ver a situação atual. O Com a Lupa não tem vínculo com o Reclame AQUI.
+          </p>
         </div>
       </div>
 

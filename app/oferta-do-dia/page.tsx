@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import BotaoWhatsApp from '../BotaoWhatsApp';
 import Mascote from '../Mascote';
+import SeloLoja from '../SeloLoja';
 
 interface ProdutoPinado {
   id: string;
@@ -113,6 +114,7 @@ function CardOferta({ p, comMascote = false }: { p: ProdutoPinado; comMascote?: 
         {/* Loja e categoria */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           {p.loja && <span style={{ fontSize: '0.78rem', color: '#6b7280', fontWeight: 500 }}>🏪 {p.loja}</span>}
+<SeloLoja loja={p.loja} />
           {p.categoria && <span style={{ fontSize: '0.65rem', color: '#9ca3af', backgroundColor: '#f3f4f6', padding: '2px 8px', borderRadius: '20px' }}>{p.categoria}</span>}
 
         </div>

@@ -3,6 +3,7 @@ import path from 'path';
 import Link from 'next/link';
 import { kv } from '@/lib/kv';
 import BotaoWhatsApp from '../BotaoWhatsApp';
+import SeloLoja from '../SeloLoja';
 
 interface ProdutoPinado {
   id: string;
@@ -119,7 +120,7 @@ export default async function OfertasSelecionadasPage({ searchParams }: { search
                     </h2>
 
                                         {p.loja && (
-                      <div style={{ fontSize: '0.72rem', color: '#6b7280', fontWeight: 500 }}>🏪 {p.loja}</div>
+                      <div style={{ fontSize: '0.72rem', color: '#6b7280', fontWeight: 500, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px' }}>🏪 {p.loja} <SeloLoja loja={p.loja} compacto /></div>
                     )}
                     {(p as any).moedaOriginal === 'USD' && (
                       <div style={{ fontSize: '0.68rem', color: '#92400e', fontWeight: 600, backgroundColor: '#fef3c7', padding: '2px 6px', borderRadius: '4px', display: 'inline-block' }}>
