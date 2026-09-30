@@ -219,7 +219,7 @@ export default function OfertasDoDiaPage() {
           <a href="/ofertas" style={{ color: '#dc2626', fontWeight: 600, textDecoration: 'none' }}>Ver todas as ofertas →</a>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '24px' }}>
+       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(380px, 100%), 1fr))', gap: '24px' }}>
          {ofertas.map((p, i) => <CardOferta key={p.id} p={p} comMascote={i === 0} />)}
         </div>
       )}
