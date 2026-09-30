@@ -38,7 +38,10 @@ async function nomeLojaCadastrada(link: string | undefined): Promise<string | nu
   if (!link) return null;
   try {
     const lojas = (await kv.get<{ nome: string; url: string }[]>('lojas:cadastradas')) || [];
-    const dominio = new URL(link).hostname.replace(/^www\./, '');
+    // Para links da Awin, usa a loja de destino que vem no parâmetro "ued"
+    const u = new URL(link);
+    const destino = u.hostname.endsWith('awin1.com') ? u.searchParams.get('ued') : null;
+    const dominio = new URL(destino || link).hostname.replace(/^www\./, '');
     const achada = lojas.find(l => {
       try { return new URL(l.url).hostname.replace(/^www\./, '') === dominio; }
       catch { return false; }
