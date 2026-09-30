@@ -511,7 +511,7 @@ export default function CadastraLojasPage() {
           🌐 Lomadee ({lojas.filter(l => l.tipo === 'lomadee').length})
         </button>
         <button onClick={() => setAba('awin')} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', backgroundColor: aba === 'awin' ? '#f59e0b' : '#fff', color: aba === 'awin' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-          🏷 Awin / Rakuten ({lojas.filter(l => l.tipo === 'awin').length})
+          🏷 Awin / Rakuten / Actionpay ({lojas.filter(l => l.tipo === 'awin').length})
         </button>
       </div>
 
@@ -566,7 +566,7 @@ export default function CadastraLojasPage() {
               </div>
               <div style={{ flex: 1, minWidth: '160px' }}>
                 <label style={labelStyle}>ID do anunciante Awin</label>
-                <input value={anuncianteId} onChange={e => setAnuncianteId(e.target.value)} placeholder="ex: awin-arno ou rakuten-54237" style={inputStyle} required />
+                <input value={anuncianteId} onChange={e => setAnuncianteId(e.target.value)} placeholder="ex: awin-arno, rakuten-54237 ou actionpay-14185" style={inputStyle} required />
               </div>
             </div>
             <div style={{ marginBottom: '12px' }}>

@@ -1,4 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { kv } from '@/lib/kv';
+
+// Remove parâmetros de rastreio de terceiros do endereço do produto (utm_, f=, gclid...)
+function limparUrl(url: string): string {
+  try {
+    const u = new URL(url.trim());
+    for (const k of [...u.searchParams.keys()]) {
+      if (/^(utm_.*|gclid|fbclid|msclkid|f|aff.*|ref|src|source|campaign|mc_.*|ran.*)$/i.test(k)) u.searchParams.delete(k);
+    }
+    u.hash = '';
+    return u.toString();
+  } catch { return url; }
+}
 
 const API_KEY = process.env.LOMADEE_API_KEY || '';
 const AWIN_AFFID = process.env.AWIN_PUBLISHER_ID || '3093907';
@@ -29,7 +42,19 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ shortUrl: null, error: 'RAKUTEN_LINK_ID não configurado' }, { status: 500 });
       }
       const rakutenLink = `https://click.linksynergy.com/deeplink?id=${encodeURIComponent(RAKUTEN_LINK_ID)}&mid=${rakutenMid}&murl=${encodeURIComponent(url)}`;
-      return NextResponse.json({ shortUrl: rakutenLink });
+           return NextResponse.json({ shortUrl: rakutenLink });
+    }
+
+    // Se for oferta Actionpay (organizationId = "actionpay-<oferta>"), usa o modelo guardado no KV
+    const actionpayOferta = typeof organizationId === 'string' && organizationId.startsWith('actionpay-')
+      ? organizationId.slice('actionpay-'.length) : '';
+    if (actionpayOferta) {
+      const modelos = (await kv.get<Record<string, { prefixo: string | null }>>('actionpay:deeplinks')) || {};
+      const prefixo = modelos[actionpayOferta]?.prefixo;
+      if (!prefixo) {
+        return NextResponse.json({ shortUrl: null, error: `Oferta Actionpay ${actionpayOferta} sem deeplink cadastrado` }, { status: 502 });
+      }
+      return NextResponse.json({ shortUrl: `${prefixo}comlupa/url=${encodeURIComponent(limparUrl(url))}` });
     }
 
     // Caso contrário usa Lomadee
