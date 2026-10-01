@@ -63,7 +63,7 @@ export default async function OfertasSelecionadasPage({ searchParams }: { search
       <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fbbf24', borderRadius: '10px', padding: '12px 20px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
         <span style={{ fontSize: '1.2rem' }}>⚠️</span>
         <p style={{ fontSize: '0.82rem', color: '#92400e', margin: 0, lineHeight: 1.5 }}>
-          <strong>Atenção:</strong> Preços, parcelas e disponibilidade são de responsabilidade do anunciante e podem ser alterados a qualquer momento. Confira sempre as condições atuais no site da loja antes de finalizar a compra.
+          <strong>Atenção:</strong> Preços, parcelas e disponibilidade são de responsabilidade do anunciante e podem ser alterados a qualquer momento. Confira sempre as condições atuais no site da loja antes de finalizar a compra. Lojas com a indicação 💵 Preço convertido de USD estão localizadas em outro país, e as compras podem estar sujeitas a tributação de importação, que nem sempre aparece no carrinho e pode ser cobrada na entrega.
         </p>
       </div>
 

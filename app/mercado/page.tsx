@@ -75,7 +75,9 @@ export default function MercadoPage() {
           Bebidas, alimentos e produtos do dia a dia com as melhores ofertas
         </p>
         <p style={{ margin: 0, opacity: 0.65, fontSize: '0.72rem', maxWidth: '520px', marginInline: 'auto' }}>
-          Atenção: os preços, descontos e disponibilidade são referenciais. Valem as condições exibidas na loja no momento da compra.
+          Atenção: os preços, descontos, frete, disponibilidade e demais condições apresentados são apenas referenciais.<br />
+Valem as condições exibidas no momento da compra, diretamente na loja e no carrinho do site. Lojas com a indicação 💵 Preço convertido de USD estão localizadas em outro país, e as compras podem estar sujeitas a tributação de importação, que nem sempre aparece no carrinho e pode ser cobrada na entrega.
+
         </p>
       </div>      </div>
 

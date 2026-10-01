@@ -65,7 +65,7 @@ export default async function ParceladoPage({ searchParams }: { searchParams: Pr
       <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fbbf24', borderRadius: '10px', padding: '12px 20px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
         <span style={{ fontSize: '1.2rem' }}>⚠️</span>
         <p style={{ fontSize: '0.82rem', color: '#92400e', margin: 0, lineHeight: 1.5 }}>
-          <strong>Atenção:</strong> Condições de parcelamento, preços e disponibilidade são de responsabilidade do anunciante. As parcelas exibidas podem não refletir as condições atuais da loja. Confirme sempre no site e no carrinho antes de finalizar.
+          <strong>Atenção:</strong> Condições de parcelamento, preços e disponibilidade são de responsabilidade do anunciante. As parcelas exibidas podem não refletir as condições atuais da loja. Confirme sempre no site e no carrinho antes de finalizar. Lojas com a indicação 💵 Preço convertido de USD estão localizadas em outro país, e as compras podem estar sujeitas a tributação de importação, que nem sempre aparece no carrinho e pode ser cobrada na entrega.
         </p>
       </div>
       {lojas.length > 1 && (

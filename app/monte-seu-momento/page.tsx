@@ -104,7 +104,8 @@ export default function MonteSeuMomentoPage() {
             Escolha o clima, monte sua lista e receba os links de oferta no e-mail
           </p>
           <p style={{ margin: 0, opacity: 0.7, fontSize: '0.72rem', maxWidth: '520px', marginInline: 'auto', lineHeight: 1.5 }}>
-            Atenção: os preços, descontos, frete, disponibilidade e demais condições apresentados são apenas referenciais.<br />Valem as condições exibidas no momento da compra, diretamente na loja e no carrinho do site.
+            Atenção: os preços, descontos, frete, disponibilidade e demais condições apresentados são apenas referenciais.<br />
+Valem as condições exibidas no momento da compra, diretamente na loja e no carrinho do site. Lojas com a indicação 💵 Preço convertido de USD estão localizadas em outro país, e as compras podem estar sujeitas a tributação de importação, que nem sempre aparece no carrinho e pode ser cobrada na entrega.
           </p>
         </div></div>
 
