@@ -228,7 +228,12 @@ export default function OfertaDestaque() {
                   </span>
                 )}
               </div>
-              {oferta.parcelas && oferta.valorParcela && (
+              {((oferta as any).moedaUSD || (oferta as any).moedaOriginal === 'USD') && (
+  <div style={{ fontSize: '0.72rem', color: '#92400e', backgroundColor: '#fef3c7', padding: '4px 8px', borderRadius: '6px', display: 'inline-block', margin: '4px 0', fontWeight: 600 }}>
+    💱 Preço convertido de USD para BRL{(oferta as any).cotacaoUsada ? ` (cotação R$ ${Number((oferta as any).cotacaoUsada).toFixed(2).replace('.', ',')})` : ''}. Confira o valor final no site. (*sujeito a tributação)
+  </div>
+)}
+{oferta.parcelas && oferta.valorParcela && (
                 <div style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '4px' }}>
                   ou <strong style={{ color: '#111827' }}>{oferta.parcelas}x</strong> de{' '}
                   <strong style={{ color: '#111827' }}>R$ {formatarPreco(parseFloat(oferta.valorParcela))}</strong> sem juros

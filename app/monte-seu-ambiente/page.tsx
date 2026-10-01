@@ -226,7 +226,7 @@ export default function MonteSeuAmbientePage() {
                            {p.loja && (
                             <div style={{ fontSize: '0.68rem', color: '#047857', fontWeight: 600 }}>🏪 {p.loja}</div>
                           )}
-                          {(p as any).moedaUSD && (
+                          {((p as any).moedaUSD || (p as any).moedaOriginal === 'USD') && (
                             <div style={{ fontSize: '0.68rem', color: '#92400e', background: '#fef3c7', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', marginBottom: '0.25rem', fontWeight: 600 }}>
                               💵 Preço convertido de USD
                             </div>

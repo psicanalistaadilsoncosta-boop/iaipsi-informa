@@ -118,7 +118,7 @@ export default function MercadoPage() {
                     <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#1f2937', lineHeight: 1.3, marginBottom: '0.4rem' }}>
                       {nome.length > 60 ? nome.slice(0, 57) + '...' : nome}
                     </div>
-                    {p.moedaUSD && (
+                    {(p.moedaUSD || (p as any).moedaOriginal === 'USD') && (
                       <div style={{ fontSize: '0.68rem', color: '#92400e', background: '#fef3c7', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', marginBottom: '0.25rem', fontWeight: 600 }}>
                         💵 Preço convertido de USD
                       </div>
