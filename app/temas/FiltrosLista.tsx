@@ -77,14 +77,41 @@ export default function FiltrosLista({ todos, ativos, temaId, faixas = FAIXAS_PR
     </div>
   );
 
-  return (
-    <div className="fl" style={{ ['--t-1' as any]: c[1], ['--t-2' as any]: c[2], ['--t-soft' as any]: c[4], ['--t-ink' as any]: c[5] }}>
-      <style>{CSS}</style>
+  const linhas = (
+    <>
       {comCategoria && cats.length > 1 &&
         linha('Categoria', 'cat', cats.map(n => ({ nome: n, n: paraCat.filter(p => categoriaDe(p) === n).length })), paraCat.length)}
       {linha('Preço', 'faixa', faixas.map(f => ({ nome: f.nome, n: paraFaixa.filter(p => naFaixa(p, f.nome, faixas)).length })), paraFaixa.length, 'Todos')}
       {lojas.length > 1 &&
         linha('Loja', 'loja', lojas.map(l => ({ nome: l, n: paraLoja.filter(p => p.loja === l).length, icone: '🏪' })), paraLoja.length)}
+    </>
+  );
+
+  // resumo para a barra recolhida do celular
+  const escolhidos = [ativos.cat, ativos.faixa, ativos.loja].filter(Boolean) as string[];
+  const resultado = aplicarFiltros(todos, ativos, faixas).length;
+  const algumAtivo = escolhidos.length > 0;
+
+  return (
+    <div className="fl" style={{ ['--t-1' as any]: c[1], ['--t-2' as any]: c[2], ['--t-soft' as any]: c[4], ['--t-ink' as any]: c[5] }}>
+      <style>{CSS}</style>
+
+      {/* computador: tudo aberto */}
+      <div className="fl-desk">{linhas}</div>
+
+      {/* celular: recolhido, abre ao tocar */}
+      <details className="fl-mob">
+        <summary>
+          <span className="fl-sum-txt">
+            🔍 <b>Filtrar</b>{algumAtivo ? ' · ' + escolhidos.join(' · ') : ''}
+          </span>
+          <span className="fl-sum-n">{resultado} {resultado === 1 ? 'item' : 'itens'}</span>
+        </summary>
+        <div className="fl-painel">
+          {linhas}
+          {algumAtivo && <a className="fl-limpar" href={linkFiltros({})}>✕ Limpar filtros</a>}
+        </div>
+      </details>
     </div>
   );
 }
@@ -96,9 +123,20 @@ const CSS = `
 .fl-chip{padding:6px 14px;border-radius:999px;border:2px solid var(--t-soft);background:#fff;color:var(--t-ink);font-weight:700;font-size:.82rem;text-decoration:none;white-space:nowrap}
 .fl-chip:hover{border-color:var(--t-1)}
 .fl-chip[aria-current="true"]{background:var(--t-1);border-color:var(--t-1);color:#fff}
+.fl-desk{display:flex;flex-direction:column;gap:14px}
+.fl-mob{display:none}
 @media (max-width:700px){
-  .fl-linha{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
-  .fl-linha::-webkit-scrollbar{display:none}
-  .fl-rot{min-width:auto}
+  .fl-desk{display:none}
+  .fl-mob{display:block;background:#fff;border:2px solid var(--t-soft);border-radius:14px}
+  .fl-mob summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 14px;color:var(--t-ink);font-size:.88rem}
+  .fl-mob summary::-webkit-details-marker{display:none}
+  .fl-mob summary::after{content:'▾';font-size:1rem;color:var(--t-1);transition:transform .2s}
+  .fl-mob[open] summary::after{transform:rotate(180deg)}
+  .fl-sum-txt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fl-sum-n{margin-left:auto;font-size:.75rem;font-weight:800;background:var(--t-soft);border-radius:999px;padding:2px 9px;white-space:nowrap}
+  .fl-painel{display:flex;flex-direction:column;gap:12px;padding:4px 14px 14px;border-top:1px solid var(--t-soft)}
+  .fl-painel .fl-linha:last-of-type{max-height:132px;overflow-y:auto}
+  .fl-rot{min-width:100%}
+  .fl-limpar{align-self:flex-start;font-weight:800;font-size:.82rem;color:var(--t-1);text-decoration:none}
 }
 `;
