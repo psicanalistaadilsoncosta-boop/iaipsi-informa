@@ -32,6 +32,7 @@ type Props = {
 
 // página que explica a CNV (você vai criar o conteúdo)
 const LINK_CNV = '/comunicacao-nao-violenta';
+const MAX_LISTA = 10; // igual ao MAX_PRODUTOS de app/api/ambientes/enviar/route.ts
 const MAX_CAMPO = 250;  // igual ao MAX_CAMPO de lib/ia-pedido.ts
 const MAX_RELATO = 300; // igual ao MAX_RELATO de lib/ia-pedido.ts
 
@@ -133,7 +134,7 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
   // nas datas, a lista fica guardada no aparelho da pessoa (dá para voltar depois e continuar)
   useEffect(() => {
     if (!T.data) return;
-    try { const s = localStorage.getItem(CHAVE_LISTA); if (s) setLista(JSON.parse(s)); } catch {}
+    try { const s = localStorage.getItem(CHAVE_LISTA); if (s) setLista(JSON.parse(s).slice(0, MAX_LISTA)); } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => {
@@ -185,7 +186,16 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
   useEffect(() => { setQtd(24); }, [n1, filtro, faixa]);
 
   const naLista = (p: any) => lista.some(x => chave(x) === chave(p));
-  const alternar = (p: any) => setLista(prev => (prev.some(x => chave(x) === chave(p)) ? prev.filter(x => chave(x) !== chave(p)) : [...prev, p]));
+  const [cheia, setCheia] = useState(false);
+  const alternar = (p: any) => {
+    const jaTem = lista.some(x => chave(x) === chave(p));
+    if (!jaTem && lista.length >= MAX_LISTA) {
+      setCheia(true);
+      setTimeout(() => setCheia(false), 4000);
+      return;
+    }
+    setLista(prev => (prev.some(x => chave(x) === chave(p)) ? prev.filter(x => chave(x) !== chave(p)) : [...prev, p]));
+  };
   const total = lista.reduce((s, p) => s + num(p.preco ?? p.price), 0);
 
   // só o texto do pedido (sem a lista), para o topo do e-mail
@@ -408,7 +418,8 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
 
       {lista.length > 0 && (
         <div className="vt-flutua">
-          <b>{T.data ? '♡' : '🛒'} {lista.length} {lista.length === 1 ? 'item' : 'itens'}</b>
+          <b>{T.data ? '♡' : '🛒'} {lista.length} de {MAX_LISTA} {lista.length === 1 ? 'item' : 'itens'}</b>
+          {cheia && <span className="vt-cheia">Sua lista chegou a {MAX_LISTA} itens. Tire um para colocar outro.</span>}
           {total > 0 && <span>Total aprox.: {brl(total)}</span>}
           <button type="button" onClick={() => setShowModal(true)}>{T.data ? '💌 Ver minha lista de pedidos' : 'Receber links por e-mail'}</button>
         </div>
@@ -599,6 +610,7 @@ const CSS = `
 .vt-pedir[aria-pressed="true"]{background:var(--t-2);border-color:var(--t-2);color:#fff}
 .vt-flutua{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:100;background:var(--t-2);color:#fff;border-radius:16px;padding:14px 16px;box-shadow:0 6px 24px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:6px;min-width:220px}
 .vt-flutua span{font-size:13px;opacity:.9}
+.vt-flutua .vt-cheia{opacity:1;background:#fff;color:var(--t-2);border-radius:8px;padding:6px 8px;font-weight:700}
 .vt-flutua button{background:#fff;color:var(--t-2);border:0;border-radius:10px;padding:8px;font-weight:800;cursor:pointer}
 .vt-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px}
 .vt-modal-in{background:#fff;border-radius:18px;padding:28px;width:100%;max-width:420px;text-align:center}
