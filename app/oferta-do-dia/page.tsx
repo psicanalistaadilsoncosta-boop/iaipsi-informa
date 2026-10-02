@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import BotaoWhatsApp from '../BotaoWhatsApp';
 import Mascote from '../Mascote';
 import SeloLoja from '../SeloLoja';
+import CabecalhoTema from '../temas/CabecalhoTema';
 
 interface ProdutoPinado {
   id: string;
@@ -205,19 +206,10 @@ export default function OfertasDoDiaPage() {
 
   return (
     <main style={{ maxWidth: '900px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
-<div style={{ backgroundColor: '#fffbeb', border: '1px solid #fbbf24', borderRadius: '10px', padding: '12px 20px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <span style={{ fontSize: '1.2rem' }}>⚠️</span>
-        <p style={{ fontSize: '0.82rem', color: '#92400e', margin: 0, lineHeight: 1.5 }}>
-          <strong>Atenção:</strong> Condições de parcelamento, preços e disponibilidade são de responsabilidade do anunciante. As parcelas exibidas podem não refletir as condições atuais da loja. Confirme sempre no site e no carrinho antes de finalizar. Lojas com a indicação 💱 Preço convertido de USD estão localizadas em outro país, e as compras podem estar sujeitas a tributação de importação, que nem sempre aparece no carrinho e pode ser cobrada na entrega.
-        </p>
-      </div>
-
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
-        <a href="/ofertas" style={{ color: '#dc2626', fontWeight: 600, fontSize: '0.85rem', textDecoration: 'none' }}>← Voltar às ofertas</a>
-        <span style={{ backgroundColor: '#dc2626', color: '#fff', fontSize: '0.78rem', fontWeight: 700, padding: '4px 14px', borderRadius: '20px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-          🔥 Ofertas do Dia
-        </span>
-      </div>
+      <CabecalhoTema
+        temaId="ofertadodia"
+        aviso="Condições de parcelamento, preços e disponibilidade são de responsabilidade do anunciante. As parcelas exibidas podem não refletir as condições atuais da loja: confirme sempre no site e no carrinho antes de finalizar. Lojas com 💱 Preço convertido de USD ficam em outro país, e a compra pode ter imposto de importação, que nem sempre aparece no carrinho e pode ser cobrado na entrega. Saiba que os valores sofrem alteração de acordo com a variação cambial no Brasil."
+      />
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>⏳ Carregando ofertas...</div>

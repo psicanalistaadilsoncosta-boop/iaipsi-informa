@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import CabecalhoTema from '../temas/CabecalhoTema';
 
 interface Campanha {
   id: string;
@@ -354,35 +355,14 @@ export default function OfertasPage() {
   return (
     <div style={{ backgroundColor: '#fff', minHeight: '100vh', fontFamily: 'Helvetica, Arial, sans-serif', color: '#1a1a1a' }}>
 
-      {/* Barra utilitária */}
-      <div style={{ backgroundColor: '#1a1a1a', color: '#e5e5e5', fontSize: '0.74rem' }}>
-        <div style={{ maxWidth: '1160px', margin: '0 auto', padding: '7px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-          <a href="/" style={{ color: '#e5e5e5', textDecoration: 'none', fontWeight: 500 }}>← Voltar ao site</a>
-          <span style={{ color: '#9ca3af' }}>Atualizado automaticamente · links de afiliado</span>
-        </div>
-      </div>
+      <div style={{ maxWidth: '1160px', margin: '0 auto', padding: '24px 20px 0' }}>
+        <CabecalhoTema
+          temaId="cupons"
+          aviso="Condições, preços e regras dos cupons são de responsabilidade do anunciante e podem mudar a qualquer momento. Confirme sempre no site e no carrinho antes de finalizar."
+        />
 
-      {/* Cabeçalho principal */}
-      <header style={{ borderBottom: '1px solid #e8e8e8', backgroundColor: '#fff' }}>
-        <div style={{ maxWidth: '1160px', margin: '0 auto', padding: '20px 20px 0', display: 'flex', flexDirection: 'column', gap: '18px' }}>
-
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '20px', flexWrap: 'wrap' }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0, letterSpacing: '-0.01em' }}>
-              🛍 Ofertas &amp; Cupons
-            </h1>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              <a href="/oferta-do-dia" style={{ padding: '8px 14px', borderRadius: '3px', border: '1px solid #e8e8e8', color: '#dc2626', fontWeight: 600, fontSize: '0.8rem', textDecoration: 'none' }}>
-                🔥 Oferta do Dia
-              </a>
-               </div>
-          </div>
-      <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fbbf24', borderRadius: '10px', padding: '12px 20px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <span style={{ fontSize: '1.2rem' }}>⚠️</span>
-        <p style={{ fontSize: '0.82rem', color: '#92400e', margin: 0, lineHeight: 1.5 }}>
-          <strong>Atenção:</strong> Condições de parcelamento, preços e disponibilidade são de responsabilidade do anunciante. As parcelas exibidas podem não refletir as condições atuais da loja. Confirme sempre no site e no carrinho antes de finalizar.
-        </p>
-      </div>
-          {/* Abas sublinhadas */}
+        {/* Abas sublinhadas + atalho para a Oferta do Dia */}
+        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', borderBottom: '1px solid #e8e8e8' }}>
           <nav style={{ display: 'flex', gap: '28px' }}>
             {(['campanhas', 'marcas'] as const).map(a => (
               <button
@@ -392,7 +372,7 @@ export default function OfertasPage() {
                   padding: '0 0 12px',
                   border: 'none',
                   background: 'none',
-                  borderBottom: `3px solid ${aba === a ? '#dc2626' : 'transparent'}`,
+                  borderBottom: `3px solid ${aba === a ? '#7C3AED' : 'transparent'}`,
                   color: aba === a ? '#1a1a1a' : '#6b7280',
                   fontWeight: aba === a ? 700 : 500,
                   fontSize: '0.92rem',
@@ -404,8 +384,12 @@ export default function OfertasPage() {
               </button>
             ))}
           </nav>
+          <a href="/oferta-do-dia" style={{ marginBottom: '10px', padding: '6px 14px', borderRadius: '999px', backgroundColor: '#DC2626', color: '#fff', fontWeight: 700, fontSize: '0.8rem', textDecoration: 'none' }}>
+            🔥 Oferta do Dia
+          </a>
         </div>
-      </header>
+      </div>
+
 
       <main style={{ maxWidth: '1160px', margin: '0 auto', padding: '28px 20px 60px' }}>
 

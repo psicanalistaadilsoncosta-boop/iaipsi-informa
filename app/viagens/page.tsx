@@ -1,5 +1,6 @@
 import { kv } from '@/lib/kv';
 import Link from 'next/link';
+import CabecalhoTema from '../temas/CabecalhoTema';
 
 interface ArtigoViagem {
   id: string;
@@ -41,23 +42,10 @@ export default async function ViagensPage() {
   return (
     <main style={{ maxWidth: '1060px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
 
-      <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#0f766e', fontWeight: 600, fontSize: '0.85rem', textDecoration: 'none', marginBottom: '24px' }}>
-        ← Voltar ao site
-      </Link>
-
-      <header style={{ backgroundColor: '#fff', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: '32px', borderTop: '6px solid #0f766e' }}>
-        <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#111827', margin: '0 0 6px' }}>🌍 Roteiros de Viagem</h1>
-        <p style={{ color: '#6b7280', fontSize: '0.95rem', margin: 0 }}>
-          Passeios e experiências selecionados — com análise editorial e dicas de quem pesquisou.
-        </p>
-      </header>
-
-      <div style={{ backgroundColor: '#f0fdfa', border: '1px solid #99f6e4', borderRadius: '10px', padding: '12px 20px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <span style={{ fontSize: '1.2rem' }}>ℹ️</span>
-        <p style={{ fontSize: '0.82rem', color: '#134e4a', margin: 0, lineHeight: 1.5 }}>
-          <strong>Atenção:</strong> Preços, disponibilidade e itinerários são de responsabilidade do operador e podem ser alterados a qualquer momento. Confira sempre as condições atuais na Viator antes de reservar.
-        </p>
-      </div>
+           <CabecalhoTema
+        temaId="roteiros"
+        aviso="Preços, disponibilidade e itinerários são de responsabilidade do operador e podem mudar a qualquer momento. Confira sempre as condições atuais na Viator antes de reservar."
+      />
 
       {viagens.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>

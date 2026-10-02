@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { kv } from '@/lib/kv';
 import BotaoWhatsApp from '../BotaoWhatsApp';
 import SeloLoja from '../SeloLoja';
+import CabecalhoTema from '../temas/CabecalhoTema';
 
 interface ProdutoPinado {
   id: string;
@@ -50,22 +51,13 @@ export default async function OfertasSelecionadasPage({ searchParams }: { search
   return (
     <main style={{ maxWidth: '1060px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
 
-      <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#2563eb', fontWeight: 600, fontSize: '0.85rem', textDecoration: 'none', marginBottom: '24px' }}>
-        ← Voltar ao site
-      </Link>
 
-      <header style={{ backgroundColor: '#fff', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: '32px', borderTop: '6px solid #2563eb' }}>
-        <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#111827', margin: '0 0 6px' }}>⭐ Ofertas Selecionadas</h1>
-        <p style={{ color: '#6b7280', fontSize: '0.95rem', margin: 0 }}>
-          Produtos escolhidos a dedo — qualidade e custo-benefício garantidos.
-        </p>
-      </header>
-      <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fbbf24', borderRadius: '10px', padding: '12px 20px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <span style={{ fontSize: '1.2rem' }}>⚠️</span>
-        <p style={{ fontSize: '0.82rem', color: '#92400e', margin: 0, lineHeight: 1.5 }}>
-          <strong>Atenção:</strong> Preços, parcelas e disponibilidade são de responsabilidade do anunciante e podem ser alterados a qualquer momento. Confira sempre as condições atuais no site da loja antes de finalizar a compra. Lojas com a indicação 💵 Preço convertido de USD estão localizadas em outro país, e as compras podem estar sujeitas a tributação de importação, que nem sempre aparece no carrinho e pode ser cobrada na entrega.
-        </p>
-      </div>
+      <CabecalhoTema
+        temaId="selecionadas"
+        aviso="Preços, parcelas e disponibilidade são de responsabilidade do anunciante e podem mudar a qualquer momento. Confira sempre as condições no site da loja antes de comprar. Lojas com 💵 Preço convertido de USD ficam em outro país, e a compra pode ter imposto de importação, que nem sempre aparece no carrinho e pode ser cobrado na entrega. Saiba que os valores sofrem alteração de acordo com a variação cambial no Brasil."
+      />
+
+     
 
       {lojas.length > 1 && (
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
@@ -110,7 +102,7 @@ export default async function OfertasSelecionadasPage({ searchParams }: { search
                       </span>
                     )}
                     <span style={{ position: 'absolute', top: '12px', right: '12px', backgroundColor: '#2563eb', color: '#fff', fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: '20px' }}>
-                      ⭐ Selecionado
+                    🔍 Lupado
                     </span>
                   </div>
 

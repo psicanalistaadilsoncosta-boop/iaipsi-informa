@@ -3,6 +3,7 @@ import path from 'path';
 import Link from 'next/link';
 import { kv } from '@/lib/kv';
 import BotaoWhatsApp from '../BotaoWhatsApp';
+import CabecalhoTema from '../temas/CabecalhoTema';
 
 interface ProdutoPinado {
   id: string;
@@ -52,22 +53,13 @@ export default async function ParceladoPage({ searchParams }: { searchParams: Pr
   return (
     <main style={{ maxWidth: '1060px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
 
-      <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#047857', fontWeight: 600, fontSize: '0.85rem', textDecoration: 'none', marginBottom: '24px' }}>
-        ← Voltar ao site
-      </Link>
+            <CabecalhoTema
+        temaId="parcelado"
+        aviso="Condições de parcelamento, preços e disponibilidade são de responsabilidade do anunciante. As parcelas exibidas podem não refletir as condições atuais da loja: confirme sempre no site e no carrinho antes de finalizar. Lojas com 💵 Preço convertido de USD ficam em outro país, e a compra pode ter imposto de importação, que nem sempre aparece no carrinho e pode ser cobrado na entrega. Saiba que os valores sofrem alteração de acordo com a variação cambial no Brasil."
+      />
 
-      <header style={{ backgroundColor: '#fff', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: '32px', borderTop: '6px solid #047857' }}>
-        <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#111827', margin: '0 0 6px' }}>💳 Parcelado sem Juros</h1>
-        <p style={{ color: '#6b7280', fontSize: '0.95rem', margin: 0 }}>
-          Produtos selecionados com parcelamento sem juros — facilite sua compra.
-        </p>
-      </header>
-      <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fbbf24', borderRadius: '10px', padding: '12px 20px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <span style={{ fontSize: '1.2rem' }}>⚠️</span>
-        <p style={{ fontSize: '0.82rem', color: '#92400e', margin: 0, lineHeight: 1.5 }}>
-          <strong>Atenção:</strong> Condições de parcelamento, preços e disponibilidade são de responsabilidade do anunciante. As parcelas exibidas podem não refletir as condições atuais da loja. Confirme sempre no site e no carrinho antes de finalizar. Lojas com a indicação 💵 Preço convertido de USD estão localizadas em outro país, e as compras podem estar sujeitas a tributação de importação, que nem sempre aparece no carrinho e pode ser cobrada na entrega.
-        </p>
-      </div>
+
+
       {lojas.length > 1 && (
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
           <a href="?pagina=1"
