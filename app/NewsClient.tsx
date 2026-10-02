@@ -7,6 +7,7 @@ import OfertaDestaque from './OfertaDestaque';
 import ArtigosProdutoSection from './ArtigosProdutoSection';
 import ViagemDestaque from './ViagemDestaque';
 import BannerDestaque from './banners/BannerDestaque';
+import { TEMAS } from './temas/temas';
 
 // ─── GRID DAS 5 PÁGINAS DE PRODUTOS ──────────────────────────────────────────
 const PAGINAS_PRODUTOS = [
@@ -306,111 +307,68 @@ function TickerOfertas({ itens }: { itens: any[] }) {
   );
 }
 
+// tema de cada vitrine (cores e ícones vêm de app/temas/temas.ts)
+const TEMA_DA_PAGINA: Record<string, string> = {
+  '/monte-seu-ambiente': 'ambiente',
+  '/monte-seu-momento': 'momento',
+  '/vista-se': 'vistase',
+  '/vista-seu-filho': 'filho',
+  '/beleza': 'beleza',
+  '/mercado': 'mercado',
+};
+
 function GridPaginasProdutos() {
-  const renderCard = (p: typeof PAGINAS_PRODUTOS[number]) => (
-    <a
-      key={p.href}
-      href={p.href}
-      style={{ textDecoration: 'none' }}
-    >
-      <div style={{
-        border: `1.5px solid ${p.corBorda}`,
-        borderRadius: '14px',
-        overflow: 'hidden',
-        position: 'relative',
-        height: '160px',
-        display: 'flex',
-        alignItems: 'center',
-        transition: 'transform 0.15s, box-shadow 0.15s',
-        cursor: 'pointer',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-        backgroundColor: p.corBg,
-      }}
-        onMouseEnter={e => {
-          (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)';
-          (e.currentTarget as HTMLDivElement).style.boxShadow = '0 6px 16px rgba(0,0,0,0.14)';
-        }}
-        onMouseLeave={e => {
-          (e.currentTarget as HTMLDivElement).style.transform = '';
-          (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
-        }}
-      >
-        {/* Imagem de fundo à esquerda */}
-        <img
-          src={p.imagem}
-          alt={p.titulo}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            objectPosition: 'center',
-          }}
-          onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-        />
-
-        {/* Degradê da esquerda (transparente) para a direita (corBg opaco) */}
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          background: `linear-gradient(to right, transparent 0%, ${p.corBg}cc 45%, ${p.corBg} 68%)`,
-        }} />
-
-        {/* Conteúdo de texto — lado direito */}
-        <div style={{
-          position: 'relative',
-          zIndex: 1,
-          marginLeft: 'auto',
-          padding: '14px 16px 14px 0',
-          width: '62%',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-end',
-          textAlign: 'right',
-          gap: '6px',
-        }}>
-          <div style={{ display: 'flex', gap: '4px', lineHeight: 1 }}>
-            <span style={{ fontSize: '1.4rem' }}>{p.emoji}</span>
-            <span style={{ fontSize: '1.4rem' }}>{p.emoji2}</span>
-          </div>
-          <div style={{ fontWeight: 800, fontSize: '0.88rem', color: p.cor, lineHeight: 1.2 }}>{p.titulo}</div>
-          <div style={{ fontSize: '0.68rem', color: '#374151', lineHeight: 1.35 }}>{p.descricao}</div>
-          <div style={{
-            backgroundColor: p.cor,
-            color: '#fff',
-            fontSize: '0.68rem',
-            fontWeight: 700,
-            padding: '4px 12px',
-            borderRadius: '20px',
-          }}>
-            Ver produtos →
-          </div>
-        </div>
-      </div>
-    </a>
-  );
-
   return (
     <section style={{ marginBottom: '32px' }}>
+      <style>{`
+        .su-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+        .su-card { position: relative; display: flex; flex-direction: column; justify-content: flex-end; min-height: 190px;
+          border-radius: 18px; overflow: hidden; text-decoration: none; color: #fff;
+          box-shadow: 0 6px 20px rgba(0,0,0,.12); transition: transform .2s, box-shadow .2s; }
+        .su-card:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(0,0,0,.18); }
+        .su-foto { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+        .su-veu { position: absolute; inset: 0; }
+        .su-lupa { position: absolute; top: 12px; right: 12px; width: 62px; height: 62px; border-radius: 50%;
+          border: 4px solid rgba(255,255,255,.9); background: rgba(255,255,255,.2); display: grid; place-items: center; font-size: 30px; }
+        .su-lupa::after { content: ''; position: absolute; width: 8px; height: 24px; border-radius: 6px; right: -6px; bottom: -16px;
+          transform: rotate(-45deg); background: var(--su-ink); }
+        .su-txt { position: relative; padding: 16px; display: flex; flex-direction: column; gap: 4px; }
+        .su-tit { font-size: 1.15rem; font-weight: 800; line-height: 1.15; text-shadow: 0 1px 6px rgba(0,0,0,.25); }
+        .su-tit em { font-style: normal; color: var(--su-3); }
+        .su-desc { font-size: .78rem; opacity: .95; line-height: 1.35; text-shadow: 0 1px 4px rgba(0,0,0,.3); }
+        .su-btn { align-self: flex-start; margin-top: 6px; background: var(--su-3); color: var(--su-ink);
+          font-weight: 800; font-size: .75rem; padding: 6px 14px; border-radius: 999px; }
+        .su-news { grid-column: 1 / -1; display: flex; }
+        @media (max-width: 760px) { .su-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+          .su-card { min-height: 170px; } .su-tit { font-size: 1rem; } .su-lupa { width: 48px; height: 48px; font-size: 22px; } }
+      `}</style>
+
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
         <div style={{ width: '4px', height: '28px', backgroundColor: '#dc2626', borderRadius: '2px' }} />
         <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#111827', margin: 0 }}>Seu Universo</h2>
         <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 500, marginLeft: '4px' }}>ambiente, moda, beleza e mais...</span>
       </div>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-        gap: '12px',
-      }}>
-        {/* Os 5 primeiros cards */}
-        {PAGINAS_PRODUTOS.slice(0, 5).map(renderCard)}
-
-        {/* Vista seu Filho + Banner lado a lado — ocupam 2 colunas cada */}
-               {PAGINAS_PRODUTOS.slice(5).map(renderCard)}
-
-        <div className="bn-wrap-container">
+      <div className="su-grid">
+        {PAGINAS_PRODUTOS.map(p => {
+          const T = TEMAS[TEMA_DA_PAGINA[p.href]];
+          if (!T) return null;
+          const c = T.cores;
+          return (
+            <a key={p.href} href={p.href} className="su-card"
+              style={{ background: c[1], ['--su-3' as any]: c[3], ['--su-ink' as any]: c[5] }}>
+              <img className="su-foto" src={p.imagem} alt="" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              <div className="su-veu" style={{ background: `linear-gradient(160deg, ${c[1]}cc 0%, ${c[2]}f2 75%)` }} />
+              <div className="su-lupa" aria-hidden="true">{T.emoji}</div>
+              <div className="su-txt">
+                <div className="su-tit">{p.titulo}</div>
+                <div className="su-desc">{p.descricao}</div>
+                <span className="su-btn">Ver produtos →</span>
+              </div>
+            </a>
+          );
+        })}
+        <div className="su-news">
           <BannerNewsletter />
         </div>
       </div>
