@@ -15,9 +15,12 @@ export type Tema = {
   data?: boolean;     // datas festivas: botão "♡ Pedir"
   filtro: 'tipo' | 'preco';
   mascote?: string;   // imagem da mascote no banner grande (no lugar da lupa)
+  exemplos?: { mim?: Partial<Exemplos>; juntos?: Partial<Exemplos> }; // textos de exemplo da lista de pedidos
   leadTipo: string;   // identifica a origem da lista no e-mail
   faixas?: Faixa[];   // faixas de preço próprias (sem isso, usa FAIXAS_PRECO)
 };
+
+export type Exemplos = { dica: string; para: string; obs: string; sent: string; nec: string; ped: string; nome: string; lista: string };
 
 export type Faixa = { nome: string; min: number; max: number };
 
@@ -89,8 +92,31 @@ export const TEMAS: Record<string, Tema> = {
     faixa: '🎄 Natal · confira o prazo de entrega de cada loja antes de comprar',
     eyebrow: 'Natal',
     titulo: ['Presentes que fazem os ', 'olhos brilharem', ''],
-    sub: 'Filtre por bolso e monte a lista de pedidos da família.',
+    sub: 'Presentes para toda a família e  amigos, por faixa de preço. Monte sua lista: peça para você ou combine com quem vai presentear junto.',
     cta: '🎁 Achar o presente', emoji: '🎁', chapeu: '🎅', deco: ['🎄', '❄️'], data: true, filtro: 'preco', leadTipo: 'natal',
+    exemplos: {
+      mim: {
+        dica: 'Peça um presente para você, com carinho e sem rodeios: em quatro passos, do jeito da Comunicação Não Violenta. Todos os campos são opcionais.',
+        para: 'Ex.: Filho / Amor / Mãe',
+        obs: 'Ex.: Olha o que eu vi com a ajuda da Lupa: aquele perfume que eu sempre comento quando a gente passa na loja…',
+        sent: 'Ex.: …e fiquei com vontade de ganhar de presente neste Natal.',
+        nec: 'Ex.: Depois de um ano corrido, quero um mimo que me lembre de cuidar de mim.',
+        ped: 'Ex.: Você toparia me dar o perfume? Se outro item da lista combinar mais com você, vou adorar do mesmo jeito.',
+        nome: 'Ex.: Mãe',
+        lista: 'Presentes que eu adoraria ganhar:',
+      },
+      juntos: {
+        dica: 'Combine o presente de alguém com quem vai dividir: em quatro passos, do jeito da Comunicação Não Violenta. Todos os campos são opcionais.',
+        para: 'Ex.: Amor / Irmã / Turma do amigo secreto',
+        obs: 'Ex.: Olha o que eu vi com a ajuda da Lupa: a vó anda dizendo que a cafeteira dela quebrou…',
+        sent: 'Ex.: …e eu fiquei pensando que seria um presente útil e cheio de carinho.',
+        nec: 'Ex.: Quero que a gente dê algo que ela use todo dia e que caiba no nosso orçamento.',
+        ped: 'Ex.: Você topa a gente dividir a cafeteira? Avaliamos juntos o valor, e a caneca térmica também é ótima.',
+        nome: 'Ex.: Ana',
+        lista: 'Nossas opções de presente:',
+      },
+    },
+    mascote: '/mascote/lupa-natal.webp',
   },
   selecionadas: {
     cores: ['#F5F8FF', '#2563EB', '#1E3A8A', '#FBBF24', '#DBEAFE', '#172554'],
@@ -151,5 +177,6 @@ export const FAIXAS_PRECO: Faixa[] = [
 // Calendário das datas festivas: a faixa da home aparece entre "de" e "ate" (MM-DD, horário de Brasília).
 // Só coloque aqui datas que já têm página pronta.
 export const CALENDARIO: { tema: string; href: string; de: string; ate: string; chamada: string; mascote?: string }[] = [
-  { tema: 'criancas', href: '/dia-das-criancas', de: '09-25', ate: '10-12', chamada: 'Presentes por faixa de preço. Monte a lista e receba os links.', mascote: '/mascote/lupa-sentada.webp' },
+   { tema: 'natal', href: '/natal', de: '11-01', ate: '12-25', chamada: 'Presentes por faixa de preço para toda a família. Monte a lista e combine com quem vai presentear.', mascote: '/mascote/lupa-natal.webp' },
+ { tema: 'criancas', href: '/dia-das-criancas', de: '09-25', ate: '10-12', chamada: 'Presentes por faixa de preço. Monte a lista e receba os links.', mascote: '/mascote/lupa-sentada.webp' },
 ];

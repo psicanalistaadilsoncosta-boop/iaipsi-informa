@@ -30,6 +30,18 @@ type Props = {
   registrarLead?: (email: string, lista: any[]) => Promise<any>; // sem isso, usa /api/vista-se/lead
 };
 
+// exemplos dos campos do pedido; cada ficha pode trocar (temas.ts → exemplos)
+const EXEMPLOS_PADRAO = {
+  dica: 'Combine o presente com quem vai dividir ou presentear junto: em quatro passos, do jeito da Comunicação Não Violenta. Todos os campos são opcionais.',
+  para: 'Ex.: Amor / Vó Lúcia / Dinda',
+  obs: 'Ex.: Olha o que eu vi com a ajuda da Lupa: o Pedro anda montando cidades de blocos com os amigos da escola…',
+  sent: 'Ex.: …e eu fiquei animada com a ideia de dar algo que ele já curte.',
+  nec: 'Ex.: Quero um presente que estimule a criatividade dele e caiba no nosso orçamento.',
+  ped: 'Ex.: Você topa a gente dar o kit de montar? Avaliamos juntos o nosso orçamento, e o de pintura também é ótimo.',
+  nome: 'Ex.: Ana',
+  lista: 'Nossas opções de presente:',
+};
+
 const num = (v: any) => parseFloat(String(v ?? '').replace(',', '.')) || 0;
 const brl = (v: number) => 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const chave = (p: any) => String(p.id || p.link || p.nome);
@@ -43,6 +55,7 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
   const [nivel1, setNivel1] = useState<string | null>(null);
   const [filtro, setFiltro] = useState<string | null>(null);
   const [faixa, setFaixa] = useState<string | null>(null);
+  const [qtd, setQtd] = useState(24);
   const [lista, setLista] = useState<any[]>([]);
   const [email, setEmail] = useState('');
   const [emailsExtra, setEmailsExtra] = useState('');
@@ -52,6 +65,10 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
   const [erro, setErro] = useState('');
   const [cnv, setCnv] = useState({ para: '', obs: '', sent: '', nec: '', ped: '', nome: '' });
   const [copiado, setCopiado] = useState(false);
+  const temMim = !!T.exemplos?.mim;
+  const temJuntos = !T.exemplos || !!T.exemplos.juntos;
+  const [modo, setModo] = useState<'juntos' | 'mim'>(temJuntos ? 'juntos' : 'mim');
+  const EX = { ...EXEMPLOS_PADRAO, ...(T.exemplos?.[modo] || {}) };
   const CHAVE_LISTA = `comlupa:lista:${String(temaId)}`;
 
   // nas datas, a lista fica guardada no aparelho da pessoa (dá para voltar depois e continuar)
@@ -106,6 +123,7 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
     return v >= f.min && v <= f.max;
   };
   const produtos = T.filtro === 'tipo' && faixa ? base.filter(p => naFaixa(p, faixa)) : base;
+  useEffect(() => { setQtd(24); }, [n1, filtro, faixa]);
 
   const naLista = (p: any) => lista.some(x => chave(x) === chave(p));
   const alternar = (p: any) => setLista(prev => (prev.some(x => chave(x) === chave(p)) ? prev.filter(x => chave(x) !== chave(p)) : [...prev, p]));
@@ -134,7 +152,7 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
     const itens = lista.map(p => `• ${p.nome || p.name} — ${brl(num(p.preco ?? p.price))}\n  ${p.link}`).join('\n');
     return [
       corpo,
-      `${corpo ? '\n' : ''}Minha lista de pedidos:\n${itens}`,
+      `${corpo ? '\n' : ''}${EX.lista}\n${itens}`,
       l(cnv.nome) ? `\nCom carinho, ${l(cnv.nome)}` : '',
       '\n(vi com a ajuda da Lupa · comlupa.com.br)',
     ].filter(Boolean).join('\n');
@@ -268,7 +286,7 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
           <p className="vt-vazio">Nenhum produto nesta vitrine ainda.</p>
         ) : (
           <div className="vt-grade">
-            {produtos.map((p: any) => {
+            {produtos.slice(0, qtd).map((p: any) => {
               const nome = p.nome || p.name || '';
               const preco = num(p.preco ?? p.price);
               const antigo = num(p.precoOriginal);
@@ -301,6 +319,13 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
             })}
           </div>
         )}
+        {!loading && produtos.length > qtd && (
+          <div className="vt-mais">
+            <button type="button" onClick={() => setQtd(q => q + 24)}>
+              Ver mais produtos ({produtos.length - qtd} restantes)
+            </button>
+          </div>
+        )}
       </main>
 
       {lista.length > 0 && (
@@ -330,19 +355,25 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
                 <div className="vt-total"><span>Total da lista</span><b>{brl(total)}</b></div>
 
                 <h3>Escreva seu pedido</h3>
-               <p className="vt-dica">Combine o presente com quem vai dividir ou presentear junto: em quatro passos, do jeito da Comunicação Não Violenta. Todos os campos são opcionais.</p>
+                {temMim && temJuntos && (
+                  <div className="vt-modos" role="group" aria-label="Tipo de pedido">
+                    <button type="button" aria-pressed={modo === 'mim'} onClick={() => setModo('mim')}>🎁 Pedir para mim</button>
+                    <button type="button" aria-pressed={modo === 'juntos'} onClick={() => setModo('juntos')}>🤝 Presentear alguém juntos</button>
+                  </div>
+                )}
+                <p className="vt-dica">{EX.dica}</p>
                 <label className="vt-campo" htmlFor="cnv-para"><i>Para</i>quem vai receber o pedido
-                  <input id="cnv-para" value={cnv.para} onChange={e => setCnv({ ...cnv, para: e.target.value })} placeholder="Ex.: Amor / Vó Lúcia / Dinda" /></label>
+                  <input id="cnv-para" value={cnv.para} onChange={e => setCnv({ ...cnv, para: e.target.value })} placeholder={EX.para} /></label>
                 <label className="vt-campo" htmlFor="cnv-obs"><i>1 · Observação</i>o que eu vejo ou ouço
-                  <textarea id="cnv-obs" value={cnv.obs} onChange={e => setCnv({ ...cnv, obs: e.target.value })} placeholder="Ex.: Olha o que eu vi com a ajuda da Lupa: o Pedro anda montando cidades de blocos com os amigos da escola…" /></label>
+                  <textarea id="cnv-obs" value={cnv.obs} onChange={e => setCnv({ ...cnv, obs: e.target.value })} placeholder={EX.obs} /></label>
                 <label className="vt-campo" htmlFor="cnv-sent"><i>2 · Sentimento</i>como eu me sinto
-                  <textarea id="cnv-sent" value={cnv.sent} onChange={e => setCnv({ ...cnv, sent: e.target.value })} placeholder="Ex.: …e eu fiquei animada com a ideia de dar algo que ele já curte." /></label>
+                  <textarea id="cnv-sent" value={cnv.sent} onChange={e => setCnv({ ...cnv, sent: e.target.value })} placeholder={EX.sent} /></label>
                 <label className="vt-campo" htmlFor="cnv-nec"><i>3 · Necessidade</i>do que eu preciso, e por quê
-                  <textarea id="cnv-nec" value={cnv.nec} onChange={e => setCnv({ ...cnv, nec: e.target.value })} placeholder="Ex.: Quero um presente que estimule a criatividade dele e caiba no nosso orçamento." /></label>
+                  <textarea id="cnv-nec" value={cnv.nec} onChange={e => setCnv({ ...cnv, nec: e.target.value })} placeholder={EX.nec} /></label>
                 <label className="vt-campo" htmlFor="cnv-ped"><i>4 · Pedido</i>de um jeito que dá para dizer sim ou não
-                  <textarea id="cnv-ped" value={cnv.ped} onChange={e => setCnv({ ...cnv, ped: e.target.value })} placeholder="Ex.: Você topa a gente dar o kit de montar? Avaliamos juntos o nosso orçamento, e o de pintura também é ótimo." /></label>
+                  <textarea id="cnv-ped" value={cnv.ped} onChange={e => setCnv({ ...cnv, ped: e.target.value })} placeholder={EX.ped} /></label>
                 <label className="vt-campo" htmlFor="cnv-nome"><i>Assinatura</i>seu nome
-                  <input id="cnv-nome" value={cnv.nome} onChange={e => setCnv({ ...cnv, nome: e.target.value })} placeholder="Ex.: Ana" /></label>
+                  <input id="cnv-nome" value={cnv.nome} onChange={e => setCnv({ ...cnv, nome: e.target.value })} placeholder={EX.nome} /></label>
 
                 <div className="vt-previa">{textoPedido()}</div>
                 <div className="vt-botoes">
@@ -396,7 +427,7 @@ const CSS = `
 .vt-lupa .cabo{position:absolute;width:16%;height:40%;background:var(--t-ink);border-radius:20px;right:4%;bottom:-8%;transform:rotate(-45deg);transform-origin:top}
 .vt-lupa .dentro{position:relative;font-size:clamp(60px,9vw,96px);animation:vtboia 3.5s ease-in-out infinite}
 .vt-lupa .chapeu{position:absolute;top:-4%;left:8%;font-size:clamp(38px,5vw,58px);transform:rotate(-18deg)}
-.vt-mascote{justify-self:center;width:min(360px,100%);height:auto;filter:drop-shadow(0 12px 18px rgba(0,0,0,.25));animation:vtmasc 4s ease-in-out infinite}
+.vt-mascote{justify-self:center;width:auto;max-width:min(360px,100%);max-height:280px;height:auto;filter:drop-shadow(0 12px 18px rgba(0,0,0,.25));animation:vtmasc 4s ease-in-out infinite}
 @keyframes vtmasc{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 .vt-deco{position:absolute;font-size:200px;opacity:.12;pointer-events:none}
 .vt-deco.a{top:-50px;left:-40px;transform:rotate(-12deg)}
@@ -414,6 +445,9 @@ const CSS = `
 .vt-chip-p{padding:5px 12px;font-size:13px}
 .vt-chip-p[aria-pressed="true"]{background:var(--t-2);border-color:var(--t-2)}
 .vt-aviso{text-align:center;color:#6E6680;font-size:11px;max-width:760px;margin:4px auto 0}
+.vt-mais{display:flex;justify-content:center;padding-top:26px}
+.vt-mais button{border:2px solid var(--t-1);background:#fff;color:var(--t-1);border-radius:999px;padding:12px 28px;font-weight:800;font-size:15px;cursor:pointer}
+.vt-mais button:hover{background:var(--t-1);color:#fff}
 .vt-vazio{text-align:center;color:#9ca3af;padding:40px 0}
 .vt-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px;padding-top:20px}
 .vt-card{background:#fff;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;border:2px solid transparent;box-shadow:0 6px 22px rgba(43,38,53,.07);transition:transform .25s,border-color .25s}
@@ -467,13 +501,16 @@ const CSS = `
 .vt-botoes{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .vt-zap{flex:1;text-align:center;background:#16A34A;color:#fff;border-radius:10px;padding:11px;font-weight:800;text-decoration:none}
 .vt-copiar{flex:1;background:#fff;border:2px solid var(--t-2);color:var(--t-2);border-radius:10px;padding:9px;font-weight:800;cursor:pointer}
+.vt-modos{display:flex;gap:6px;margin:12px 0 4px;background:var(--t-soft);border-radius:999px;padding:4px}
+.vt-modos button{flex:1;border:0;background:transparent;border-radius:999px;padding:8px 6px;font-weight:800;font-size:13px;color:var(--t-ink);cursor:pointer}
+.vt-modos button[aria-pressed="true"]{background:#fff;color:var(--t-1);box-shadow:0 2px 8px rgba(0,0,0,.08)}
 .vt-pedido hr{border:0;border-top:1px dashed var(--t-soft);margin:18px 0 10px}
 @media (max-width:760px){
   .vt-banner-in{grid-template-columns:1fr;padding:22px 16px 26px}
   .vt-lupa{position:absolute;right:8px;top:6px;width:110px}
   .vt-banner h1{padding-right:96px}
   .vt-banner.com-mascote h1{padding-right:0}
-  .vt-mascote{width:min(260px,80%);margin:4px auto -12px}
+  .vt-mascote{width:auto;max-width:80%;max-height:200px;margin:4px auto -12px}
   .vt-banner p{font-size:15px}
   .vt-grade{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
   .vt-foto{height:130px}
