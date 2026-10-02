@@ -59,7 +59,39 @@ interface ProdutoLista {
 }
 
 function esc(t: string) {
-  return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// ---- limpeza dos produtos que vêm do navegador ----
+function num(v: any) {
+  const n = Number(String(v ?? '').replace(',', '.'));
+  return Number.isFinite(n) && n >= 0 && n < 1e7 ? n : 0;
+}
+function txt(v: any, max = 160) {
+  return esc(String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, max));
+}
+function urlImagem(v: any) {
+  try {
+    const u = new URL(String(v || ''));
+    return u.protocol === 'https:' ? esc(u.href) : '';
+  } catch { return ''; }
+}
+function limparProduto(p: any): ProdutoLista {
+  const parcelas = parseInt(String(p?.parcelas ?? ''), 10);
+  return {
+    nome: txt(p?.nome) || 'Produto',
+    preco: num(p?.preco),
+    precoOriginal: num(p?.precoOriginal) || undefined,
+    desconto: Math.min(Math.round(num(p?.desconto)), 99) || undefined,
+    parcelas: parcelas > 0 && parcelas <= 48 ? String(parcelas) : undefined,
+    valorParcela: num(p?.valorParcela) ? String(num(p?.valorParcela)) : undefined,
+    link: esc(String(p?.link || '')),
+    imagem: urlImagem(p?.imagem),
+    ambiente: txt(p?.ambiente, 60) || undefined,
+    tipoAmbiente: txt(p?.tipoAmbiente, 60) || undefined,
+    loja: txt(p?.loja, 60) || undefined,
+  };
 }
 
 function gerarHtml(produtos: ProdutoLista[], secao: Secao, mensagem = ''): string {
@@ -181,7 +213,7 @@ export async function POST(req: NextRequest) {
     const destinatarios = todos.join(', ');
 
     const secao = identificarSecao(req.headers.get('referer'));
-    const html = gerarHtml(produtos, secao, msg);
+    const html = gerarHtml(produtos.map(limparProduto), secao, msg);
 
     await criarTransporter().sendMail({
             from: `"${secao.titulo} · Com a Lupa" <${process.env.ZOHO_FROM || process.env.ZOHO_SMTP_USER}>`,
@@ -193,6 +225,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (e) {
     console.error('[enviar-ambiente]', e);
-    return NextResponse.json({ error: String(e) }, { status: 500 });
+    return NextResponse.json({ error: 'Não foi possível enviar agora.' }, { status: 500 });
   }
 }
