@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import CabecalhoTema from '../temas/CabecalhoTema';
+import { linkAfiliadoOk } from '@/lib/links-afiliados';
 
 interface Campanha {
   id: string;
@@ -344,7 +345,9 @@ export default function OfertasPage() {
       });
   }, []);
 
-  const campanhasAtivas = campanhas.filter(c => c.status === 'onTime');
+  const campanhasAtivas = campanhas.filter(c =>
+    c.status === 'onTime' && linkAfiliadoOk(c.channels?.[0]?.shortUrls?.[0] || c.url)
+  );
 
   const marcasFiltradas = categoriaAtiva === 'Todas'
     ? marcas.filter(m => m.categoriaInterna !== 'Outros')
@@ -407,7 +410,6 @@ export default function OfertasPage() {
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '20px' }}>
                     {campanhasAtivas.map(c => <CampanhaCard key={c.id} c={c} />)}
                   </div>
-                  <Paginacao pagina={paginaCamp} setPagina={setPaginaCamp} count={campanhasAtivas.length} />
                 </>
               )
             )}
