@@ -5,6 +5,7 @@ import { kv } from '@/lib/kv';
 import BotaoWhatsApp from '../BotaoWhatsApp';
 import SeloLoja from '../SeloLoja';
 import CabecalhoTema from '../temas/CabecalhoTema';
+import FiltrosLista, { aplicarFiltros, linkFiltros } from '../temas/FiltrosLista';
 
 interface ProdutoPinado {
   id: string;
@@ -41,11 +42,15 @@ async function getProdutos(pagina = 1, loja = ''): Promise<{ produtos: ProdutoPi
   const produtos = filtrados.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
   return { produtos, total, lojas };
 }
-export default async function OfertasSelecionadasPage({ searchParams }: { searchParams: Promise<{ pagina?: string; loja?: string }> }) {
+export default async function OfertasSelecionadasPage({ searchParams }: { searchParams: Promise<{ pagina?: string; loja?: string; cat?: string; faixa?: string }> }) {
   const params = await searchParams;
   const pagina = Math.max(1, parseInt(params.pagina || '1'));
   const lojaFiltro = params.loja || '';
-  const { produtos, total, lojas } = await getProdutos(pagina, lojaFiltro);
+  const ativos = { loja: lojaFiltro, cat: params.cat || '', faixa: params.faixa || '' };
+  const todos = await getTodos();
+  const filtrados = aplicarFiltros(todos, ativos);
+  const total = filtrados.length;
+  const produtos = filtrados.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
   const totalPaginas = Math.ceil(total / POR_PAGINA);
 
   return (
@@ -59,23 +64,7 @@ export default async function OfertasSelecionadasPage({ searchParams }: { search
 
      
 
-      {lojas.length > 1 && (
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
-          <a href="?pagina=1"
-            style={{ padding: '6px 16px', borderRadius: '999px', border: `2px solid ${!lojaFiltro ? '#2563eb' : '#e5e7eb'}`, backgroundColor: !lojaFiltro ? '#2563eb' : '#fff', color: !lojaFiltro ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.82rem', textDecoration: 'none', whiteSpace: 'nowrap' }}>
-            Todas ({total || 0})
-          </a>
-          {lojas.map(l => {
-            const ativa = lojaFiltro === l;
-            return (
-              <a key={l} href={`?loja=${encodeURIComponent(l)}&pagina=1`}
-                style={{ padding: '6px 16px', borderRadius: '999px', border: `2px solid ${ativa ? '#2563eb' : '#e5e7eb'}`, backgroundColor: ativa ? '#2563eb' : '#fff', color: ativa ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.82rem', textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                🏪 {l}
-              </a>
-            );
-          })}
-        </div>
-      )}
+            <FiltrosLista todos={todos} ativos={ativos} temaId="selecionadas" />
 
       {produtos.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>
@@ -148,7 +137,7 @@ export default async function OfertasSelecionadasPage({ searchParams }: { search
       {totalPaginas > 1 && (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginTop: '32px' }}>
           {pagina > 1 && (
-                       <a href={`?${lojaFiltro ? `loja=${encodeURIComponent(lojaFiltro)}&` : ''}pagina=${pagina - 1}`} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, textDecoration: 'none', fontSize: '0.9rem' }}>
+                       <a href={linkFiltros({ ...ativos, pagina: pagina - 1 })} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, textDecoration: 'none', fontSize: '0.9rem' }}>
               ← Anterior
             </a>
           )}
@@ -156,7 +145,7 @@ export default async function OfertasSelecionadasPage({ searchParams }: { search
             Página {pagina} de {totalPaginas} · {total} ofertas
           </span>
           {pagina < totalPaginas && (
-            <a href={`?${lojaFiltro ? `loja=${encodeURIComponent(lojaFiltro)}&` : ''}pagina=${pagina + 1}`} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, textDecoration: 'none', fontSize: '0.9rem' }}>
+            <a href={linkFiltros({ ...ativos, pagina: pagina + 1 })} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, textDecoration: 'none', fontSize: '0.9rem' }}>
               Próxima →
             </a>
           )}

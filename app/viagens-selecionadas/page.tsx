@@ -1,6 +1,13 @@
 import { kv } from '@/lib/kv';
 import Link from 'next/link';
 import CabecalhoTema from '../temas/CabecalhoTema';
+import FiltrosLista, { aplicarFiltros, linkFiltros } from '../temas/FiltrosLista';
+
+const FAIXAS_PASSEIO = [
+  { nome: 'Até R$ 200', min: 0, max: 200 },
+  { nome: 'R$ 200 a 600', min: 200.01, max: 600 },
+  { nome: 'Acima de R$ 600', min: 600.01, max: Infinity },
+];
 
 interface PasseioPinado {
   id: string;
@@ -39,11 +46,15 @@ async function getViagens(pagina = 1, loja = ''): Promise<{ viagens: PasseioPina
   return { viagens, total, lojas };
 }
 
-export default async function ViagensSelecionadasPage({ searchParams }: { searchParams: Promise<{ pagina?: string; loja?: string }> }) {
+export default async function ViagensSelecionadasPage({ searchParams }: { searchParams: Promise<{ pagina?: string; loja?: string; faixa?: string }> }) {
   const params = await searchParams;
   const pagina = Math.max(1, parseInt(params.pagina || '1'));
   const lojaFiltro = params.loja || '';
-  const { viagens, total, lojas } = await getViagens(pagina, lojaFiltro);
+  const ativos = { loja: lojaFiltro, faixa: params.faixa || '' };
+  const todos = (await getTodos()).map(v => ({ ...v, preco: v.precoBase }));
+  const filtrados = aplicarFiltros(todos, ativos, FAIXAS_PASSEIO);
+  const total = filtrados.length;
+  const viagens = filtrados.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
   const totalPaginas = Math.ceil(total / POR_PAGINA);
 
   return (
@@ -54,22 +65,7 @@ export default async function ViagensSelecionadasPage({ searchParams }: { search
         aviso="Preços, disponibilidade e itinerários são de responsabilidade do operador e podem mudar a qualquer momento. Confira sempre as condições atuais na Viator antes de reservar."
       />
 
-           {lojas.length > 1 && (
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '24px' }}>
-          
-            <a           
-            href="./"
-            style={{ padding: '6px 16px', borderRadius: '20px', fontSize: '0.82rem', fontWeight: 600, textDecoration: 'none', backgroundColor: !lojaFiltro ? '#0f766e' : '#fff', color: !lojaFiltro ? '#fff' : '#374151', border: '1px solid #e5e7eb' }}
-          >
-            Todas
-          </a>
-                   {lojas.map(l => (
-            <a key={l} href={`?loja=${encodeURIComponent(l)}`} style={{ padding: '6px 16px', borderRadius: '20px', fontSize: '0.82rem', fontWeight: 600, textDecoration: 'none', backgroundColor: lojaFiltro === l ? '#0f766e' : '#fff', color: lojaFiltro === l ? '#fff' : '#374151', border: '1px solid #e5e7eb' }}>
-              {l}
-            </a>
-          ))}
-        </div>
-      )}
+                <FiltrosLista todos={todos} ativos={ativos} temaId="viagens" faixas={FAIXAS_PASSEIO} comCategoria={false} />
 
       {viagens.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>
@@ -161,7 +157,7 @@ export default async function ViagensSelecionadasPage({ searchParams }: { search
            {totalPaginas > 1 && (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginTop: '32px' }}>
           {pagina > 1 && (
-            <a href={`?${lojaFiltro ? `loja=${encodeURIComponent(lojaFiltro)}&` : ''}pagina=${pagina - 1}`} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, textDecoration: 'none', fontSize: '0.9rem' }}>
+            <a href={linkFiltros({ ...ativos, pagina: pagina - 1 })} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, textDecoration: 'none', fontSize: '0.9rem' }}>
               ← Anterior
             </a>
           )}
@@ -169,7 +165,7 @@ export default async function ViagensSelecionadasPage({ searchParams }: { search
             Página {pagina} de {totalPaginas} · {total} viagens
           </span>
           {pagina < totalPaginas && (
-            <a href={`?${lojaFiltro ? `loja=${encodeURIComponent(lojaFiltro)}&` : ''}pagina=${pagina + 1}`} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, textDecoration: 'none', fontSize: '0.9rem' }}>
+            <a href={linkFiltros({ ...ativos, pagina: pagina + 1 })} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, textDecoration: 'none', fontSize: '0.9rem' }}>
               Próxima →
             </a>
           )}
