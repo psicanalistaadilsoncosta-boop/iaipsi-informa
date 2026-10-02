@@ -10,6 +10,7 @@ function comTempoLimite<T>(p: Promise<T>, ms: number, reserva: T): Promise<T> {
 }
 import { getViagemDestaque } from './ViagemDestaque';
 import { Analytics } from "@vercel/analytics/next"
+import FaixaSazonal from './temas/FaixaSazonal';
 
 export interface FeedItem {
   title?: string;
@@ -469,5 +470,5 @@ export default async function Home() {
   const bannerSlides = [...bannerData.slidesEditoriais, ...bannerData.produtosBanner]
     .sort(() => Math.random() - 0.5);
 
-  return <NewsClient posts={posts} ads={ads} editorial={editorial} sabores={sabores} ofertasMix={ofertasMix} artigosProduto={artigosProduto} viagemDestaque={viagemDestaque} viagensNoticias={viagensNoticias} comPalavraDestaque={comPalavraDestaque} bannerSlides={bannerSlides} />
+    return <><FaixaSazonal /><NewsClient posts={posts} ads={ads} editorial={editorial} sabores={sabores} ofertasMix={ofertasMix} artigosProduto={artigosProduto} viagemDestaque={viagemDestaque} viagensNoticias={viagensNoticias} comPalavraDestaque={comPalavraDestaque} bannerSlides={bannerSlides} /></>
 }

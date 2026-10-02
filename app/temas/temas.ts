@@ -97,3 +97,9 @@ export const FAIXAS_PRECO: Faixa[] = [
   { nome: 'R$ 100 a 300', min: 100.01, max: 300 },
   { nome: 'Acima de R$ 300', min: 300.01, max: Infinity },
 ];
+
+// Calendário das datas festivas: a faixa da home aparece entre "de" e "ate" (MM-DD, horário de Brasília).
+// Só coloque aqui datas que já têm página pronta.
+export const CALENDARIO: { tema: string; href: string; de: string; ate: string; chamada: string }[] = [
+  { tema: 'criancas', href: '/dia-das-criancas', de: '09-25', ate: '10-12', chamada: 'Presentes por faixa de preço. Monte a lista e receba os links.' },
+];
