@@ -50,6 +50,21 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
   const [enviando, setEnviando] = useState(false);
   const [enviado, setEnviado] = useState(false);
   const [erro, setErro] = useState('');
+  const [cnv, setCnv] = useState({ para: '', obs: '', sent: '', nec: '', ped: '', nome: '' });
+  const [copiado, setCopiado] = useState(false);
+  const CHAVE_LISTA = `comlupa:lista:${String(temaId)}`;
+
+  // nas datas, a lista fica guardada no aparelho da pessoa (dá para voltar depois e continuar)
+  useEffect(() => {
+    if (!T.data) return;
+    try { const s = localStorage.getItem(CHAVE_LISTA); if (s) setLista(JSON.parse(s)); } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (!T.data) return;
+    try { localStorage.setItem(CHAVE_LISTA, JSON.stringify(lista)); } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lista]);
 
   useEffect(() => {
     carregar().then(d => { setBruto(d || {}); setLoading(false); }).catch(() => setLoading(false));
@@ -96,6 +111,41 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
   const alternar = (p: any) => setLista(prev => (prev.some(x => chave(x) === chave(p)) ? prev.filter(x => chave(x) !== chave(p)) : [...prev, p]));
   const total = lista.reduce((s, p) => s + num(p.preco ?? p.price), 0);
 
+  // só o texto do pedido (sem a lista), para o topo do e-mail
+  const corpoPedido = () => {
+    const l = (t: string) => t.trim();
+    return [
+      l(cnv.para) ? `${l(cnv.para)},` : '',
+      [l(cnv.obs), l(cnv.sent)].filter(Boolean).join(' '),
+      l(cnv.nec),
+      l(cnv.ped),
+      l(cnv.nome) ? `Com carinho, ${l(cnv.nome)}` : '',
+    ].filter(Boolean).join('\n');
+  };
+
+  const textoPedido = () => {
+    const l = (t: string) => t.trim();
+    const corpo = [
+      l(cnv.para) ? `${l(cnv.para)},` : '',
+      [l(cnv.obs), l(cnv.sent)].filter(Boolean).join(' '),
+      l(cnv.nec),
+      l(cnv.ped),
+    ].filter(Boolean).join('\n');
+    const itens = lista.map(p => `• ${p.nome || p.name} — ${brl(num(p.preco ?? p.price))}\n  ${p.link}`).join('\n');
+    return [
+      corpo,
+      `${corpo ? '\n' : ''}Minha lista de pedidos:\n${itens}`,
+      l(cnv.nome) ? `\nCom carinho, ${l(cnv.nome)}` : '',
+      '\n(vi com a ajuda da Lupa · comlupa.com.br)',
+    ].filter(Boolean).join('\n');
+  };
+
+  async function copiarPedido() {
+    const t = textoPedido();
+    try { await navigator.clipboard.writeText(t); setCopiado(true); setTimeout(() => setCopiado(false), 2500); }
+    catch { window.prompt('Copie o texto do pedido:', t); }
+  }
+
   async function enviarLista() {
     if (!email.trim() || lista.length === 0) return;
     setEnviando(true); setErro('');
@@ -109,6 +159,7 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email, emailsExtra,
+          mensagem: T.data ? corpoPedido() : undefined,
           produtos: lista.map(p => ({
             nome: p.nome || p.name || '',
             preco: num(p.preco ?? p.price),
@@ -143,7 +194,7 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
 
       <div className="vt-faixa">{T.faixa}</div>
 
-        <section className={`vt-banner${T.mascote ? ' com-mascote' : ''}`}>
+      <section className={`vt-banner${T.mascote ? ' com-mascote' : ''}`}>
         <div className="vt-deco a" aria-hidden="true">{T.deco[0]}</div>
         <div className="vt-deco b" aria-hidden="true">{T.deco[1]}</div>
         <div className="vt-banner-in">
@@ -153,7 +204,7 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
             <p>{T.sub}</p>
             <a className="vt-cta" href="#vt-produtos">{T.cta}</a>
           </div>
-                    {T.mascote ? (
+          {T.mascote ? (
             <img className="vt-mascote" src={T.mascote} alt="" aria-hidden="true" />
           ) : (
             <div className="vt-lupa" aria-hidden="true">
@@ -208,7 +259,7 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
 
         <p className="vt-aviso">
           Preços, descontos, frete e disponibilidade são referenciais: valem as condições exibidas na loja no momento da compra.
-          Lojas com indicação 💵 Preço convertido de USD, ficam em outro país e a compra pode ter imposto de importação, que nem sempre aparece no carrinho. Saiba que os valores sofrem alteração de acordo com a variação cambial no Brasil.
+          Lojas com 💵 ficam em outro país e a compra pode ter imposto de importação, que nem sempre aparece no carrinho. Saiba que os valores sofrem alteração de acordo com a variação cambial no Brasil.
         </p>
 
         {loading ? (
@@ -256,18 +307,57 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
         <div className="vt-flutua">
           <b>{T.data ? '♡' : '🛒'} {lista.length} {lista.length === 1 ? 'item' : 'itens'}</b>
           {total > 0 && <span>Total aprox.: {brl(total)}</span>}
-          <button type="button" onClick={() => setShowModal(true)}>Receber links por e-mail</button>
+          <button type="button" onClick={() => setShowModal(true)}>{T.data ? '💌 Ver minha lista de pedidos' : 'Receber links por e-mail'}</button>
         </div>
       )}
 
       {showModal && (
         <div className="vt-modal" role="dialog" aria-modal="true">
-          <div className="vt-modal-in">
+          <div className={`vt-modal-in${T.data ? ' largo' : ''}`}>
+            {T.data && !enviado && (
+              <div className="vt-pedido">
+                <div style={{ fontSize: '2rem' }}>💌</div>
+                <h2>Minha lista de pedidos</h2>
+                <ul className="vt-itens">
+                  {lista.map(p => (
+                    <li key={chave(p)}>
+                      {(p.imagem || p.thumbnail) ? <img src={p.imagem || p.thumbnail} alt="" /> : <span>{T.emoji}</span>}
+                      <div><b>{p.nome || p.name}</b><small>{brl(num(p.preco ?? p.price))}</small></div>
+                      <button type="button" onClick={() => alternar(p)} aria-label="Tirar da lista">✕</button>
+                    </li>
+                  ))}
+                </ul>
+                <div className="vt-total"><span>Total da lista</span><b>{brl(total)}</b></div>
+
+                <h3>Escreva seu pedido</h3>
+               <p className="vt-dica">Combine o presente com quem vai dividir ou presentear junto: em quatro passos, do jeito da Comunicação Não Violenta. Todos os campos são opcionais.</p>
+                <label className="vt-campo" htmlFor="cnv-para"><i>Para</i>quem vai receber o pedido
+                  <input id="cnv-para" value={cnv.para} onChange={e => setCnv({ ...cnv, para: e.target.value })} placeholder="Ex.: Amor / Vó Lúcia / Dinda" /></label>
+                <label className="vt-campo" htmlFor="cnv-obs"><i>1 · Observação</i>o que eu vejo ou ouço
+                  <textarea id="cnv-obs" value={cnv.obs} onChange={e => setCnv({ ...cnv, obs: e.target.value })} placeholder="Ex.: Olha o que eu vi com a ajuda da Lupa: o Pedro anda montando cidades de blocos com os amigos da escola…" /></label>
+                <label className="vt-campo" htmlFor="cnv-sent"><i>2 · Sentimento</i>como eu me sinto
+                  <textarea id="cnv-sent" value={cnv.sent} onChange={e => setCnv({ ...cnv, sent: e.target.value })} placeholder="Ex.: …e eu fiquei animada com a ideia de dar algo que ele já curte." /></label>
+                <label className="vt-campo" htmlFor="cnv-nec"><i>3 · Necessidade</i>do que eu preciso, e por quê
+                  <textarea id="cnv-nec" value={cnv.nec} onChange={e => setCnv({ ...cnv, nec: e.target.value })} placeholder="Ex.: Quero um presente que estimule a criatividade dele e caiba no nosso orçamento." /></label>
+                <label className="vt-campo" htmlFor="cnv-ped"><i>4 · Pedido</i>de um jeito que dá para dizer sim ou não
+                  <textarea id="cnv-ped" value={cnv.ped} onChange={e => setCnv({ ...cnv, ped: e.target.value })} placeholder="Ex.: Você topa a gente dar o kit de montar? Avaliamos juntos o nosso orçamento, e o de pintura também é ótimo." /></label>
+                <label className="vt-campo" htmlFor="cnv-nome"><i>Assinatura</i>seu nome
+                  <input id="cnv-nome" value={cnv.nome} onChange={e => setCnv({ ...cnv, nome: e.target.value })} placeholder="Ex.: Ana" /></label>
+
+                <div className="vt-previa">{textoPedido()}</div>
+                <div className="vt-botoes">
+                  <a className="vt-zap" href={`https://wa.me/?text=${encodeURIComponent(textoPedido())}`} target="_blank" rel="noopener noreferrer">Enviar no WhatsApp</a>
+                  <button type="button" className="vt-copiar" onClick={copiarPedido}>{copiado ? '✓ Copiado' : '📋 Copiar mensagem'}</button>
+                </div>
+                <hr />
+                <p className="vt-dica" style={{ margin: 0 }}>Ou receba só os links por e-mail:</p>
+              </div>
+            )}
             {!enviado ? (
               <>
-                <div style={{ fontSize: '2rem' }}>{T.emoji}</div>
-                <h2>Receber minha lista</h2>
-                <p>{lista.length} {lista.length === 1 ? 'item selecionado' : 'itens selecionados'}</p>
+                {!T.data && <div style={{ fontSize: '2rem' }}>{T.emoji}</div>}
+                {!T.data && <h2>Receber minha lista</h2>}
+                {!T.data && <p>{lista.length} {lista.length === 1 ? 'item selecionado' : 'itens selecionados'}</p>}
                 <input id="vt-email" type="email" placeholder="seu@email.com" value={email} onChange={e => setEmail(e.target.value)} />
                 <label htmlFor="vt-extra" className="vt-extra-rot">Enviar uma cópia para alguém? (opcional)</label>
                 <input id="vt-extra" type="text" placeholder="amigo@email.com, familia@email.com" value={emailsExtra} onChange={e => setEmailsExtra(e.target.value)} />
@@ -280,7 +370,7 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
                 <div style={{ fontSize: '3rem' }}>✅</div>
                 <h2>Enviado!</h2>
                 <p>Verifique sua caixa de entrada.</p>
-                <button type="button" className="vt-ok" onClick={() => { setShowModal(false); setEnviado(false); setLista([]); setEmailsExtra(''); }}>Fechar</button>
+                <button type="button" className="vt-ok" onClick={() => { setShowModal(false); setEnviado(false); if (!T.data) setLista([]); setEmailsExtra(''); }}>Fechar</button>
               </>
             )}
           </div>
@@ -355,10 +445,33 @@ const CSS = `
 .vt-ok{width:100%;padding:12px;background:var(--t-1);color:#fff;border:0;border-radius:10px;font-weight:800;cursor:pointer;font-size:15px;margin-bottom:6px}
 .vt-ok:disabled{opacity:.6;cursor:wait}
 .vt-cancela{background:none;border:0;color:#9ca3af;cursor:pointer}
+.vt-modal-in{max-height:92vh;overflow-y:auto}
+.vt-modal-in.largo{max-width:560px;text-align:left}
+.vt-modal-in.largo > div:first-child, .vt-pedido > div:first-child{text-align:center}
+.vt-pedido h2{text-align:center}
+.vt-pedido h3{margin:18px 0 2px;color:var(--t-ink);font-size:17px}
+.vt-dica{font-size:13px!important;color:#6b7280}
+.vt-itens{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.vt-itens li{display:grid;grid-template-columns:48px 1fr auto;gap:10px;align-items:center;border:1px solid var(--t-soft);border-radius:12px;padding:6px 8px}
+.vt-itens img,.vt-itens li > span{width:48px;height:48px;object-fit:contain;border-radius:8px;background:#fff;display:grid;place-items:center;font-size:26px}
+.vt-itens b{display:block;font-size:13px;line-height:1.25}
+.vt-itens small{color:var(--t-1);font-weight:800}
+.vt-itens button{border:0;background:none;color:#9ca3af;font-size:16px;cursor:pointer;padding:4px 8px}
+.vt-total{display:flex;justify-content:space-between;padding:10px 4px 0;font-size:14px}
+.vt-campo{display:block;font-size:12px;color:#6b7280;margin-top:10px}
+.vt-campo i{font-style:normal;display:inline-block;background:var(--t-1);color:#fff;border-radius:999px;padding:1px 9px;font-size:11px;font-weight:800;margin-right:6px;letter-spacing:.03em}
+.vt-campo input,.vt-campo textarea{display:block;width:100%;box-sizing:border-box;margin-top:4px;border:2px solid var(--t-soft);border-radius:10px;padding:9px 11px;font:inherit;font-size:15px;color:#2B2635}
+.vt-campo textarea{min-height:56px;resize:vertical}
+.vt-campo input:focus,.vt-campo textarea:focus{outline:none;border-color:var(--t-1)}
+.vt-previa{margin-top:14px;background:var(--t-soft);border-radius:12px;padding:12px 14px;font-size:13px;white-space:pre-wrap;word-break:break-word;color:var(--t-ink);max-height:220px;overflow-y:auto}
+.vt-botoes{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.vt-zap{flex:1;text-align:center;background:#16A34A;color:#fff;border-radius:10px;padding:11px;font-weight:800;text-decoration:none}
+.vt-copiar{flex:1;background:#fff;border:2px solid var(--t-2);color:var(--t-2);border-radius:10px;padding:9px;font-weight:800;cursor:pointer}
+.vt-pedido hr{border:0;border-top:1px dashed var(--t-soft);margin:18px 0 10px}
 @media (max-width:760px){
   .vt-banner-in{grid-template-columns:1fr;padding:22px 16px 26px}
   .vt-lupa{position:absolute;right:8px;top:6px;width:110px}
-   .vt-banner h1{padding-right:96px}
+  .vt-banner h1{padding-right:96px}
   .vt-banner.com-mascote h1{padding-right:0}
   .vt-mascote{width:min(260px,80%);margin:4px auto -12px}
   .vt-banner p{font-size:15px}

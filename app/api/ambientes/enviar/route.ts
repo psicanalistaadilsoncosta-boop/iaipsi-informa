@@ -26,6 +26,9 @@ const SECOES: Record<string, Secao> = {
   'mercado':            { titulo: 'Mercado',            emoji: '🛒🧺' },
 };
 
+SECOES['dia-das-criancas'] = { titulo: 'Dia das Crianças', emoji: '🎈' };
+SECOES['natal'] = { titulo: 'Natal', emoji: '🎄' };
+
 const SECAO_PADRAO: Secao = { titulo: 'Seu Universo', emoji: '✨' };
 
 function identificarSecao(referer: string | null): Secao {
@@ -52,7 +55,11 @@ interface ProdutoLista {
   loja?: string;
 }
 
-function gerarHtml(produtos: ProdutoLista[], secao: Secao): string {
+function esc(t: string) {
+  return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function gerarHtml(produtos: ProdutoLista[], secao: Secao, mensagem = ''): string {
   const itens = produtos.map(p => `
     <tr>
       <td style="padding:12px;border-bottom:1px solid #f3f4f6;vertical-align:top;width:70px">
@@ -90,6 +97,8 @@ function gerarHtml(produtos: ProdutoLista[], secao: Secao): string {
       <p style="color:rgba(255,255,255,0.85);margin:0;font-size:14px">Produtos selecionados com links de oferta</p>
     </div>
 
+    ${mensagem ? `<div style="margin:20px 16px 4px;padding:16px 18px;background:#fff7ed;border-left:4px solid #f59e0b;border-radius:10px;font-size:15px;line-height:1.6;color:#1f2937">${esc(mensagem).replace(/\n/g, '<br>')}</div>` : ''}
+
     <!-- Produtos -->
     <div style="padding:0 16px">
       <table style="width:100%;border-collapse:collapse">
@@ -117,7 +126,8 @@ function gerarHtml(produtos: ProdutoLista[], secao: Secao): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, emailsExtra, produtos } = await req.json();
+    const { email, emailsExtra, produtos, mensagem } = await req.json();
+    const msg = typeof mensagem === 'string' ? mensagem.trim().slice(0, 3000) : '';
 
     if (!email) return NextResponse.json({ error: 'E-mail obrigatório' }, { status: 400 });
     if (!produtos?.length) return NextResponse.json({ error: 'Lista vazia' }, { status: 400 });
@@ -130,12 +140,12 @@ export async function POST(req: NextRequest) {
     const destinatarios = [email, ...extras].join(', ');
 
     const secao = identificarSecao(req.headers.get('referer'));
-    const html = gerarHtml(produtos, secao);
+    const html = gerarHtml(produtos, secao, msg);
 
     await criarTransporter().sendMail({
             from: `"${secao.titulo} · Com a Lupa" <${process.env.ZOHO_FROM || process.env.ZOHO_SMTP_USER}>`,
       to: destinatarios,
-      subject: `${secao.emoji} Sua lista · ${secao.titulo} — ${produtos.length} produto${produtos.length > 1 ? 's' : ''} selecionado${produtos.length > 1 ? 's' : ''}`,
+      subject: msg ? `💌 Lista de pedidos · ${secao.titulo}` : `${secao.emoji} Sua lista · ${secao.titulo} — ${produtos.length} produto${produtos.length > 1 ? 's' : ''} selecionado${produtos.length > 1 ? 's' : ''}`,
       html,
     });
 
