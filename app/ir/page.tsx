@@ -1,10 +1,8 @@
 'use client';
 
-'use client';
-
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-
+import { linkAfiliadoOk } from '@/lib/links-afiliados';
 
 const MENSAGENS = [
   '🔄 Verificando condições atuais...',
@@ -15,7 +13,9 @@ const MENSAGENS = [
 
 function IrContent() {
   const searchParams = useSearchParams();
-  const url = searchParams.get('url') || '/';
+  const bruto = searchParams.get('url') || '';
+  const url = linkAfiliadoOk(bruto) ? bruto : '/';
+  if (bruto && url === '/') console.warn('[ir] link recusado:', bruto);
   const nome = searchParams.get('nome') || 'oferta';
   const imagem = searchParams.get('imagem') || '';
   const [progresso, setProgresso] = useState(0);

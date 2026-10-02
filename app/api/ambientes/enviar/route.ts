@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+import { kv } from '@/lib/kv';
+import { linkAfiliadoOk } from '@/lib/links-afiliados';
+
 
 function criarTransporter() {
   return nodemailer.createTransport({
@@ -124,9 +127,25 @@ function gerarHtml(produtos: ProdutoLista[], secao: Secao, mensagem = ''): strin
 </html>`;
 }
 
+const EMAIL_OK = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const MAX_DEST = 5;
+const MAX_PRODUTOS = 10;
+
+// conta envios numa janela de tempo; true = passou do limite
+async function estourou(chave: string, max: number, janelaMin: number) {
+  const agora = Date.now();
+  const v = await kv.get<{ n: number; ate: number }>(chave);
+  const atual = v && v.ate > agora ? v : { n: 0, ate: agora + janelaMin * 60000 };
+  if (atual.n >= max) return true;
+  await kv.set(chave, { n: atual.n + 1, ate: atual.ate });
+  return false;
+}
+
+
 export async function POST(req: NextRequest) {
   try {
-    const { email, emailsExtra, produtos, mensagem } = await req.json();
+    const { site, email, emailsExtra, produtos, mensagem } = await req.json();
+    if (site) return NextResponse.json({ success: true }); // robô: finge que enviou
     const msg = typeof mensagem === 'string' ? mensagem.trim().slice(0, 3000) : '';
 
     if (!email) return NextResponse.json({ error: 'E-mail obrigatório' }, { status: 400 });
@@ -134,10 +153,32 @@ export async function POST(req: NextRequest) {
 
     // Destinatários: e-mail principal + extras separados por vírgula
     const extras = (emailsExtra || '')
-      .split(',')
+       .split(/[,;\s]+/)
       .map((e: string) => e.trim())
       .filter(Boolean);
-    const destinatarios = [email, ...extras].join(', ');
+    const todos = [String(email).trim(), ...extras].map((e: string) => e.toLowerCase());
+    if (todos.length > MAX_DEST) {
+      return NextResponse.json({ error: `Você pode enviar cópia para até ${MAX_DEST - 1} e-mails.` }, { status: 400 });
+    }
+    if (!todos.every((e: string) => EMAIL_OK.test(e))) {
+      return NextResponse.json({ error: 'Confira os e-mails digitados.' }, { status: 400 });
+    }
+    if (!Array.isArray(produtos) || produtos.length > MAX_PRODUTOS) {
+      return NextResponse.json({ error: `A lista pode ter até ${MAX_PRODUTOS} produtos.` }, { status: 400 });
+    }
+    const ruins = produtos.filter((p: any) => !linkAfiliadoOk(String(p?.link || '')));
+    if (ruins.length) {
+      console.warn('[enviar] link recusado:', ruins.slice(0, 3).map((p: any) => p?.link));
+      return NextResponse.json({ error: 'Um dos produtos tem um link que não reconhecemos. Tire-o da lista e tente de novo.' }, { status: 400 });
+    }
+    const ip = (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'sem-ip';
+    if (await estourou(`envio:ip:${ip}`, 10, 60)) {
+      return NextResponse.json({ error: 'Muitos envios seguidos. Tente de novo daqui a pouco.' }, { status: 429 });
+    }
+    if (await estourou('envio:site', 300, 1440)) {
+      return NextResponse.json({ error: 'O envio por e-mail está muito procurado hoje. Tente amanhã ou compartilhe pelo WhatsApp.' }, { status: 429 });
+    }
+    const destinatarios = todos.join(', ');
 
     const secao = identificarSecao(req.headers.get('referer'));
     const html = gerarHtml(produtos, secao, msg);

@@ -30,6 +30,11 @@ type Props = {
   registrarLead?: (email: string, lista: any[]) => Promise<any>; // sem isso, usa /api/vista-se/lead
 };
 
+// página que explica a CNV (você vai criar o conteúdo)
+const LINK_CNV = '/comunicacao-nao-violenta';
+const MAX_CAMPO = 250;  // igual ao MAX_CAMPO de lib/ia-pedido.ts
+const MAX_RELATO = 300; // igual ao MAX_RELATO de lib/ia-pedido.ts
+
 // exemplos dos campos do pedido; cada ficha pode trocar (temas.ts → exemplos)
 const EXEMPLOS_PADRAO = {
   dica: 'Combine o presente com quem vai dividir ou presentear junto: em quatro passos, do jeito da Comunicação Não Violenta. Todos os campos são opcionais.',
@@ -58,6 +63,7 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
   const [qtd, setQtd] = useState(24);
   const [lista, setLista] = useState<any[]>([]);
   const [email, setEmail] = useState('');
+  const [hp, setHp] = useState(''); // campo-armadilha: só robô preenche
   const [emailsExtra, setEmailsExtra] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [enviando, setEnviando] = useState(false);
@@ -69,6 +75,59 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
   const temJuntos = !T.exemplos || !!T.exemplos.juntos;
   const [modo, setModo] = useState<'juntos' | 'mim'>(temJuntos ? 'juntos' : 'mim');
   const EX = { ...EXEMPLOS_PADRAO, ...(T.exemplos?.[modo] || {}) };
+
+  // ✨ Escrever com a Lupa (rascunho com IA, liberado por e-mail confirmado)
+  const [ia, setIa] = useState({ aberto: false, etapa: 'email' as 'email' | 'codigo' | 'pronto', email: '', codigo: '', novidades: false, token: '', restantes: -1, relato: '', carregando: false, erro: '', aviso: '' });
+  const CHAVE_TOKEN = 'comlupa:ia:token';
+  useEffect(() => {
+    if (!T.data) return;
+    let token = '';
+    try { token = localStorage.getItem(CHAVE_TOKEN) || ''; } catch {}
+    if (!token) return;
+    fetch(`/api/ia-pedido?token=${encodeURIComponent(token)}`).then(r => r.json()).then(d => {
+      if (d.sessao) setIa(v => ({ ...v, token, etapa: 'pronto', restantes: d.restantes }));
+      else { try { localStorage.removeItem(CHAVE_TOKEN); } catch {} }
+    }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function iaPost(url: string, corpo: any) {
+    setIa(v => ({ ...v, carregando: true, erro: '', aviso: '' }));
+    try {
+      const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) });
+      const d = await r.json().catch(() => ({}));
+      setIa(v => ({ ...v, carregando: false }));
+      return { ok: r.ok, d };
+    } catch {
+      setIa(v => ({ ...v, carregando: false, erro: 'Sem conexão. Tente de novo.' }));
+      return { ok: false, d: {} as any };
+    }
+  }
+  async function iaPedirCodigo() {
+    const { ok, d } = await iaPost('/api/ia-pedido/codigo', { email: ia.email, site: hp });
+    if (ok) setIa(v => ({ ...v, etapa: 'codigo', aviso: `Enviamos um código para ${v.email}. Confira também o spam.` }));
+    else setIa(v => ({ ...v, erro: d.erro || 'Não foi possível enviar o código.' }));
+  }
+  async function iaConfirmar() {
+    const { ok, d } = await iaPost('/api/ia-pedido/verificar', { email: ia.email, codigo: ia.codigo, novidades: ia.novidades });
+    if (ok && d.token) {
+      try { localStorage.setItem(CHAVE_TOKEN, d.token); } catch {}
+      setIa(v => ({ ...v, token: d.token, etapa: 'pronto', restantes: d.restantes, codigo: '', aviso: 'E-mail confirmado!' }));
+    } else setIa(v => ({ ...v, erro: d.erro || 'Código incorreto.' }));
+  }
+  async function iaGerar() {
+    const { ok, d } = await iaPost('/api/ia-pedido', {
+      token: ia.token, modo, tema: T.eyebrow, para: cnv.para, relato: ia.relato,
+      itens: lista.map(p => p.nome || p.name),
+    });
+    if (ok && d.campos) {
+      setCnv(c => ({ ...c, ...d.campos }));
+      setIa(v => ({ ...v, restantes: d.restantes, aviso: 'Rascunho pronto nos campos abaixo. Ajuste do seu jeito.' }));
+    } else {
+      if (d.sessao === false) { try { localStorage.removeItem(CHAVE_TOKEN); } catch {} setIa(v => ({ ...v, token: '', etapa: 'email' })); }
+      setIa(v => ({ ...v, erro: d.erro || 'Não foi possível gerar agora.', restantes: typeof d.restantes === 'number' ? d.restantes : v.restantes }));
+    }
+  }
   const CHAVE_LISTA = `comlupa:lista:${String(temaId)}`;
 
   // nas datas, a lista fica guardada no aparelho da pessoa (dá para voltar depois e continuar)
@@ -176,7 +235,7 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
       const res = await fetch('/api/ambientes/enviar', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email, emailsExtra,
+          email, emailsExtra, site: hp,
           mensagem: T.data ? corpoPedido() : undefined,
           produtos: lista.map(p => ({
             nome: p.nome || p.name || '',
@@ -191,7 +250,13 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
           })),
         }),
       });
-      if (!res.ok) { setErro('Não foi possível enviar agora. Confira o e-mail e tente de novo.'); return; }
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        setErro(res.status < 500 && d.error
+          ? d.error
+          : 'Não foi possível enviar agora. Confira o e-mail, o limite de 4 cópias e de 10 produtos, e tente de novo.');
+        return;
+      }
       setEnviado(true);
     } catch {
       setErro('Não foi possível enviar agora. Confira sua conexão e tente de novo.');
@@ -220,7 +285,20 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
             <span className="vt-eyebrow">{T.eyebrow}</span>
             <h1 style={{ fontFamily: display }}>{T.titulo[0]}<em>{T.titulo[1]}</em>{T.titulo[2]}</h1>
             <p>{T.sub}</p>
-            <a className="vt-cta" href="#vt-produtos">{T.cta}</a>
+            <div className="vt-acoes">
+              <a className="vt-cta" href="#vt-produtos">{T.cta}</a>
+              {T.data && (
+                <details className="vt-como">
+                  <summary>ⓘ Como funciona o pedido</summary>
+                  <ol>
+                    <li>Toque em <b>♡ Pedir</b> nos presentes de que gostar. Eles vão para a sua lista.</li>
+                    <li>Ao abrir a lista, você pode escrever um pedido para a pessoa com quem vai compartilhar, em quatro passos, do jeito da <a href={LINK_CNV}>Comunicação Não Violenta</a>.</li>
+                    <li>Se quiser, a Lupa escreve um rascunho com IA: são <b>5 por mês</b>, com confirmação por e-mail.</li>
+                    <li>Prefere só mandar os links? Deixe os campos em branco e compartilhe a lista por WhatsApp ou e-mail.</li>
+                  </ol>
+                </details>
+              )}
+            </div>
           </div>
           {T.mascote ? (
             <img className="vt-mascote" src={T.mascote} alt="" aria-hidden="true" />
@@ -361,19 +439,64 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
                     <button type="button" aria-pressed={modo === 'juntos'} onClick={() => setModo('juntos')}>🤝 Presentear alguém juntos</button>
                   </div>
                 )}
-                <p className="vt-dica">{EX.dica}</p>
-                <label className="vt-campo" htmlFor="cnv-para"><i>Para</i>quem vai receber o pedido
-                  <input id="cnv-para" value={cnv.para} onChange={e => setCnv({ ...cnv, para: e.target.value })} placeholder={EX.para} /></label>
+                <p className="vt-dica">{EX.dica} <a className="vt-link-cnv" href={LINK_CNV} target="_blank" rel="noopener">O que é a Comunicação Não Violenta? →</a></p>
+
+                <div className="vt-ia">
+                  {!ia.aberto ? (
+                    <button type="button" className="vt-ia-abrir" onClick={() => setIa(v => ({ ...v, aberto: true }))}>
+                      ✨ Escrever com a Lupa <small>a IA faz um rascunho dos 4 passos</small>
+                    </button>
+                  ) : ia.etapa === 'pronto' ? (
+                    <>
+                      <label className="vt-campo" htmlFor="ia-relato"><i>✨ Conte do seu jeito</i>em poucas palavras, o que você quer pedir ou combinar
+                       <textarea id="ia-relato" value={ia.relato} maxLength={MAX_RELATO} onChange={e => setIa(v => ({ ...v, relato: e.target.value }))}
+                          placeholder={modo === 'mim' ? 'Ex.: quero pedir pro meu marido aquele perfume, mas sem parecer cobrança' : 'Ex.: quero combinar com minha irmã um presente pra vó, ela adora cozinhar'} />
+                        <small className="vt-conta">{ia.relato.length}/{MAX_RELATO}</small></label>
+                      <button type="button" className="vt-ia-gerar" onClick={iaGerar} disabled={ia.carregando || ia.restantes === 0}>
+                        {ia.carregando ? 'Escrevendo…' : '✨ Gerar rascunho'}
+                      </button>
+                      {ia.restantes >= 0 && <small className="vt-ia-info">{ia.restantes} de {5} rascunhos disponíveis neste mês. O texto que você escreve não fica guardado.</small>}
+                    </>
+                  ) : (
+                    <>
+                      <p className="vt-ia-txt">Para usar o rascunho com IA, confirme seu e-mail. Usamos o e-mail só para controlar o limite de uso (5 por mês); o texto que você escreve não fica guardado.</p>
+                      {ia.etapa === 'email' ? (
+                        <>
+                          <input id="ia-email" type="email" placeholder="seu@email.com" value={ia.email} onChange={e => setIa(v => ({ ...v, email: e.target.value }))} />
+                          <label className="vt-ia-check" htmlFor="ia-novidades">
+                            <input id="ia-novidades" type="checkbox" checked={ia.novidades} onChange={e => setIa(v => ({ ...v, novidades: e.target.checked }))} />
+                            Quero receber ofertas e novidades do Com a Lupa (opcional)
+                          </label>
+                          <button type="button" className="vt-ia-gerar" onClick={iaPedirCodigo} disabled={ia.carregando}>{ia.carregando ? 'Enviando…' : 'Enviar código'}</button>
+                        </>
+                      ) : (
+                        <>
+                          <input id="ia-codigo" inputMode="numeric" autoComplete="one-time-code" placeholder="Código de 6 números" value={ia.codigo} onChange={e => setIa(v => ({ ...v, codigo: e.target.value.replace(/\D/g, '').slice(0, 6) }))} />
+                          <button type="button" className="vt-ia-gerar" onClick={iaConfirmar} disabled={ia.carregando || ia.codigo.length < 6}>{ia.carregando ? 'Confirmando…' : 'Confirmar'}</button>
+                          <button type="button" className="vt-ia-voltar" onClick={() => setIa(v => ({ ...v, etapa: 'email', codigo: '', aviso: '' }))}>Trocar e-mail ou reenviar código</button>
+                        </>
+                      )}
+                    </>
+                  )}
+                  {ia.aviso && <p className="vt-ia-ok">{ia.aviso}</p>}
+                  {ia.erro && <p className="vt-ia-erro">{ia.erro}</p>}
+                </div>
+                               <label className="vt-campo" htmlFor="cnv-para"><i>Para</i>quem vai receber o pedido
+                  <input id="cnv-para" value={cnv.para} maxLength={40} onChange={e => setCnv({ ...cnv, para: e.target.value })} placeholder={EX.para} /></label>
                 <label className="vt-campo" htmlFor="cnv-obs"><i>1 · Observação</i>o que eu vejo ou ouço
-                  <textarea id="cnv-obs" value={cnv.obs} onChange={e => setCnv({ ...cnv, obs: e.target.value })} placeholder={EX.obs} /></label>
+                  <textarea id="cnv-obs" value={cnv.obs} maxLength={MAX_CAMPO} onChange={e => setCnv({ ...cnv, obs: e.target.value })} placeholder={EX.obs} />
+                  <small className="vt-conta">{cnv.obs.length}/{MAX_CAMPO}</small></label>
                 <label className="vt-campo" htmlFor="cnv-sent"><i>2 · Sentimento</i>como eu me sinto
-                  <textarea id="cnv-sent" value={cnv.sent} onChange={e => setCnv({ ...cnv, sent: e.target.value })} placeholder={EX.sent} /></label>
+                  <textarea id="cnv-sent" value={cnv.sent} maxLength={MAX_CAMPO} onChange={e => setCnv({ ...cnv, sent: e.target.value })} placeholder={EX.sent} />
+                  <small className="vt-conta">{cnv.sent.length}/{MAX_CAMPO}</small></label>
                 <label className="vt-campo" htmlFor="cnv-nec"><i>3 · Necessidade</i>do que eu preciso, e por quê
-                  <textarea id="cnv-nec" value={cnv.nec} onChange={e => setCnv({ ...cnv, nec: e.target.value })} placeholder={EX.nec} /></label>
+                  <textarea id="cnv-nec" value={cnv.nec} maxLength={MAX_CAMPO} onChange={e => setCnv({ ...cnv, nec: e.target.value })} placeholder={EX.nec} />
+                  <small className="vt-conta">{cnv.nec.length}/{MAX_CAMPO}</small></label>
                 <label className="vt-campo" htmlFor="cnv-ped"><i>4 · Pedido</i>de um jeito que dá para dizer sim ou não
-                  <textarea id="cnv-ped" value={cnv.ped} onChange={e => setCnv({ ...cnv, ped: e.target.value })} placeholder={EX.ped} /></label>
+                  <textarea id="cnv-ped" value={cnv.ped} maxLength={MAX_CAMPO} onChange={e => setCnv({ ...cnv, ped: e.target.value })} placeholder={EX.ped} />
+                  <small className="vt-conta">{cnv.ped.length}/{MAX_CAMPO}</small></label>
                 <label className="vt-campo" htmlFor="cnv-nome"><i>Assinatura</i>seu nome
-                  <input id="cnv-nome" value={cnv.nome} onChange={e => setCnv({ ...cnv, nome: e.target.value })} placeholder={EX.nome} /></label>
+                  <input id="cnv-nome" value={cnv.nome} maxLength={40} onChange={e => setCnv({ ...cnv, nome: e.target.value })} placeholder={EX.nome} /></label>
 
                 <div className="vt-previa">{textoPedido()}</div>
                 <div className="vt-botoes">
@@ -389,8 +512,9 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
                 {!T.data && <div style={{ fontSize: '2rem' }}>{T.emoji}</div>}
                 {!T.data && <h2>Receber minha lista</h2>}
                 {!T.data && <p>{lista.length} {lista.length === 1 ? 'item selecionado' : 'itens selecionados'}</p>}
+               <input className="vt-hp" name="hp_campo" tabIndex={-1} autoComplete="off" aria-hidden="true" value={hp} onChange={e => setHp(e.target.value)} />
                 <input id="vt-email" type="email" placeholder="seu@email.com" value={email} onChange={e => setEmail(e.target.value)} />
-                <label htmlFor="vt-extra" className="vt-extra-rot">Enviar uma cópia para alguém? (opcional)</label>
+                <label htmlFor="vt-extra" className="vt-extra-rot">Enviar uma cópia para alguém? (opcional, até 4 e-mails)</label>
                 <input id="vt-extra" type="text" placeholder="amigo@email.com, familia@email.com" value={emailsExtra} onChange={e => setEmailsExtra(e.target.value)} />
                 {erro && <p className="vt-erro">{erro}</p>}
                 <button type="button" className="vt-ok" onClick={enviarLista} disabled={enviando}>{enviando ? 'Enviando…' : 'Enviar links'}</button>
@@ -422,6 +546,13 @@ const CSS = `
 .vt-banner p{font-size:17px;max-width:46ch;margin:0 0 18px;opacity:.95}
 .vt-cta{display:inline-block;background:var(--t-3);color:var(--t-ink);border-radius:999px;padding:12px 24px;font-weight:800;text-decoration:none;box-shadow:0 8px 20px rgba(0,0,0,.18);transition:transform .2s}
 .vt-cta:hover{transform:translateY(-3px)}
+.vt-acoes{display:flex;flex-wrap:wrap;align-items:flex-start;gap:12px}
+.vt-como{flex-basis:100%;max-width:520px}
+.vt-como summary{display:inline-block;cursor:pointer;list-style:none;background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.6);color:#fff;border-radius:999px;padding:8px 16px;font-weight:700;font-size:14px}
+.vt-como summary::-webkit-details-marker{display:none}
+.vt-como[open] summary{background:#fff;color:#2B2635}
+.vt-como ol{margin:10px 0 0;background:#fff;color:#2B2635;border-radius:14px;padding:14px 16px 14px 34px;font-size:14.5px;line-height:1.5;display:flex;flex-direction:column;gap:6px;box-shadow:0 8px 20px rgba(0,0,0,.15)}
+.vt-como ol a{color:var(--t-1);font-weight:700}
 .vt-lupa{justify-self:center;position:relative;width:min(200px,100%);aspect-ratio:1;display:grid;place-items:center}
 .vt-lupa .aro{position:absolute;inset:6%;border-radius:50%;background:rgba(255,255,255,.18);border:10px solid rgba(255,255,255,.9)}
 .vt-lupa .cabo{position:absolute;width:16%;height:40%;background:var(--t-ink);border-radius:20px;right:4%;bottom:-8%;transform:rotate(-45deg);transform-origin:top}
@@ -474,6 +605,7 @@ const CSS = `
 .vt-modal-in h2{margin:6px 0;color:#1f2937}
 .vt-modal-in p{color:#6b7280;font-size:14px}
 .vt-modal-in input{width:100%;padding:12px;border-radius:10px;border:1px solid #d1d5db;font-size:16px;box-sizing:border-box;margin:6px 0 10px}
+.vt-hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none}
 .vt-extra-rot{display:block;text-align:left;font-size:13px;color:#6b7280;margin-top:4px}
 .vt-erro{color:#b91c1c!important;font-weight:700}
 .vt-ok{width:100%;padding:12px;background:var(--t-1);color:#fff;border:0;border-radius:10px;font-weight:800;cursor:pointer;font-size:15px;margin-bottom:6px}
@@ -496,6 +628,7 @@ const CSS = `
 .vt-campo i{font-style:normal;display:inline-block;background:var(--t-1);color:#fff;border-radius:999px;padding:1px 9px;font-size:11px;font-weight:800;margin-right:6px;letter-spacing:.03em}
 .vt-campo input,.vt-campo textarea{display:block;width:100%;box-sizing:border-box;margin-top:4px;border:2px solid var(--t-soft);border-radius:10px;padding:9px 11px;font:inherit;font-size:15px;color:#2B2635}
 .vt-campo textarea{min-height:56px;resize:vertical}
+.vt-conta{display:block;text-align:right;font-size:11px;color:#9a93a8;margin-top:2px}
 .vt-campo input:focus,.vt-campo textarea:focus{outline:none;border-color:var(--t-1)}
 .vt-previa{margin-top:14px;background:var(--t-soft);border-radius:12px;padding:12px 14px;font-size:13px;white-space:pre-wrap;word-break:break-word;color:var(--t-ink);max-height:220px;overflow-y:auto}
 .vt-botoes{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
@@ -504,6 +637,18 @@ const CSS = `
 .vt-modos{display:flex;gap:6px;margin:12px 0 4px;background:var(--t-soft);border-radius:999px;padding:4px}
 .vt-modos button{flex:1;border:0;background:transparent;border-radius:999px;padding:8px 6px;font-weight:800;font-size:13px;color:var(--t-ink);cursor:pointer}
 .vt-modos button[aria-pressed="true"]{background:#fff;color:var(--t-1);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.vt-link-cnv{color:var(--t-1);font-weight:800;text-decoration:none;white-space:nowrap}
+.vt-ia{margin-top:12px;border:2px dashed var(--t-1);border-radius:14px;padding:12px;background:#fff;display:flex;flex-direction:column;gap:8px}
+.vt-ia-abrir{border:0;background:linear-gradient(120deg,var(--t-1),var(--t-2));color:#fff;border-radius:12px;padding:12px;font-weight:800;font-size:15px;cursor:pointer;display:flex;flex-direction:column;gap:2px;align-items:center}
+.vt-ia-abrir small{font-weight:600;font-size:12px;opacity:.9}
+.vt-ia input[type=email],.vt-ia #ia-codigo{width:100%;box-sizing:border-box;border:2px solid var(--t-soft);border-radius:10px;padding:10px 12px;font-size:16px}
+.vt-ia-gerar{border:0;background:var(--t-1);color:#fff;border-radius:10px;padding:11px;font-weight:800;cursor:pointer}
+.vt-ia-gerar:disabled{opacity:.6;cursor:wait}
+.vt-ia-voltar{border:0;background:none;color:#6b7280;font-size:12px;text-decoration:underline;cursor:pointer}
+.vt-ia-txt,.vt-ia-info{font-size:12px!important;color:#6b7280;margin:0}
+.vt-ia-check{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:#374151}
+.vt-ia-ok{margin:0;color:#047857!important;font-size:13px!important;font-weight:700}
+.vt-ia-erro{margin:0;color:#b91c1c!important;font-size:13px!important;font-weight:700}
 .vt-pedido hr{border:0;border-top:1px dashed var(--t-soft);margin:18px 0 10px}
 @media (max-width:760px){
   .vt-banner-in{grid-template-columns:1fr;padding:22px 16px 26px}
