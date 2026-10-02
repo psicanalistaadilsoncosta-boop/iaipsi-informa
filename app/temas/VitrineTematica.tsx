@@ -143,7 +143,7 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
 
       <div className="vt-faixa">{T.faixa}</div>
 
-      <section className="vt-banner">
+        <section className={`vt-banner${T.mascote ? ' com-mascote' : ''}`}>
         <div className="vt-deco a" aria-hidden="true">{T.deco[0]}</div>
         <div className="vt-deco b" aria-hidden="true">{T.deco[1]}</div>
         <div className="vt-banner-in">
@@ -153,11 +153,15 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
             <p>{T.sub}</p>
             <a className="vt-cta" href="#vt-produtos">{T.cta}</a>
           </div>
-          <div className="vt-lupa" aria-hidden="true">
-            <div className="aro" /><div className="cabo" />
-            <div className="dentro">{T.emoji}</div>
-            {T.chapeu && <div className="chapeu">{T.chapeu}</div>}
-          </div>
+                    {T.mascote ? (
+            <img className="vt-mascote" src={T.mascote} alt="" aria-hidden="true" />
+          ) : (
+            <div className="vt-lupa" aria-hidden="true">
+              <div className="aro" /><div className="cabo" />
+              <div className="dentro">{T.emoji}</div>
+              {T.chapeu && <div className="chapeu">{T.chapeu}</div>}
+            </div>
+          )}
         </div>
       </section>
 
@@ -302,6 +306,8 @@ const CSS = `
 .vt-lupa .cabo{position:absolute;width:16%;height:40%;background:var(--t-ink);border-radius:20px;right:4%;bottom:-8%;transform:rotate(-45deg);transform-origin:top}
 .vt-lupa .dentro{position:relative;font-size:clamp(60px,9vw,96px);animation:vtboia 3.5s ease-in-out infinite}
 .vt-lupa .chapeu{position:absolute;top:-4%;left:8%;font-size:clamp(38px,5vw,58px);transform:rotate(-18deg)}
+.vt-mascote{justify-self:center;width:min(360px,100%);height:auto;filter:drop-shadow(0 12px 18px rgba(0,0,0,.25));animation:vtmasc 4s ease-in-out infinite}
+@keyframes vtmasc{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 .vt-deco{position:absolute;font-size:200px;opacity:.12;pointer-events:none}
 .vt-deco.a{top:-50px;left:-40px;transform:rotate(-12deg)}
 .vt-deco.b{bottom:-70px;right:28%;transform:rotate(14deg);font-size:170px}
@@ -352,7 +358,9 @@ const CSS = `
 @media (max-width:760px){
   .vt-banner-in{grid-template-columns:1fr;padding:22px 16px 26px}
   .vt-lupa{position:absolute;right:8px;top:6px;width:110px}
-  .vt-banner h1{padding-right:96px}
+   .vt-banner h1{padding-right:96px}
+  .vt-banner.com-mascote h1{padding-right:0}
+  .vt-mascote{width:min(260px,80%);margin:4px auto -12px}
   .vt-banner p{font-size:15px}
   .vt-grade{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
   .vt-foto{height:130px}

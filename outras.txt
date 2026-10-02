@@ -1,0 +1,1470 @@
+===== ofertas ===== 
+'use client';
+
+import { useState, useEffect } from 'react';
+
+interface Campanha {
+  id: string;
+  name: string;
+  type: string;
+  period: { startAt: string; endAt: string };
+  status: string;
+  url: string;
+  code?: string;
+  isHighlight: boolean;
+  mediaKit?: { banners?: string[] | null };
+  channels: { shortUrls: string[] | null }[];
+}
+
+interface Marca {
+  id: string;
+  name: string;
+  logo: string;
+  site: string;
+  segment: string;
+  categoriaInterna: string;
+  channels: { shortUrls: string[] | null }[];
+}
+
+const CATEGORIA_ICONS: Record<string, string> = {
+  'Eletro & Tech': '💻',
+  'Gastronomia & Vinhos': '🍷',
+  'Viagens': '✈️',
+  'Casa & Móveis': '🏠',
+  'Moda': '👗',
+  'Saúde & Beleza': '💊',
+  'Bebês & Kids': '👶',
+  'Entretenimento': '🎬',
+  'Serviços': '⚙️',
+  'Outros': '🛍',
+};
+
+const CATEGORIA_COLORS: Record<string, string> = {
+  'Eletro & Tech': '#0f766e',
+  'Gastronomia & Vinhos': '#7c2d12',
+  'Viagens': '#0284c7',
+  'Casa & Móveis': '#047857',
+  'Moda': '#be185d',
+  'Saúde & Beleza': '#7c3aed',
+  'Bebês & Kids': '#ea580c',
+  'Entretenimento': '#1e3a8a',
+  'Serviços': '#374151',
+  'Outros': '#6b7280',
+};
+
+function tempoRestante(endAt: string): string {
+  const diff = new Date(endAt).getTime() - Date.now();
+  if (diff <= 0) return 'Expirado';
+  const horas = Math.floor(diff / 3600000);
+  const dias = Math.floor(horas / 24);
+  if (dias > 0) return `${dias}d restantes`;
+  return `${horas}h restantes`;
+}
+
+function CampanhaCard({ c }: { c: Campanha }) {
+  const [copiado, setCopiado] = useState(false);
+  const link = c.channels?.[0]?.shortUrls?.[0] || c.url;
+  const banner = c.mediaKit?.banners?.[0];
+  const isCupom = c.type === 'GenericCoupon' || c.type === 'PersonalCoupon';
+  const expira = c.period?.endAt ? tempoRestante(c.period.endAt) : 'Sem prazo';
+
+  function copiarCupom() {
+    if (c.code) {
+      navigator.clipboard.writeText(c.code);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2000);
+    }
+  }
+
+  return (
+    <article
+      style={{
+        backgroundColor: '#fff',
+        borderRadius: '4px',
+        overflow: 'hidden',
+        border: '1px solid #e8e8e8',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      {/* Mídia 16:9 com selos sobrepostos */}
+      <div
+        style={{
+          position: 'relative',
+          aspectRatio: '16 / 9',
+          backgroundColor: '#eceff1',
+          overflow: 'hidden',
+        }}
+      >
+        {banner ? (
+          <img
+            src={banner}
+            alt={c.name}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            onError={e => {
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
+          />
+        ) : null}
+        <span
+          style={{
+            position: 'absolute',
+            top: '10px',
+            left: '10px',
+            backgroundColor: isCupom ? '#7c3aed' : '#dc2626',
+            color: '#fff',
+            fontSize: '0.64rem',
+            fontWeight: 700,
+            letterSpacing: '0.06em',
+            padding: '4px 9px',
+            borderRadius: '2px',
+            textTransform: 'uppercase',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {isCupom ? '🏷 Cupom' : '🔥 Oferta'}
+        </span>
+      </div>
+
+      {/* Corpo */}
+      <div
+        style={{
+          padding: '14px 16px 16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px',
+          flexGrow: 1,
+        }}
+      >
+        <h2
+          style={{
+            fontSize: '0.95rem',
+            fontWeight: 600,
+            color: '#1a1a1a',
+            margin: 0,
+            lineHeight: 1.35,
+            textWrap: 'pretty',
+            display: '-webkit-box',
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+          }}
+        >
+          {c.name}
+        </h2>
+
+        {/* Linha de meta: prazo */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontSize: '0.74rem',
+            fontWeight: 600,
+            color: expira === 'Expirado' ? '#dc2626' : '#6b7280',
+            paddingBottom: '2px',
+            borderBottom: '1px solid #f0f0f0',
+          }}
+        >
+          <span>⏱ {expira}</span>
+        </div>
+
+        {/* Ações fixadas na base */}
+        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {isCupom && c.code && (
+            <button
+              onClick={copiarCupom}
+              style={{
+                backgroundColor: copiado ? '#047857' : '#fafafa',
+                color: copiado ? '#fff' : '#1a1a1a',
+                border: `1px dashed ${copiado ? '#047857' : '#c9c9c9'}`,
+                borderRadius: '3px',
+                padding: '9px 12px',
+                fontWeight: 700,
+                fontSize: '0.9rem',
+                cursor: 'pointer',
+                letterSpacing: '0.08em',
+                transition: 'all 0.2s',
+                textAlign: 'center',
+              }}
+            >
+              {copiado ? '✅ Copiado!' : `${c.code} — Copiar`}
+            </button>
+          )}
+          <a
+           href={`/ir?url=${encodeURIComponent(link)}&nome=${encodeURIComponent(c.name)}&imagem=${encodeURIComponent(banner || '')}`}
+            style={{
+              backgroundColor: '#dc2626',
+              color: '#fff',
+              padding: '11px 16px',
+              borderRadius: '3px',
+              fontWeight: 700,
+              fontSize: '0.85rem',
+              textAlign: 'center',
+              textDecoration: 'none',
+            }}
+          >
+            {isCupom ? 'Usar cupom' : 'Ver oferta'}
+          </a>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function MarcaCard({ m }: { m: Marca }) {
+  const link = m.channels?.[0]?.shortUrls?.[0] || `https://${m.site}`;
+  const color = CATEGORIA_COLORS[m.categoriaInterna] || '#374151';
+  return (
+    <a href={link} target="_blank" rel="noopener noreferrer sponsored" style={{ textDecoration: 'none' }}>
+      <article
+        style={{
+          backgroundColor: '#fff',
+          borderRadius: '4px',
+          border: '1px solid #e8e8e8',
+          padding: '18px 14px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          textAlign: 'center',
+          gap: '10px',
+          height: '100%',
+          cursor: 'pointer',
+        }}
+      >
+        <div
+          style={{
+            width: '64px',
+            height: '64px',
+            borderRadius: '50%',
+            overflow: 'hidden',
+            border: '1px solid #eee',
+            flexShrink: 0,
+            backgroundColor: '#fafafa',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <img
+            src={m.logo}
+            alt={m.name}
+            style={{ width: '78%', height: '78%', objectFit: 'contain' }}
+            onError={e => {
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
+          />
+        </div>
+        <div style={{ fontWeight: 600, color: '#1a1a1a', fontSize: '0.9rem', lineHeight: 1.3 }}>{m.name}</div>
+        <div
+          style={{
+            fontSize: '0.7rem',
+            color: color,
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+          }}
+        >
+          {CATEGORIA_ICONS[m.categoriaInterna]} {m.categoriaInterna}
+        </div>
+      </article>
+    </a>
+  );
+}
+
+function Paginacao({ pagina, setPagina, count }: { pagina: number; setPagina: (p: number) => void; count: number }) {
+  const temProxima = count >= 20;
+  if (pagina === 1 && !temProxima) return null;
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', marginTop: '36px' }}>
+      <button
+        onClick={() => setPagina(pagina - 1)}
+        disabled={pagina === 1}
+        style={{
+          padding: '10px 18px',
+          borderRadius: '3px',
+          border: '1px solid #ddd',
+          backgroundColor: '#fff',
+          color: pagina === 1 ? '#bbb' : '#1a1a1a',
+          fontWeight: 600,
+          fontSize: '0.85rem',
+          cursor: pagina === 1 ? 'not-allowed' : 'pointer',
+        }}
+      >
+        ← Anterior
+      </button>
+      <span style={{ fontSize: '0.85rem', color: '#6b7280', fontWeight: 500, minWidth: '90px', textAlign: 'center' }}>
+        Página {pagina}
+      </span>
+      <button
+        onClick={() => setPagina(pagina + 1)}
+        disabled={!temProxima}
+        style={{
+          padding: '10px 18px',
+          borderRadius: '3px',
+          border: '1px solid #ddd',
+          backgroundColor: '#fff',
+          color: !temProxima ? '#bbb' : '#1a1a1a',
+          fontWeight: 600,
+          fontSize: '0.85rem',
+          cursor: !temProxima ? 'not-allowed' : 'pointer',
+        }}
+      >
+        Próxima →
+      </button>
+    </div>
+  );
+}
+
+export default function OfertasPage() {
+  const [campanhas, setCampanhas] = useState<Campanha[]>([]);
+  const [marcas, setMarcas] = useState<Marca[]>([]);
+  const [categorias, setCategorias] = useState<string[]>([]);
+  const [aba, setAba] = useState<'campanhas' | 'marcas'>('campanhas');
+  const [categoriaAtiva, setCategoriaAtiva] = useState('Todas');
+  const [loading, setLoading] = useState(true);
+  const [paginaCamp, setPaginaCamp] = useState(1);
+  const [paginaMarca, setPaginaMarca] = useState(1);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`/api/lomadee?tipo=campaigns&pagina=${paginaCamp}`)
+      .then(r => r.json())
+      .then(d => setCampanhas(d.data || []))
+      .finally(() => setLoading(false));
+  }, [paginaCamp]);
+
+  useEffect(() => {
+    // Busca marcas com categorias
+    fetch('/api/lomadee?tipo=brands-categoria')
+      .then(r => r.json())
+      .then(d => {
+        setMarcas(d.data || []);
+        setCategorias(['Todas', ...(d.categorias || []).filter((c: string) => c !== 'Outros')]);
+      });
+  }, []);
+
+  const campanhasAtivas = campanhas.filter(c => c.status === 'onTime');
+
+  const marcasFiltradas = categoriaAtiva === 'Todas'
+    ? marcas.filter(m => m.categoriaInterna !== 'Outros')
+    : marcas.filter(m => m.categoriaInterna === categoriaAtiva);
+
+  const marcasPaginadas = marcasFiltradas.slice((paginaMarca - 1) * 20, paginaMarca * 20);
+
+  return (
+    <div style={{ backgroundColor: '#fff', minHeight: '100vh', fontFamily: 'Helvetica, Arial, sans-serif', color: '#1a1a1a' }}>
+
+      {/* Barra utilitária */}
+      <div style={{ backgroundColor: '#1a1a1a', color: '#e5e5e5', fontSize: '0.74rem' }}>
+        <div style={{ maxWidth: '1160px', margin: '0 auto', padding: '7px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+          <a href="/" style={{ color: '#e5e5e5', textDecoration: 'none', fontWeight: 500 }}>← Voltar ao site</a>
+          <span style={{ color: '#9ca3af' }}>Atualizado automaticamente · links de afiliado</span>
+        </div>
+      </div>
+
+      {/* Cabeçalho principal */}
+      <header style={{ borderBottom: '1px solid #e8e8e8', backgroundColor: '#fff' }}>
+        <div style={{ maxWidth: '1160px', margin: '0 auto', padding: '20px 20px 0', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '20px', flexWrap: 'wrap' }}>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0, letterSpacing: '-0.01em' }}>
+              🛍 Ofertas &amp; Cupons
+            </h1>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <a href="/oferta-do-dia" style={{ padding: '8px 14px', borderRadius: '3px', border: '1px solid #e8e8e8', color: '#dc2626', fontWeight: 600, fontSize: '0.8rem', textDecoration: 'none' }}>
+                🔥 Oferta do Dia
+              </a>
+               </div>
+          </div>
+      <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fbbf24', borderRadius: '10px', padding: '12px 20px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <span style={{ fontSize: '1.2rem' }}>⚠️</span>
+        <p style={{ fontSize: '0.82rem', color: '#92400e', margin: 0, lineHeight: 1.5 }}>
+          <strong>Atenção:</strong> Condições de parcelamento, preços e disponibilidade são de responsabilidade do anunciante. As parcelas exibidas podem não refletir as condições atuais da loja. Confirme sempre no site e no carrinho antes de finalizar.
+        </p>
+      </div>
+          {/* Abas sublinhadas */}
+          <nav style={{ display: 'flex', gap: '28px' }}>
+            {(['campanhas', 'marcas'] as const).map(a => (
+              <button
+                key={a}
+                onClick={() => setAba(a)}
+                style={{
+                  padding: '0 0 12px',
+                  border: 'none',
+                  background: 'none',
+                  borderBottom: `3px solid ${aba === a ? '#dc2626' : 'transparent'}`,
+                  color: aba === a ? '#1a1a1a' : '#6b7280',
+                  fontWeight: aba === a ? 700 : 500,
+                  fontSize: '0.92rem',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                {a === 'campanhas' ? `Ofertas & Cupons (${campanhasAtivas.length})` : 'Lojas por Categoria'}
+              </button>
+            ))}
+          </nav>
+        </div>
+      </header>
+
+      <main style={{ maxWidth: '1160px', margin: '0 auto', padding: '28px 20px 60px' }}>
+
+        {loading && aba === 'campanhas' ? (
+          <div style={{ textAlign: 'center', padding: '80px 20px', color: '#6b7280', fontSize: '0.9rem' }}>⏳ Carregando...</div>
+        ) : (
+          <>
+            {/* Aba campanhas */}
+            {aba === 'campanhas' && (
+              campanhasAtivas.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '80px 20px', color: '#6b7280', fontSize: '0.9rem' }}>Nenhuma oferta ativa no momento.</div>
+              ) : (
+                <>
+                  <h2 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '0 0 16px' }}>Em destaque hoje</h2>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '20px' }}>
+                    {campanhasAtivas.map(c => <CampanhaCard key={c.id} c={c} />)}
+                  </div>
+                  <Paginacao pagina={paginaCamp} setPagina={setPaginaCamp} count={campanhasAtivas.length} />
+                </>
+              )
+            )}
+
+            {/* Aba marcas com categorias */}
+            {aba === 'marcas' && (
+              <div>
+                {/* Filtros de categoria — trilha horizontal */}
+                <nav
+                  style={{
+                    display: 'flex',
+                    gap: '8px',
+                    marginBottom: '24px',
+                    overflowX: 'auto',
+                    paddingBottom: '10px',
+                    borderBottom: '1px solid #f0f0f0',
+                  }}
+                >
+                  {categorias.map(cat => {
+                    const isActive = categoriaAtiva === cat;
+                    const color = CATEGORIA_COLORS[cat] || '#374151';
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => { setCategoriaAtiva(cat); setPaginaMarca(1); }}
+                        style={{
+                          padding: '8px 14px',
+                          borderRadius: '999px',
+                          border: `1px solid ${isActive ? color : '#e0e0e0'}`,
+                          backgroundColor: isActive ? color : '#fff',
+                          color: isActive ? '#fff' : '#374151',
+                          fontWeight: 600,
+                          fontSize: '0.8rem',
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0,
+                          fontFamily: 'inherit',
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        {cat === 'Todas' ? '🛍 Todas' : `${CATEGORIA_ICONS[cat] || ''} ${cat}`}
+                      </button>
+                    );
+                  })}
+                </nav>
+
+                {marcasPaginadas.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '80px 20px', color: '#6b7280', fontSize: '0.9rem' }}>Nenhuma loja nessa categoria.</div>
+                ) : (
+                  <>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: '14px' }}>
+                      {marcasPaginadas.map(m => <MarcaCard key={m.id} m={m} />)}
+                    </div>
+                    <Paginacao pagina={paginaMarca} setPagina={setPaginaMarca} count={marcasPaginadas.length} />
+                  </>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </main>
+
+      <footer style={{ borderTop: '1px solid #e8e8e8', backgroundColor: '#fafafa' }}>
+        <div style={{ maxWidth: '1160px', margin: '0 auto', padding: '28px 20px 40px', textAlign: 'center' }}>
+          <p style={{ fontSize: '0.74rem', color: '#6b7280', margin: 0, lineHeight: 1.7, maxWidth: '640px', marginInline: 'auto' }}>
+            Links de afiliado — ao comprar através deles você apoia o site Com a Lupa sem custo adicional. Ofertas sujeitas a disponibilidade e prazo.
+          </p>
+        </div>
+      </footer>
+
+    </div>
+  );
+}
+===== ofertas-selecionadas ===== 
+import fs from 'fs/promises';
+import path from 'path';
+import Link from 'next/link';
+import { kv } from '@/lib/kv';
+import BotaoWhatsApp from '../BotaoWhatsApp';
+import SeloLoja from '../SeloLoja';
+
+interface ProdutoPinado {
+  id: string;
+  nome: string;
+  imagem: string;
+  link: string;
+  preco: number;
+  precoOriginal: number;
+  desconto: number;
+  destinos: string[];
+  pinedAt: string;
+  loja?: string;
+}
+
+const POR_PAGINA = 30;
+
+async function getTodos(): Promise<ProdutoPinado[]> {
+  try {
+    const data = await kv.get<ProdutoPinado[]>('produtos:pinados');
+    return (data || []).filter(p => p.destinos?.includes('ofertas-selecionadas'));
+  } catch {}
+  try {
+    const filePath = path.join(process.cwd(), 'public', 'produtos-pinados.json');
+    const raw = await fs.readFile(filePath, 'utf-8');
+    return (JSON.parse(raw) as ProdutoPinado[]).filter(p => p.destinos?.includes('ofertas-selecionadas'));
+  } catch { return []; }
+}
+
+async function getProdutos(pagina = 1, loja = ''): Promise<{ produtos: ProdutoPinado[]; total: number; lojas: string[] }> {
+  const todos = await getTodos();
+  const lojas = Array.from(new Set(todos.map(p => p.loja || '').filter(Boolean))).sort();
+  const filtrados = loja ? todos.filter(p => p.loja === loja) : todos;
+  const total = filtrados.length;
+  const produtos = filtrados.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
+  return { produtos, total, lojas };
+}
+export default async function OfertasSelecionadasPage({ searchParams }: { searchParams: Promise<{ pagina?: string; loja?: string }> }) {
+  const params = await searchParams;
+  const pagina = Math.max(1, parseInt(params.pagina || '1'));
+  const lojaFiltro = params.loja || '';
+  const { produtos, total, lojas } = await getProdutos(pagina, lojaFiltro);
+  const totalPaginas = Math.ceil(total / POR_PAGINA);
+
+  return (
+    <main style={{ maxWidth: '1060px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+
+      <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#2563eb', fontWeight: 600, fontSize: '0.85rem', textDecoration: 'none', marginBottom: '24px' }}>
+        ← Voltar ao site
+      </Link>
+
+      <header style={{ backgroundColor: '#fff', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: '32px', borderTop: '6px solid #2563eb' }}>
+        <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#111827', margin: '0 0 6px' }}>⭐ Ofertas Selecionadas</h1>
+        <p style={{ color: '#6b7280', fontSize: '0.95rem', margin: 0 }}>
+          Produtos escolhidos a dedo — qualidade e custo-benefício garantidos.
+        </p>
+      </header>
+      <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fbbf24', borderRadius: '10px', padding: '12px 20px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <span style={{ fontSize: '1.2rem' }}>⚠️</span>
+        <p style={{ fontSize: '0.82rem', color: '#92400e', margin: 0, lineHeight: 1.5 }}>
+          <strong>Atenção:</strong> Preços, parcelas e disponibilidade são de responsabilidade do anunciante e podem ser alterados a qualquer momento. Confira sempre as condições atuais no site da loja antes de finalizar a compra. Lojas com a indicação 💵 Preço convertido de USD estão localizadas em outro país, e as compras podem estar sujeitas a tributação de importação, que nem sempre aparece no carrinho e pode ser cobrada na entrega.
+        </p>
+      </div>
+
+      {lojas.length > 1 && (
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
+          <a href="?pagina=1"
+            style={{ padding: '6px 16px', borderRadius: '999px', border: `2px solid ${!lojaFiltro ? '#2563eb' : '#e5e7eb'}`, backgroundColor: !lojaFiltro ? '#2563eb' : '#fff', color: !lojaFiltro ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.82rem', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+            Todas ({total || 0})
+          </a>
+          {lojas.map(l => {
+            const ativa = lojaFiltro === l;
+            return (
+              <a key={l} href={`?loja=${encodeURIComponent(l)}&pagina=1`}
+                style={{ padding: '6px 16px', borderRadius: '999px', border: `2px solid ${ativa ? '#2563eb' : '#e5e7eb'}`, backgroundColor: ativa ? '#2563eb' : '#fff', color: ativa ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.82rem', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                🏪 {l}
+              </a>
+            );
+          })}
+        </div>
+      )}
+
+      {produtos.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>
+          Nenhuma oferta selecionada no momento. Volte em breve!
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+          {produtos.map(p => {
+            const desconto = p.precoOriginal > p.preco
+              ? Math.round((1 - p.preco / p.precoOriginal) * 100)
+              : p.desconto || 0;
+
+            return (
+             <a key={p.id} href={`/ir?url=${encodeURIComponent(p.link)}&nome=${encodeURIComponent(p.nome)}&imagem=${encodeURIComponent(p.imagem)}`} style={{ textDecoration: 'none' }}>
+                <article style={{ backgroundColor: '#fff', borderRadius: '14px', overflow: 'hidden', border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', height: '100%' }}>
+
+                  <div style={{ height: '220px', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', position: 'relative' }}>
+                    {p.imagem && (
+                      <img src={p.imagem} alt={p.nome} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                    )}
+                    {desconto > 0 && (
+                      <span style={{ position: 'absolute', top: '12px', left: '12px', backgroundColor: '#dc2626', color: '#fff', fontSize: '0.82rem', fontWeight: 800, padding: '4px 10px', borderRadius: '6px' }}>
+                        -{desconto}%
+                      </span>
+                    )}
+                    <span style={{ position: 'absolute', top: '12px', right: '12px', backgroundColor: '#2563eb', color: '#fff', fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: '20px' }}>
+                      ⭐ Selecionado
+                    </span>
+                  </div>
+
+                  <div style={{ padding: '18px', display: 'flex', flexDirection: 'column', flexGrow: 1, gap: '10px' }}>
+                    <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {p.nome}
+                    </h2>
+
+                                        {p.loja && (
+                      <div style={{ fontSize: '0.72rem', color: '#6b7280', fontWeight: 500, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px' }}>🏪 {p.loja} <SeloLoja loja={p.loja} compacto /></div>
+                    )}
+                    {(p as any).moedaOriginal === 'USD' && (
+                      <div style={{ fontSize: '0.68rem', color: '#92400e', fontWeight: 600, backgroundColor: '#fef3c7', padding: '2px 6px', borderRadius: '4px', display: 'inline-block' }}>
+                        💵 Preço convertido de USD para R$(*sujeito a tributação) · cotação do dia utilizada: R$ {((p as any).cotacaoUsada || 5.1).toFixed(2).replace('.', ',')}
+                      </div>
+                    )}
+
+                    <div style={{ marginTop: 'auto' }}>
+                      {p.precoOriginal > p.preco && (
+                        <div style={{ fontSize: '0.8rem', color: '#9ca3af', textDecoration: 'line-through' }}>
+                          R$ {p.precoOriginal.toFixed(2).replace('.', ',')}
+                        </div>
+                      )}
+                      <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#dc2626' }}>
+                        R$ {p.preco.toFixed(2).replace('.', ',')}
+                      </div>
+                      <div style={{ fontSize: '0.68rem', color: '#9ca3af', marginTop: '2px' }}>
+                        Confira o valor no site e no carrinho
+                      </div>
+                    </div>
+
+                    <div style={{ backgroundColor: '#2563eb', color: '#fff', padding: '10px', borderRadius: '8px', fontWeight: 700, fontSize: '0.88rem', textAlign: 'center' }}>
+                      Ver oferta →
+                    </div>
+                    <BotaoWhatsApp id={p.id} nome={p.nome} link={p.link} imagem={p.imagem} preco={p.preco} />
+                  </div>
+                </article>
+              </a>
+            );
+          })}
+        </div>
+      )}
+      {totalPaginas > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginTop: '32px' }}>
+          {pagina > 1 && (
+                       <a href={`?${lojaFiltro ? `loja=${encodeURIComponent(lojaFiltro)}&` : ''}pagina=${pagina - 1}`} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, textDecoration: 'none', fontSize: '0.9rem' }}>
+              ← Anterior
+            </a>
+          )}
+          <span style={{ color: '#6b7280', fontSize: '0.88rem' }}>
+            Página {pagina} de {totalPaginas} · {total} ofertas
+          </span>
+          {pagina < totalPaginas && (
+            <a href={`?${lojaFiltro ? `loja=${encodeURIComponent(lojaFiltro)}&` : ''}pagina=${pagina + 1}`} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, textDecoration: 'none', fontSize: '0.9rem' }}>
+              Próxima →
+            </a>
+          )}
+        </div>
+      )}
+      <footer style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #e5e7eb', textAlign: 'center' }}>
+        <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: 0, lineHeight: 1.6 }}>
+          Links de afiliado — ao comprar através deles você apoia o site Com a Lupa sem custo adicional.<br />
+          Preços e condições expressos nos respectivos sites dos anunciantes. Confira sempre o valor no site e no carrinho.
+        </p>
+      </footer>
+
+    </main>
+  );
+}
+===== parcelado ===== 
+import fs from 'fs/promises';
+import path from 'path';
+import Link from 'next/link';
+import { kv } from '@/lib/kv';
+import BotaoWhatsApp from '../BotaoWhatsApp';
+
+interface ProdutoPinado {
+  id: string;
+  nome: string;
+  imagem: string;
+  link: string;
+  preco: number;
+  precoOriginal: number;
+  desconto: number;
+  destinos: string[];
+  parcelas?: string;
+  valorParcela?: string;
+  pinedAt: string;
+  loja?: string;
+}
+
+const POR_PAGINA = 30;
+
+async function getTodos(): Promise<ProdutoPinado[]> {
+  try {
+    const data = await kv.get<ProdutoPinado[]>('produtos:pinados');
+    return (data || []).filter(p => p.destinos?.includes('parcelado'));
+  } catch {}
+  try {
+    const filePath = path.join(process.cwd(), 'public', 'produtos-pinados.json');
+    const raw = await fs.readFile(filePath, 'utf-8');
+    return (JSON.parse(raw) as ProdutoPinado[]).filter(p => p.destinos?.includes('parcelado'));
+  } catch { return []; }
+}
+
+async function getProdutos(pagina = 1, loja = ''): Promise<{ produtos: ProdutoPinado[]; total: number; lojas: string[] }> {
+  const todos = await getTodos();
+  const lojas = Array.from(new Set(todos.map(p => p.loja || '').filter(Boolean))).sort();
+  const filtrados = loja ? todos.filter(p => p.loja === loja) : todos;
+  const total = filtrados.length;
+  const produtos = filtrados.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
+  return { produtos, total, lojas };
+}
+
+export default async function ParceladoPage({ searchParams }: { searchParams: Promise<{ pagina?: string; loja?: string }> }) {
+  const params = await searchParams;
+  const pagina = Math.max(1, parseInt(params.pagina || '1'));
+  const lojaFiltro = params.loja || '';
+  const { produtos, total, lojas } = await getProdutos(pagina, lojaFiltro);
+  const totalPaginas = Math.ceil(total / POR_PAGINA);
+
+  return (
+    <main style={{ maxWidth: '1060px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+
+      <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#047857', fontWeight: 600, fontSize: '0.85rem', textDecoration: 'none', marginBottom: '24px' }}>
+        ← Voltar ao site
+      </Link>
+
+      <header style={{ backgroundColor: '#fff', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: '32px', borderTop: '6px solid #047857' }}>
+        <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#111827', margin: '0 0 6px' }}>💳 Parcelado sem Juros</h1>
+        <p style={{ color: '#6b7280', fontSize: '0.95rem', margin: 0 }}>
+          Produtos selecionados com parcelamento sem juros — facilite sua compra.
+        </p>
+      </header>
+      <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fbbf24', borderRadius: '10px', padding: '12px 20px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <span style={{ fontSize: '1.2rem' }}>⚠️</span>
+        <p style={{ fontSize: '0.82rem', color: '#92400e', margin: 0, lineHeight: 1.5 }}>
+          <strong>Atenção:</strong> Condições de parcelamento, preços e disponibilidade são de responsabilidade do anunciante. As parcelas exibidas podem não refletir as condições atuais da loja. Confirme sempre no site e no carrinho antes de finalizar. Lojas com a indicação 💵 Preço convertido de USD estão localizadas em outro país, e as compras podem estar sujeitas a tributação de importação, que nem sempre aparece no carrinho e pode ser cobrada na entrega.
+        </p>
+      </div>
+      {lojas.length > 1 && (
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
+          <a href="?pagina=1"
+            style={{ padding: '6px 16px', borderRadius: '999px', border: `2px solid ${!lojaFiltro ? '#047857' : '#e5e7eb'}`, backgroundColor: !lojaFiltro ? '#047857' : '#fff', color: !lojaFiltro ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.82rem', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+            Todas ({total || 0})
+          </a>
+          {lojas.map(l => {
+            const ativa = lojaFiltro === l;
+            return (
+              <a key={l} href={`?loja=${encodeURIComponent(l)}&pagina=1`}
+                style={{ padding: '6px 16px', borderRadius: '999px', border: `2px solid ${ativa ? '#047857' : '#e5e7eb'}`, backgroundColor: ativa ? '#047857' : '#fff', color: ativa ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.82rem', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                🏪 {l}
+              </a>
+            );
+          })}
+        </div>
+      )}
+
+      {produtos.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>
+          Nenhum produto disponível no momento. Volte em breve!
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+          {produtos.map(p => {
+            const desconto = p.precoOriginal > p.preco
+              ? Math.round((1 - p.preco / p.precoOriginal) * 100)
+              : p.desconto || 0;
+            const temParcela = p.parcelas && p.valorParcela;
+
+            return (
+              <a key={p.id} href={`/ir?url=${encodeURIComponent(p.link)}&nome=${encodeURIComponent(p.nome)}&imagem=${encodeURIComponent(p.imagem)}`} style={{ textDecoration: 'none' }}>
+                <article style={{ backgroundColor: '#fff', borderRadius: '14px', overflow: 'hidden', border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', height: '100%' }}>
+
+                  <div style={{ height: '200px', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', position: 'relative' }}>
+                    {p.imagem && (
+                      <img src={p.imagem} alt={p.nome} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                    )}
+                    {desconto > 0 && (
+                      <span style={{ position: 'absolute', top: '12px', left: '12px', backgroundColor: '#dc2626', color: '#fff', fontSize: '0.82rem', fontWeight: 800, padding: '4px 10px', borderRadius: '6px' }}>
+                        -{desconto}%
+                      </span>
+                    )}
+                    <span style={{ position: 'absolute', top: '12px', right: '12px', backgroundColor: '#047857', color: '#fff', fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: '20px' }}>
+                      💳 Sem juros
+                    </span>
+                  </div>
+
+                  <div style={{ padding: '18px', display: 'flex', flexDirection: 'column', flexGrow: 1, gap: '10px' }}>
+                    <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {p.nome}
+                    </h2>
+
+                    {p.loja && (
+                      <div style={{ fontSize: '0.72rem', color: '#6b7280', fontWeight: 500 }}>🏪 {p.loja}</div>
+                    )}
+
+                    <div style={{ marginTop: 'auto' }}>
+                      {p.precoOriginal > p.preco && (
+                        <div style={{ fontSize: '0.8rem', color: '#9ca3af', textDecoration: 'line-through' }}>
+                          R$ {p.precoOriginal.toFixed(2).replace('.', ',')}
+                        </div>
+                      )}
+                      <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#dc2626' }}>
+                        R$ {p.preco.toFixed(2).replace('.', ',')}
+                      </div>
+
+                      {temParcela ? (
+                        <div style={{ marginTop: '6px', backgroundColor: '#f0fdf4', borderRadius: '6px', padding: '8px 12px', border: '1px solid #bbf7d0' }}>
+                          <span style={{ fontSize: '0.82rem', color: '#374151' }}>ou </span>
+                          <span style={{ fontSize: '1rem', fontWeight: 800, color: '#047857' }}>
+                            {p.parcelas}x de R$ {parseFloat(p.valorParcela!).toFixed(2).replace('.', ',')}
+                          </span>
+                          <span style={{ fontSize: '0.78rem', color: '#047857', fontWeight: 600 }}> sem juros</span>
+                        </div>
+                      ) : (
+                        <div style={{ marginTop: '6px', fontSize: '0.78rem', color: '#047857', fontWeight: 600 }}>
+                          💳 Parcelado sem juros
+                        </div>
+                      )}
+
+                      <div style={{ fontSize: '0.68rem', color: '#9ca3af', marginTop: '4px' }}>
+                        Confira o valor no site e no carrinho
+                      </div>
+                    </div>
+
+                    <div style={{ backgroundColor: '#047857', color: '#fff', padding: '10px', borderRadius: '8px', fontWeight: 700, fontSize: '0.88rem', textAlign: 'center' }}>
+                      Comprar parcelado →
+                    </div>
+                    <BotaoWhatsApp id={p.id} nome={p.nome} link={p.link} imagem={p.imagem} preco={p.preco} />
+                  </div>
+                </article>
+              </a>
+            );
+          })}
+        </div>
+      )}
+      {totalPaginas > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginTop: '32px' }}>
+          {pagina > 1 && (
+            <a href={`?${lojaFiltro ? `loja=${encodeURIComponent(lojaFiltro)}&` : ''}pagina=${pagina - 1}`}
+              style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, textDecoration: 'none', fontSize: '0.9rem' }}>
+              ← Anterior
+            </a>
+          )}
+          <span style={{ color: '#6b7280', fontSize: '0.88rem' }}>
+            Página {pagina} de {totalPaginas} · {total} produtos
+          </span>
+          {pagina < totalPaginas && (
+            <a href={`?${lojaFiltro ? `loja=${encodeURIComponent(lojaFiltro)}&` : ''}pagina=${pagina + 1}`}
+              style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, textDecoration: 'none', fontSize: '0.9rem' }}>
+              Próxima →
+            </a>
+          )}
+        </div>
+      )}
+
+
+
+      <footer style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #e5e7eb', textAlign: 'center' }}>
+        <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: 0, lineHeight: 1.6 }}>
+          Links de afiliado — ao comprar através deles você apoia o site Com a Lupa sem custo adicional.<br />
+          Condições de parcelamento sujeitas a confirmação no site do anunciante e no carrinho de compras.
+        </p>
+      </footer>
+
+    </main>
+  );
+}
+===== oferta-do-dia ===== 
+'use client';
+
+import { useState, useEffect } from 'react';
+import BotaoWhatsApp from '../BotaoWhatsApp';
+import Mascote from '../Mascote';
+import SeloLoja from '../SeloLoja';
+
+interface ProdutoPinado {
+  id: string;
+  nome: string;
+  imagem: string;
+  imagens?: string[];
+  link: string;
+  loja?: string;
+  preco: number;
+  precoOriginal: number;
+  desconto: number;
+  parcelas?: string;
+  valorParcela?: string;
+  cupom?: string;
+  validade?: string;
+  categoria?: string;
+  ativo?: boolean;
+  destinos: string[];
+  moedaOriginal?: string;
+  cotacaoUsada?: number;
+
+}
+
+function Countdown({ endAt }: { endAt: string }) {
+  const [tempo, setTempo] = useState('');
+
+  useEffect(() => {
+    function atualizar() {
+      const diff = new Date(endAt).getTime() - Date.now();
+      if (diff <= 0) { setTempo('Expirado'); return; }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setTempo(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`);
+    }
+    atualizar();
+    const interval = setInterval(atualizar, 1000);
+    return () => clearInterval(interval);
+  }, [endAt]);
+
+  return (
+    <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+      {tempo.split(':').map((t, i) => (
+        <div key={i} style={{ backgroundColor: '#dc2626', color: '#fff', borderRadius: '8px', padding: '8px 10px', textAlign: 'center', minWidth: '48px' }}>
+          <div style={{ fontSize: '1.2rem', fontWeight: 800, lineHeight: 1 }}>{t}</div>
+          <div style={{ fontSize: '0.55rem', marginTop: '3px', opacity: 0.8 }}>{['HORAS', 'MIN', 'SEG'][i]}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function formatarPreco(valor: number) {
+return valor.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+function CardOferta({ p, comMascote = false }: { p: ProdutoPinado; comMascote?: boolean }) {
+  const [copiado, setCopiado] = useState(false);
+  const [imagemAtiva, setImagemAtiva] = useState(0);
+  const todasImagens = [p.imagem, ...(p.imagens || [])].filter(Boolean);
+  const desconto = p.precoOriginal > p.preco
+    ? Math.round((1 - p.preco / p.precoOriginal) * 100)
+    : p.desconto || 0;
+
+  return (
+    <div style={{ backgroundColor: '#fff', borderRadius: '16px', overflow: 'hidden', border: comMascote ? '2px solid #dc2626' : '1px solid #e5e7eb', boxShadow: '0 4px 16px rgba(0,0,0,0.06)', ...(comMascote ? { gridColumn: '1 / -1' } : {}) }}>
+      {/* Imagem */}
+      <div style={{ position: 'relative', backgroundColor: '#f9fafb', padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+               {comMascote && (
+                    <div style={{ position: 'absolute', left: '12px', top: '150px', zIndex: 2 }}>
+            <Mascote nome="lupa-apresenta" altura={220} />
+          </div>
+        )}
+        <div style={{ width: '100%', height: comMascote ? '360px' : '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #f3f4f6', overflow: 'hidden', padding: '12px', ...(comMascote ? { paddingLeft: '140px' } : {}) }}>
+          {todasImagens[imagemAtiva] ? (
+            <img src={todasImagens[imagemAtiva]} alt={p.nome} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+          ) : (
+            <span style={{ fontSize: '3rem' }}>🛍</span>
+          )}
+        </div>
+
+        {/* Badge desconto */}
+        {desconto > 0 && (
+          <div style={{ position: 'absolute', top: '16px', left: '16px', backgroundColor: '#dc2626', color: '#fff', fontWeight: 800, fontSize: '1rem', padding: '6px 12px', borderRadius: '8px' }}>
+            -{desconto}%
+          </div>
+        )}
+
+        {/* Miniaturas */}
+        {todasImagens.length > 1 && (
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center' }}>
+            {todasImagens.map((img, i) => (
+              <button key={i} onClick={() => setImagemAtiva(i)} style={{
+                width: '44px', height: '44px', borderRadius: '6px', overflow: 'hidden',
+                border: `2px solid ${imagemAtiva === i ? '#dc2626' : '#e5e7eb'}`,
+                backgroundColor: '#fff', cursor: 'pointer', padding: '3px', flexShrink: 0,
+              }}>
+                <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Dados */}
+      <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+        {/* Loja e categoria */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          {p.loja && <span style={{ fontSize: '0.78rem', color: '#6b7280', fontWeight: 500 }}>🏪 {p.loja}</span>}
+<SeloLoja loja={p.loja} />
+          {p.categoria && <span style={{ fontSize: '0.65rem', color: '#9ca3af', backgroundColor: '#f3f4f6', padding: '2px 8px', borderRadius: '20px' }}>{p.categoria}</span>}
+
+        </div>
+
+        {/* Título */}
+        <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+          {p.nome}
+        </h2>
+
+        {/* Preço */}
+        <div>
+          {p.precoOriginal > p.preco && (
+            <div style={{ fontSize: '0.82rem', color: '#9ca3af', textDecoration: 'line-through' }}>
+              R$ {formatarPreco(p.precoOriginal)}
+            </div>
+          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '1.6rem', fontWeight: 800, color: '#dc2626' }}>
+              R$ {formatarPreco(p.preco)}
+            </span>
+          </div>
+          {p.parcelas && p.valorParcela && (
+            <div style={{ fontSize: '0.78rem', color: '#6b7280', marginTop: '4px' }}>
+              ou <strong>{p.parcelas}x</strong> de <strong>R$ {formatarPreco(parseFloat(p.valorParcela))}</strong> sem juros
+            </div>
+          )}
+        </div>
+
+        {/* Countdown */}
+        {p.validade && (
+          <div>
+            <p style={{ fontSize: '0.72rem', color: '#6b7280', margin: '0 0 6px', textAlign: 'center' }}>⏱ Termina em:</p>
+            <Countdown endAt={p.validade} />
+          </div>
+        )}
+
+        {/* Cupom */}
+        {p.cupom && (
+          <button onClick={() => { navigator.clipboard.writeText(p.cupom!); setCopiado(true); setTimeout(() => setCopiado(false), 2000); }}
+            style={{ width: '100%', backgroundColor: copiado ? '#047857' : '#f5f3ff', color: copiado ? '#fff' : '#7c3aed', border: '2px dashed #7c3aed', borderRadius: '8px', padding: '8px', fontWeight: 800, fontSize: '1rem', cursor: 'pointer', letterSpacing: '1px', textAlign: 'center' }}>
+            {copiado ? '✅ Copiado!' : p.cupom}
+          </button>
+        )}
+
+                {/* Aviso moeda */}
+               {(p as any).moedaOriginal === 'USD' && (p as any).cotacaoUsada && (
+          <div style={{ backgroundColor: '#eff6ff', border: '1px solid #93c5fd', borderRadius: '8px', padding: '8px 12px', fontSize: '0.72rem', color: '#1e40af' }}>
+            💱 Preço convertido de USD para BRL (cotação R$ {Number((p as any).cotacaoUsada).toFixed(2)} usada no momento da busca). Confira o valor final no site. (*sujeito a tributação)
+          </div>
+        )}
+
+        {/* Aviso */}
+        <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fbbf24', borderRadius: '8px', padding: '8px 12px', fontSize: '0.72rem', color: '#92400e' }}>
+          ⚠️ Confira preço e condições no site antes de comprar.
+        </div>
+
+        {/* CTA */}
+        <a href={`/ir?url=${encodeURIComponent(p.link)}&nome=${encodeURIComponent(p.nome)}&imagem=${encodeURIComponent(p.imagem)}`} style={{
+          display: 'block', backgroundColor: '#dc2626', color: '#fff',
+          padding: '12px', borderRadius: '10px', fontWeight: 800,
+          fontSize: '1rem', textAlign: 'center', textDecoration: 'none',
+        }}>
+          Ver oferta →
+        </a>
+        <BotaoWhatsApp id={p.id} nome={p.nome} link={p.link} imagem={p.imagem} preco={p.preco} destaque />
+
+        <p style={{ fontSize: '0.65rem', color: '#9ca3af', margin: 0, textAlign: 'center' }}>
+          Link de afiliado
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export default function OfertasDoDiaPage() {
+  const [ofertas, setOfertas] = useState<ProdutoPinado[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/produtos/save')
+      .then(r => r.json())
+      .then((pinados: ProdutoPinado[]) => {
+        const filtradas = pinados.filter(p => p.destinos?.includes('oferta-do-dia'));
+        setOfertas(filtradas);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <main style={{ maxWidth: '900px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+<div style={{ backgroundColor: '#fffbeb', border: '1px solid #fbbf24', borderRadius: '10px', padding: '12px 20px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <span style={{ fontSize: '1.2rem' }}>⚠️</span>
+        <p style={{ fontSize: '0.82rem', color: '#92400e', margin: 0, lineHeight: 1.5 }}>
+          <strong>Atenção:</strong> Condições de parcelamento, preços e disponibilidade são de responsabilidade do anunciante. As parcelas exibidas podem não refletir as condições atuais da loja. Confirme sempre no site e no carrinho antes de finalizar. Lojas com a indicação 💱 Preço convertido de USD estão localizadas em outro país, e as compras podem estar sujeitas a tributação de importação, que nem sempre aparece no carrinho e pode ser cobrada na entrega.
+        </p>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+        <a href="/ofertas" style={{ color: '#dc2626', fontWeight: 600, fontSize: '0.85rem', textDecoration: 'none' }}>← Voltar às ofertas</a>
+        <span style={{ backgroundColor: '#dc2626', color: '#fff', fontSize: '0.78rem', fontWeight: 700, padding: '4px 14px', borderRadius: '20px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+          🔥 Ofertas do Dia
+        </span>
+      </div>
+
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>⏳ Carregando ofertas...</div>
+      ) : ofertas.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>
+          <p>Nenhuma oferta do dia no momento.</p>
+          <a href="/ofertas" style={{ color: '#dc2626', fontWeight: 600, textDecoration: 'none' }}>Ver todas as ofertas →</a>
+        </div>
+      ) : (
+       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(380px, 100%), 1fr))', gap: '24px' }}>
+         {ofertas.map((p, i) => <CardOferta key={p.id} p={p} comMascote={i === 0} />)}
+        </div>
+      )}
+
+      <footer style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #e5e7eb', textAlign: 'center' }}>
+        <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: 0, lineHeight: 1.6 }}>
+          Links de afiliado — ao comprar você apoia o site Com a Lupa sem custo adicional.<br />
+          Preços e condições são de responsabilidade do anunciante. Confira sempre no site e no carrinho.
+        </p>
+      </footer>
+
+    </main>
+  );
+}
+===== viagens-selecionadas ===== 
+import { kv } from '@/lib/kv';
+import Link from 'next/link';
+
+interface PasseioPinado {
+  id: string;
+  slug: string;
+  titulo: string;
+  destino?: string;
+  duracao?: string;
+  imagem: string;
+  precoBase: number;
+  precoOriginal?: number;
+  desconto?: number;
+  affiliate_url: string;
+  destinos: string[];
+  pinedAt: string;
+  precoData?: string;
+  loja?: string;
+  rating?: number;
+  reviewCount?: number;
+}
+
+const POR_PAGINA = 30;
+
+async function getTodos(): Promise<PasseioPinado[]> {
+  try {
+    const data = await kv.get<PasseioPinado[]>('artigos:viagens');
+    return (data || []).filter(v => v.destinos?.includes('viagens-selecionadas'));
+  } catch { return []; }
+}
+
+async function getViagens(pagina = 1, loja = ''): Promise<{ viagens: PasseioPinado[]; total: number; lojas: string[] }> {
+  const todos = await getTodos();
+  const lojas = Array.from(new Set(todos.map(v => v.loja || '').filter(Boolean))).sort();
+  const filtrados = loja ? todos.filter(v => v.loja === loja) : todos;
+  const total = filtrados.length;
+  const viagens = filtrados.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
+  return { viagens, total, lojas };
+}
+
+export default async function ViagensSelecionadasPage({ searchParams }: { searchParams: Promise<{ pagina?: string; loja?: string }> }) {
+  const params = await searchParams;
+  const pagina = Math.max(1, parseInt(params.pagina || '1'));
+  const lojaFiltro = params.loja || '';
+  const { viagens, total, lojas } = await getViagens(pagina, lojaFiltro);
+  const totalPaginas = Math.ceil(total / POR_PAGINA);
+
+  return (
+    <main style={{ maxWidth: '1060px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+
+      <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#0f766e', fontWeight: 600, fontSize: '0.85rem', textDecoration: 'none', marginBottom: '24px' }}>
+        ← Voltar ao site
+      </Link>
+
+      <header style={{ backgroundColor: '#fff', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: '32px', borderTop: '6px solid #0f766e' }}>
+        <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#111827', margin: '0 0 6px' }}>🌍 Viagens Selecionadas</h1>
+        <p style={{ color: '#6b7280', fontSize: '0.95rem', margin: 0 }}>
+          Passeios e experiências escolhidos a dedo — com qualidade e custo-benefício garantidos.
+        </p>
+      </header>
+
+      <div style={{ backgroundColor: '#f0fdfa', border: '1px solid #99f6e4', borderRadius: '10px', padding: '12px 20px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <span style={{ fontSize: '1.2rem' }}>⚠️</span>
+        <p style={{ fontSize: '0.82rem', color: '#134e4a', margin: 0, lineHeight: 1.5 }}>
+          <strong>Atenção:</strong> Preços, disponibilidade e itinerários são de responsabilidade do operador e podem ser alterados a qualquer momento. Confira sempre as condições atuais na Viator antes de reservar.
+        </p>
+      </div>
+
+           {lojas.length > 1 && (
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '24px' }}>
+          
+            <a           
+            href="./"
+            style={{ padding: '6px 16px', borderRadius: '20px', fontSize: '0.82rem', fontWeight: 600, textDecoration: 'none', backgroundColor: !lojaFiltro ? '#0f766e' : '#fff', color: !lojaFiltro ? '#fff' : '#374151', border: '1px solid #e5e7eb' }}
+          >
+            Todas
+          </a>
+                   {lojas.map(l => (
+            <a key={l} href={`?loja=${encodeURIComponent(l)}`} style={{ padding: '6px 16px', borderRadius: '20px', fontSize: '0.82rem', fontWeight: 600, textDecoration: 'none', backgroundColor: lojaFiltro === l ? '#0f766e' : '#fff', color: lojaFiltro === l ? '#fff' : '#374151', border: '1px solid #e5e7eb' }}>
+              {l}
+            </a>
+          ))}
+        </div>
+      )}
+
+      {viagens.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>
+          Nenhuma viagem selecionada no momento. Volte em breve!
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+          {viagens.map(v => {
+            const desconto = v.precoOriginal && v.precoOriginal > v.precoBase
+              ? Math.round((1 - v.precoBase / v.precoOriginal) * 100)
+              : v.desconto || 0;
+
+            return (
+              <a
+                key={v.id}
+                href={`/ir?url=${encodeURIComponent(v.affiliate_url)}&nome=${encodeURIComponent(v.titulo)}&imagem=${encodeURIComponent(v.imagem)}`}
+                style={{ textDecoration: 'none' }}
+              >
+                <article style={{ backgroundColor: '#fff', borderRadius: '14px', overflow: 'hidden', border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', height: '100%' }}>
+
+                  <div style={{ height: '220px', backgroundColor: '#f0fdfa', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0', position: 'relative', overflow: 'hidden' }}>
+                    {v.imagem && (
+                      <img src={v.imagem} alt={v.titulo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    )}
+                    {desconto > 0 && (
+                      <span style={{ position: 'absolute', top: '12px', left: '12px', backgroundColor: '#dc2626', color: '#fff', fontSize: '0.82rem', fontWeight: 800, padding: '4px 10px', borderRadius: '6px' }}>
+                        -{desconto}%
+                      </span>
+                    )}
+                    <span style={{ position: 'absolute', top: '12px', right: '12px', backgroundColor: '#0f766e', color: '#fff', fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: '20px' }}>
+                      ✈️ Selecionado
+                    </span>
+                    {v.duracao && (
+                      <span style={{ position: 'absolute', bottom: '10px', left: '10px', backgroundColor: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: '0.68rem', fontWeight: 600, padding: '3px 8px', borderRadius: '20px' }}>
+                        ⏱ {v.duracao}
+                      </span>
+                    )}
+                    {v.rating != null && v.rating > 0 && (
+                      <span style={{ position: 'absolute', bottom: '10px', right: '10px', backgroundColor: 'rgba(0,0,0,0.55)', color: '#fbbf24', fontSize: '0.68rem', fontWeight: 700, padding: '3px 8px', borderRadius: '20px' }}>
+                        ★ {v.rating.toFixed(1)}{v.reviewCount ? ` (${v.reviewCount.toLocaleString('pt-BR')})` : ''}
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ padding: '18px', display: 'flex', flexDirection: 'column', flexGrow: 1, gap: '10px' }}>
+                    {v.destino && (
+                      <div style={{ fontSize: '0.72rem', color: '#6b7280', fontWeight: 600 }}>📍 {v.destino}</div>
+                    )}
+
+                    <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {v.titulo}
+                    </h2>
+
+                    {v.loja && (
+                      <div style={{ fontSize: '0.72rem', color: '#6b7280', fontWeight: 500 }}>🏪 {v.loja}</div>
+                    )}
+
+                    <div style={{ marginTop: 'auto' }}>
+                      {v.precoOriginal && v.precoOriginal > v.precoBase && (
+                        <div style={{ fontSize: '0.8rem', color: '#9ca3af', textDecoration: 'line-through' }}>
+                          R$ {v.precoOriginal.toFixed(2).replace('.', ',')}
+                        </div>
+                      )}
+                      {v.precoBase > 0 && (
+                        <>
+                          <div style={{ fontSize: '0.68rem', color: '#9ca3af' }}>A partir de</div>
+                          <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f766e' }}>
+                            R$ {v.precoBase.toFixed(2).replace('.', ',')}
+                          </div>
+                        </>
+                      )}
+                      <div style={{ fontSize: '0.68rem', color: '#9ca3af', marginTop: '2px' }}>
+                        Confira o valor no site antes de reservar
+                      </div>
+                    </div>
+
+                    <div style={{ backgroundColor: '#0f766e', color: '#fff', padding: '10px', borderRadius: '8px', fontWeight: 700, fontSize: '0.88rem', textAlign: 'center' }}>
+                      Ver oferta →
+                    </div>
+                  </div>
+
+                </article>
+              </a>
+            );
+          })}
+        </div>
+      )}
+
+           {totalPaginas > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginTop: '32px' }}>
+          {pagina > 1 && (
+            <a href={`?${lojaFiltro ? `loja=${encodeURIComponent(lojaFiltro)}&` : ''}pagina=${pagina - 1}`} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, textDecoration: 'none', fontSize: '0.9rem' }}>
+              ← Anterior
+            </a>
+          )}
+          <span style={{ color: '#6b7280', fontSize: '0.88rem' }}>
+            Página {pagina} de {totalPaginas} · {total} viagens
+          </span>
+          {pagina < totalPaginas && (
+            <a href={`?${lojaFiltro ? `loja=${encodeURIComponent(lojaFiltro)}&` : ''}pagina=${pagina + 1}`} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, textDecoration: 'none', fontSize: '0.9rem' }}>
+              Próxima →
+            </a>
+          )}
+        </div>
+      )}
+
+      <footer style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #e5e7eb', textAlign: 'center' }}>
+        <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: 0, lineHeight: 1.6 }}>
+          Links de afiliado Viator — ao reservar através deles você apoia o site Com a Lupa sem custo adicional.<br />
+          Preços e condições expressos nos respectivos sites dos operadores. Confira sempre o valor antes de reservar.
+        </p>
+      </footer>
+
+    </main>
+  );
+}
+===== viagens ===== 
+import { kv } from '@/lib/kv';
+import Link from 'next/link';
+
+interface ArtigoViagem {
+  id: string;
+  slug: string;
+  titulo: string;
+  destino: string;
+  duracao: string;
+  imagem: string;
+  descricaoCurta: string;
+  precoBase: number;
+  precoData: string;
+  affiliateUrl?: string;
+  affiliate_url?: string;
+  publicado: boolean;
+  createdAt?: string;
+  pinedAt?: string;
+  rating?: number;
+  reviewCount?: number;
+}
+
+async function getViagens(): Promise<ArtigoViagem[]> {
+  try {
+    const data = await kv.get<ArtigoViagem[]>('artigos:viagens');
+    return (data || [])
+      .filter(a => a.publicado)
+      .map(a => ({
+        ...a,
+        affiliateUrl: a.affiliateUrl || a.affiliate_url || '',
+        createdAt: a.createdAt || a.pinedAt || new Date().toISOString(),
+        destino: a.destino || (a as any).destination_name || (a as any).destination_code || '',
+      }))
+      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+  } catch { return []; }
+}
+
+export default async function ViagensPage() {
+  const viagens = await getViagens();
+
+  return (
+    <main style={{ maxWidth: '1060px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+
+      <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#0f766e', fontWeight: 600, fontSize: '0.85rem', textDecoration: 'none', marginBottom: '24px' }}>
+        ← Voltar ao site
+      </Link>
+
+      <header style={{ backgroundColor: '#fff', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: '32px', borderTop: '6px solid #0f766e' }}>
+        <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#111827', margin: '0 0 6px' }}>🌍 Roteiros de Viagem</h1>
+        <p style={{ color: '#6b7280', fontSize: '0.95rem', margin: 0 }}>
+          Passeios e experiências selecionados — com análise editorial e dicas de quem pesquisou.
+        </p>
+      </header>
+
+      <div style={{ backgroundColor: '#f0fdfa', border: '1px solid #99f6e4', borderRadius: '10px', padding: '12px 20px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <span style={{ fontSize: '1.2rem' }}>ℹ️</span>
+        <p style={{ fontSize: '0.82rem', color: '#134e4a', margin: 0, lineHeight: 1.5 }}>
+          <strong>Atenção:</strong> Preços, disponibilidade e itinerários são de responsabilidade do operador e podem ser alterados a qualquer momento. Confira sempre as condições atuais na Viator antes de reservar.
+        </p>
+      </div>
+
+      {viagens.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>
+          Nenhum roteiro publicado no momento. Volte em breve!
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+          {viagens.map(v => (
+            <Link key={v.id} href={`/viagem/${v.slug}`} style={{ textDecoration: 'none' }}>
+              <article style={{ backgroundColor: '#fff', borderRadius: '14px', overflow: 'hidden', border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', height: '100%', transition: 'box-shadow 0.2s' }}>
+
+                <div style={{ height: '200px', backgroundColor: '#f0fdfa', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0', position: 'relative', overflow: 'hidden' }}>
+                  {v.imagem ? (
+                    <img src={v.imagem} alt={v.titulo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <span style={{ fontSize: '3rem' }}>🌍</span>
+                  )}
+                  <span style={{ position: 'absolute', top: '12px', right: '12px', backgroundColor: '#0f766e', color: '#fff', fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: '20px' }}>
+                    ✈️ Viagem
+                  </span>
+                  {v.duracao && (
+                    <span style={{ position: 'absolute', bottom: '10px', left: '10px', backgroundColor: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: '0.68rem', fontWeight: 600, padding: '3px 8px', borderRadius: '20px', backdropFilter: 'blur(4px)' }}>
+                      ⏱ {v.duracao}
+                    </span>
+                  )}
+                  {v.rating != null && v.rating > 0 && (
+                    <span style={{ position: 'absolute', bottom: '10px', right: '10px', backgroundColor: 'rgba(0,0,0,0.55)', color: '#fbbf24', fontSize: '0.68rem', fontWeight: 700, padding: '3px 8px', borderRadius: '20px' }}>
+                      ★ {v.rating.toFixed(1)}{v.reviewCount ? ` (${v.reviewCount.toLocaleString('pt-BR')})` : ''}
+                    </span>
+                  )}
+                </div>
+
+                <div style={{ padding: '18px', display: 'flex', flexDirection: 'column', flexGrow: 1, gap: '10px' }}>
+                  {v.destino && (
+                    <div style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: 600 }}>📍 {v.destino}</div>
+                  )}
+
+                  <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {v.titulo}
+                  </h2>
+
+                  <p style={{ fontSize: '0.82rem', color: '#6b7280', margin: 0, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {v.descricaoCurta}
+                  </p>
+
+                  <div style={{ marginTop: 'auto' }}>
+                    {v.precoBase > 0 && (
+                      <>
+                        <div style={{ fontSize: '0.68rem', color: '#9ca3af' }}>A partir de</div>
+                        <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0f766e' }}>
+                          R$ {v.precoBase.toFixed(2).replace('.', ',')}
+                        </div>
+                        <div style={{ fontSize: '0.65rem', color: '#9ca3af', marginTop: '1px' }}>
+                          Consultado em {v.precoData} · sujeito a alteração
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <div style={{ backgroundColor: '#0f766e', color: '#fff', padding: '10px', borderRadius: '8px', fontWeight: 700, fontSize: '0.88rem', textAlign: 'center' }}>
+                    Ver roteiro →
+                  </div>
+                </div>
+
+              </article>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      <footer style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #e5e7eb', textAlign: 'center' }}>
+        <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: 0, lineHeight: 1.6 }}>
+          Links de afiliado Viator — ao reservar através deles você apoia o site Com a Lupa sem custo adicional.<br />
+          Preços e condições expressos nos respectivos sites dos operadores. Confira sempre o valor no site antes de reservar.
+        </p>
+      </footer>
+
+    </main>
+  );
+}

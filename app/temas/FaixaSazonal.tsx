@@ -25,7 +25,9 @@ export default function FaixaSazonal() {
   return (
     <a href={ev.href} className="fs" style={{ background: `linear-gradient(110deg, ${T.cores[1]}, ${T.cores[2]})` }}>
       <style>{CSS}</style>
-      <span className="fs-emoji" aria-hidden="true">{T.chapeu || T.emoji}</span>
+            {ev.mascote
+        ? <img className="fs-mascote" src={ev.mascote} alt="" aria-hidden="true" />
+        : <span className="fs-emoji" aria-hidden="true">{T.chapeu || T.emoji}</span>}
       <span className="fs-txt">
         <span className="fs-quando" style={{ color: T.cores[5], background: T.cores[3] }}>{quando}</span>
         <strong>{T.eyebrow}: {T.titulo[0]}{T.titulo[1]}{T.titulo[2]}</strong>
@@ -40,6 +42,7 @@ const CSS = `
 .fs{display:flex;align-items:center;gap:16px;width:calc(100% - 24px);max-width:1180px;margin:12px auto;box-sizing:border-box;padding:14px 20px;border-radius:18px;color:#fff;text-decoration:none;box-shadow:0 8px 24px rgba(0,0,0,.12);position:relative;overflow:hidden;font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif}
 .fs:hover{filter:brightness(1.05)}
 .fs-emoji{font-size:44px;line-height:1;flex:none;animation:fsboia 3s ease-in-out infinite}
+.fs-mascote{height:112px;width:auto;flex:none;margin:-8px 0 -16px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.25))}
 .fs-txt{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
 .fs-txt strong{font-size:20px;line-height:1.2}
 .fs-sub{font-size:14px;opacity:.95}
@@ -48,7 +51,8 @@ const CSS = `
 @keyframes fsboia{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-6px) rotate(6deg)}}
 @media (max-width:700px){
   .fs{margin:10px auto;flex-wrap:wrap;gap:10px;padding:14px 16px}
-  .fs-emoji{font-size:34px}
+   .fs-emoji{font-size:34px}
+  .fs-mascote{height:84px;margin:-4px 0 -10px}
   .fs-txt strong{font-size:17px}
   .fs-btn{width:100%;text-align:center}
 }

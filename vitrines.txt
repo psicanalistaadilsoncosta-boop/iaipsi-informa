@@ -1,0 +1,1497 @@
+===== vista-se ===== 
+'use client';
+
+import { useEffect, useState } from 'react';
+
+const TIPOS = ['Roupas', 'Calçados', 'Acessórios', 'Infantil', 'Bebê'];
+
+const COR = '#be185d'; // rosa escuro
+const COR_LIGHT = '#fdf2f8';
+const COR_BADGE = '#fbcfe8';
+
+export default function VistaSePage() {
+  const [dados, setDados] = useState<Record<string, any[]>>({});
+  const [tipoAtivo, setTipoAtivo] = useState('Roupas');
+  const [carrinho, setCarrinho] = useState<any[]>([]);
+  const [email, setEmail] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [enviado, setEnviado] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/vista-se')
+      .then(r => r.json())
+      .then(d => {
+        setDados(d.adulto || {});
+        setLoading(false);
+      });
+  }, []);
+
+  const produtos = dados[tipoAtivo] || [];
+
+  function toggleCarrinho(p: any) {
+    setCarrinho(prev =>
+      prev.find(x => x.id === p.id)
+        ? prev.filter(x => x.id !== p.id)
+        : [...prev, p]
+    );
+  }
+
+  function noCarrinho(p: any) {
+    return carrinho.some(x => x.id === p.id);
+  }
+
+  async function enviarLista() {
+    if (!email || carrinho.length === 0) return;
+
+    // salva lead
+    await fetch('/api/vista-se/lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, tipo: 'adulto', itens: carrinho.map(p => p.nome || p.name) }),
+    });
+
+    // envia email
+    const linhas = carrinho.map(p =>
+      `• ${p.nome || p.name} — ${p.link}`
+    ).join('\n');
+
+    await fetch('/api/ambientes/enviar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        produtos: carrinho.map(p => ({
+          nome: p.nome || p.name || '',
+          preco: parseFloat(p.preco || p.price || '0') || 0,
+          precoOriginal: parseFloat(p.precoOriginal || '0') || undefined,
+          desconto: p.desconto || undefined,
+          parcelas: p.parcelas || undefined,
+          valorParcela: p.valorParcela || undefined,
+          link: p.link || '',
+          imagem: p.imagem || p.thumbnail || p.imageUrl || '',
+          loja: p.loja || p.storeName || p.nomeLoja || '',
+        })),
+      }),
+    });
+
+          setEnviado(true);
+  }
+
+  const total = carrinho.reduce((s, p) => s + (parseFloat(p.preco || p.price || '0') || 0), 0);
+
+  return (
+    <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: COR_LIGHT }}>
+      {/* Header */}
+      <div style={{ backgroundImage: 'url(/universo/vista-se.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', color: '#fff', padding: '2rem 1rem 1.5rem', textAlign: 'center', position: 'relative' }}>
+<div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to right, rgba(190,24,93,0.5), rgba(190,24,93,0.85))` }} />
+<div style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ fontSize: '2rem' }}>👗</div>
+        <h1 style={{ margin: '0.5rem 0 0.25rem', fontSize: '1.8rem', fontWeight: 700 }}>Vista-se</h1>
+        <p style={{ margin: 0, opacity: 0.85, fontSize: '1rem' }}>
+          Escolha seu estilo, monte sua lista e receba os links no e-mail</p>
+<p style={{ margin: 0, opacity: 0.65, fontSize: '0.65rem' }}>
+        Atenção: os preços, descontos, frete, disponibilidade e demais condições apresentados são apenas referenciais.<br />
+Valem as condições exibidas no momento da compra, diretamente na loja e no carrinho do site. Lojas com a indicação 💵 Preço convertido de USD estão localizadas em outro país, e as compras podem estar sujeitas a tributação de importação, que nem sempre aparece no carrinho e pode ser cobrada na entrega.
+</p>
+      </div> </div>
+
+      {/* Abas de tipo */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', padding: '1rem', flexWrap: 'wrap', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+        {TIPOS.map(t => (
+          <button
+            key={t}
+            onClick={() => setTipoAtivo(t)}
+            style={{
+              padding: '0.5rem 1.25rem',
+              borderRadius: '2rem',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: tipoAtivo === t ? 700 : 400,
+              background: tipoAtivo === t ? COR : '#f3f4f6',
+              color: tipoAtivo === t ? '#fff' : '#374151',
+              fontSize: '0.95rem',
+              transition: 'all 0.2s',
+            }}
+          >
+            {t} {dados[t] ? `(${dados[t].length})` : ''}
+          </button>
+        ))}
+      </div>
+
+      {/* Produtos */}
+      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '1.5rem 1rem' }}>
+        {loading ? (
+          <p style={{ textAlign: 'center', color: '#9ca3af' }}>Carregando...</p>
+                ) : produtos.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+            {(tipoAtivo === 'Infantil' || tipoAtivo === 'Bebê') ? (
+              <>
+                <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>👶</div>
+                <p style={{ color: '#374151', fontWeight: 600, marginBottom: '0.5rem' }}>
+                  Esses produtos estão em Vista seu Filho
+                </p>
+                <p style={{ color: '#9ca3af', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
+                  Roupas, calçados e brinquedos infantis ficam numa seção dedicada.
+                </p>
+                <a href="/vista-seu-filho" style={{
+                  display: 'inline-block', padding: '0.6rem 1.5rem',
+                  background: '#0369a1', color: '#fff', borderRadius: '2rem',
+                  fontWeight: 700, textDecoration: 'none', fontSize: '0.95rem',
+                }}>Ir para Vista seu Filho →</a>
+              </>
+            ) : (
+              <p style={{ color: '#9ca3af' }}>Nenhum produto nesta categoria ainda.</p>
+            )}
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+            {produtos.map((p: any) => {
+              const nome = p.nome || p.name || '';
+              const preco = p.preco || p.price || '';
+              const img = p.imagem || p.thumbnail || p.imageUrl || '';
+              const loja = p.loja || p.storeName || p.nomeLoja || '';
+              const selected = noCarrinho(p);
+              return (
+                <div
+                  key={p.id}
+                  onClick={() => toggleCarrinho(p)}
+                  style={{
+                    background: '#fff',
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    border: selected ? `2px solid ${COR}` : '2px solid transparent',
+                    boxShadow: selected ? `0 0 0 3px ${COR_BADGE}` : '0 1px 4px rgba(0,0,0,0.08)',
+                    transition: 'all 0.2s',
+                    position: 'relative',
+                  }}
+                >
+                  {selected && (
+                    <div style={{
+                      position: 'absolute', top: 8, right: 8,
+                      background: COR, color: '#fff',
+                      borderRadius: '50%', width: 24, height: 24,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '0.8rem', fontWeight: 700,
+                    }}>✓</div>
+                  )}
+                  {img && (
+                    <img src={img} alt={nome} style={{ width: '100%', height: '160px', objectFit: 'cover' }} />
+                  )}
+                  <div style={{ padding: '0.75rem' }}>
+<div style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '0.25rem' }}>{loja}</div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#1f2937', lineHeight: 1.3, marginBottom: '0.4rem' }}>
+                      {nome.length > 60 ? nome.slice(0, 57) + '...' : nome}
+                    </div>
+                    {(p.moedaUSD || (p as any).moedaOriginal === 'USD') && (
+                      <div style={{ fontSize: '0.68rem', color: '#92400e', background: '#fef3c7', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', marginBottom: '0.25rem', fontWeight: 600 }}>
+                        💵 Preço convertido de USD
+                      </div>
+                    )}
+                                      {preco && (
+                      <div style={{ fontSize: '0.95rem', fontWeight: 700, color: COR }}>
+                        R$ {parseFloat(preco).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+                      <a href={p.link} target="_blank" rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        style={{ flex: 1, textAlign: 'center', padding: '7px', backgroundColor: '#2563eb', color: '#fff', borderRadius: '8px', textDecoration: 'none', fontSize: '0.78rem', fontWeight: 700 }}>
+                        Ver oferta
+                      </a>
+                      <button onClick={e => { e.stopPropagation(); toggleCarrinho(p); }}
+                        style={{ flex: 1, padding: '7px', backgroundColor: selected ? COR : '#f3f4f6', color: selected ? '#fff' : '#374151', border: 'none', borderRadius: '8px', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer' }}>
+                        {selected ? '✓ Na lista' : '+ Lista'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Carrinho flutuante */}
+      {carrinho.length > 0 && (
+        <div style={{
+          position: 'fixed', bottom: '1.5rem', right: '1.5rem',
+          background: COR, color: '#fff',
+          borderRadius: '16px', padding: '1rem 1.25rem',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+          minWidth: '220px', zIndex: 100,
+        }}>
+          <div style={{ fontWeight: 700, marginBottom: '0.5rem' }}>
+            👗 {carrinho.length} {carrinho.length === 1 ? 'item' : 'itens'}
+          </div>
+          {total > 0 && (
+            <div style={{ fontSize: '0.85rem', marginBottom: '0.75rem', opacity: 0.9 }}>
+              Total aprox: R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+          )}
+          <button
+            onClick={() => setShowModal(true)}
+            style={{
+              width: '100%', padding: '0.5rem',
+              background: '#fff', color: COR,
+              border: 'none', borderRadius: '8px',
+              fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem',
+            }}
+          >
+            Receber links por e-mail
+          </button>
+        </div>
+      )}
+
+      {/* Modal email */}
+      {showModal && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200,
+        }}>
+          <div style={{
+            background: '#fff', borderRadius: '16px', padding: '2rem',
+            width: '90%', maxWidth: '400px', textAlign: 'center',
+          }}>
+            {!enviado ? (
+              <>
+                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>👗</div>
+                <h2 style={{ margin: '0 0 0.5rem', color: '#1f2937' }}>Receber minha lista</h2>
+                <p style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '1rem' }}>
+                  {carrinho.length} {carrinho.length === 1 ? 'item selecionado' : 'itens selecionados'}
+                </p>
+                <input
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  style={{
+                    width: '100%', padding: '0.75rem', borderRadius: '8px',
+                    border: '1px solid #d1d5db', fontSize: '1rem',
+                    boxSizing: 'border-box', marginBottom: '0.75rem',
+                  }}
+                />
+                <button
+                  onClick={enviarLista}
+                  style={{
+                    width: '100%', padding: '0.75rem',
+                    background: COR, color: '#fff',
+                    border: 'none', borderRadius: '8px',
+                    fontWeight: 700, cursor: 'pointer', fontSize: '1rem',
+                    marginBottom: '0.5rem',
+                  }}
+                >
+                  Enviar links
+                </button>
+                <button
+                  onClick={() => setShowModal(false)}
+                  style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer' }}
+                >
+                  Cancelar
+                </button>
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>✅</div>
+                <h2 style={{ color: '#1f2937' }}>Enviado!</h2>
+                <p style={{ color: '#6b7280' }}>Verifique sua caixa de entrada.</p>
+                <button
+                  onClick={() => { setShowModal(false); setEnviado(false); setCarrinho([]); }}
+                  style={{
+                    padding: '0.75rem 2rem', background: COR, color: '#fff',
+                    border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer',
+                  }}
+                >
+                  Fechar
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+===== beleza ===== 
+'use client';
+
+import { useEffect, useState } from 'react';
+
+const TIPOS = ['Perfumes', 'Skincare', 'Maquiagem', 'Cabelos', 'Massagem', 'Solar', 'Cuidados'];
+
+const COR = '#9d174d'; // rosa escuro / vinho
+const COR_LIGHT = '#fff1f2';
+const COR_BADGE = '#fecdd3';
+
+export default function BelezaPage() {
+  const [dados, setDados] = useState<Record<string, any[]>>({});
+  const [tipoAtivo, setTipoAtivo] = useState('');
+  const [carrinho, setCarrinho] = useState<any[]>([]);
+  const [email, setEmail] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [enviado, setEnviado] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/beleza')
+      .then(r => r.json())
+      .then(d => {
+        setDados(d);
+        // ativa primeiro tipo que tiver produtos
+        const primeiro = TIPOS.find(t => d[t]?.length > 0);
+        if (primeiro) setTipoAtivo(primeiro);
+        setLoading(false);
+      });
+  }, []);
+
+  const produtos = dados[tipoAtivo] || [];
+
+  function toggleCarrinho(p: any) {
+    setCarrinho(prev =>
+      prev.find(x => x.id === p.id)
+        ? prev.filter(x => x.id !== p.id)
+        : [...prev, p]
+    );
+  }
+
+  function noCarrinho(p: any) {
+    return carrinho.some(x => x.id === p.id);
+  }
+
+  async function enviarLista() {
+    if (!email || carrinho.length === 0) return;
+
+    await fetch('/api/beleza/lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, itens: carrinho.map(p => p.nome || p.name) }),
+    });
+
+    await fetch('/api/ambientes/enviar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        produtos: carrinho.map((p: any) => ({
+          nome: p.nome || p.name || '',
+          preco: parseFloat(p.preco || p.price || '0') || 0,
+          precoOriginal: parseFloat(p.precoOriginal || '0') || undefined,
+          desconto: p.desconto || undefined,
+          parcelas: p.parcelas || undefined,
+          valorParcela: p.valorParcela || undefined,
+          link: p.link || '',
+          imagem: p.imagem || p.thumbnail || p.imageUrl || '',
+          loja: p.loja || p.storeName || p.nomeLoja || '',
+        })),
+      }),
+    });
+
+    setEnviado(true);
+  }
+
+  const total = carrinho.reduce((s, p) => s + (parseFloat(p.preco || p.price || '0') || 0), 0);
+
+  // Tipos que têm produtos
+  const tiposComProdutos = TIPOS.filter(t => dados[t]?.length > 0);
+
+  return (
+    <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: COR_LIGHT }}>
+      {/* Header */}
+      <div style={{ backgroundImage: 'url(/universo/beleza.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', color: '#fff', padding: '2rem 1rem 1.5rem', textAlign: 'center', position: 'relative' }}>
+        <div style={{ fontSize: '2rem' }}>💄</div>
+<div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to right, rgba(157,23,77,0.5), rgba(219,39,119,0.85))` }} />
+<div style={{ position: 'relative', zIndex: 1 }}>
+        <h1 style={{ margin: '0.5rem 0 0.25rem', fontSize: '1.8rem', fontWeight: 700 }}>Beleza & Cuidados</h1>
+        <p style={{ margin: 0, opacity: 0.85, fontSize: '1rem' }}>
+          Perfumes, skincare, maquiagem e mais — monte sua lista e receba os links</p>
+<p style={{ margin: 0, opacity: 0.65, fontSize: '0.65rem' }}>
+        Atenção: os preços, descontos, frete, disponibilidade e demais condições apresentados são apenas referenciais.<br />
+Valem as condições exibidas no momento da compra, diretamente na loja e no carrinho do site. Lojas com a indicação 💵 Preço convertido de USD estão localizadas em outro país, e as compras podem estar sujeitas a tributação de importação, que nem sempre aparece no carrinho e pode ser cobrada na entrega.
+        </p>
+
+      </div>      </div>
+
+
+      {/* Abas */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', padding: '1rem', flexWrap: 'wrap', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+        {tiposComProdutos.map(t => (
+          <button
+            key={t}
+            onClick={() => setTipoAtivo(t)}
+            style={{
+              padding: '0.5rem 1.25rem',
+              borderRadius: '2rem',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: tipoAtivo === t ? 700 : 400,
+              background: tipoAtivo === t ? COR : '#f3f4f6',
+              color: tipoAtivo === t ? '#fff' : '#374151',
+              fontSize: '0.95rem',
+              transition: 'all 0.2s',
+            }}
+          >
+            {t} ({dados[t]?.length || 0})
+          </button>
+        ))}
+      </div>
+
+      {/* Produtos */}
+      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '1.5rem 1rem' }}>
+        {loading ? (
+          <p style={{ textAlign: 'center', color: '#9ca3af' }}>Carregando...</p>
+        ) : produtos.length === 0 ? (
+          <p style={{ textAlign: 'center', color: '#9ca3af' }}>Nenhum produto nesta categoria ainda.</p>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+            {produtos.map((p: any) => {
+              const nome = p.nome || p.name || '';
+              const preco = p.preco || p.price || '';
+              const img = p.imagem || p.thumbnail || p.imageUrl || '';
+              const loja = p.loja || p.storeName || p.nomeLoja || '';
+              const selected = noCarrinho(p);
+              return (
+                <div
+                  key={p.id}
+                  onClick={() => toggleCarrinho(p)}
+                  style={{
+                    background: '#fff',
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    border: selected ? `2px solid ${COR}` : '2px solid transparent',
+                    boxShadow: selected ? `0 0 0 3px ${COR_BADGE}` : '0 1px 4px rgba(0,0,0,0.08)',
+                    transition: 'all 0.2s',
+                    position: 'relative',
+                  }}
+                >
+                  {selected && (
+                    <div style={{
+                      position: 'absolute', top: 8, right: 8,
+                      background: COR, color: '#fff',
+                      borderRadius: '50%', width: 24, height: 24,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '0.8rem', fontWeight: 700,
+                    }}>✓</div>
+                  )}
+                  {img && (
+                    <img src={img} alt={nome} style={{ width: '100%', height: '160px', objectFit: 'cover' }} />
+                  )}
+                  <div style={{ padding: '0.75rem' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '0.25rem' }}>{loja}</div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#1f2937', lineHeight: 1.3, marginBottom: '0.4rem' }}>
+                      {nome.length > 60 ? nome.slice(0, 57) + '...' : nome}
+                    </div>
+                    {(p.moedaUSD || (p as any).moedaOriginal === 'USD') && (
+                      <div style={{ fontSize: '0.68rem', color: '#92400e', background: '#fef3c7', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', marginBottom: '0.25rem', fontWeight: 600 }}>
+                        💵 Preço convertido de USD
+                      </div>
+                    )}
+                                       {preco && (
+                      <div style={{ fontSize: '0.95rem', fontWeight: 700, color: COR }}>
+                        R$ {parseFloat(preco).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+                      <a href={p.link} target="_blank" rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        style={{ flex: 1, textAlign: 'center', padding: '7px', backgroundColor: '#2563eb', color: '#fff', borderRadius: '8px', textDecoration: 'none', fontSize: '0.78rem', fontWeight: 700 }}>
+                        Ver oferta
+                      </a>
+                      <button onClick={e => { e.stopPropagation(); toggleCarrinho(p); }}
+                        style={{ flex: 1, padding: '7px', backgroundColor: selected ? COR : '#f3f4f6', color: selected ? '#fff' : '#374151', border: 'none', borderRadius: '8px', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer' }}>
+                        {selected ? '✓ Na lista' : '+ Lista'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Carrinho flutuante */}
+      {carrinho.length > 0 && (
+        <div style={{
+          position: 'fixed', bottom: '1.5rem', right: '1.5rem',
+          background: COR, color: '#fff',
+          borderRadius: '16px', padding: '1rem 1.25rem',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+          minWidth: '220px', zIndex: 100,
+        }}>
+          <div style={{ fontWeight: 700, marginBottom: '0.5rem' }}>
+            💄 {carrinho.length} {carrinho.length === 1 ? 'item' : 'itens'}
+          </div>
+          {total > 0 && (
+            <div style={{ fontSize: '0.85rem', marginBottom: '0.75rem', opacity: 0.9 }}>
+              Total aprox: R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+          )}
+          <button
+            onClick={() => setShowModal(true)}
+            style={{
+              width: '100%', padding: '0.5rem',
+              background: '#fff', color: COR,
+              border: 'none', borderRadius: '8px',
+              fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem',
+            }}
+          >
+            Receber links por e-mail
+          </button>
+        </div>
+      )}
+
+      {/* Modal email */}
+      {showModal && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200,
+        }}>
+          <div style={{
+            background: '#fff', borderRadius: '16px', padding: '2rem',
+            width: '90%', maxWidth: '400px', textAlign: 'center',
+          }}>
+            {!enviado ? (
+              <>
+                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💄</div>
+                <h2 style={{ margin: '0 0 0.5rem', color: '#1f2937' }}>Receber minha lista</h2>
+                <p style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '1rem' }}>
+                  {carrinho.length} {carrinho.length === 1 ? 'item selecionado' : 'itens selecionados'}
+                </p>
+                <input
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  style={{
+                    width: '100%', padding: '0.75rem', borderRadius: '8px',
+                    border: '1px solid #d1d5db', fontSize: '1rem',
+                    boxSizing: 'border-box', marginBottom: '0.75rem',
+                  }}
+                />
+                <button
+                  onClick={enviarLista}
+                  style={{
+                    width: '100%', padding: '0.75rem',
+                    background: COR, color: '#fff',
+                    border: 'none', borderRadius: '8px',
+                    fontWeight: 700, cursor: 'pointer', fontSize: '1rem',
+                    marginBottom: '0.5rem',
+                  }}
+                >
+                  Enviar links
+                </button>
+                <button
+                  onClick={() => setShowModal(false)}
+                  style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer' }}
+                >
+                  Cancelar
+                </button>
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>✅</div>
+                <h2 style={{ color: '#1f2937' }}>Enviado!</h2>
+                <p style={{ color: '#6b7280' }}>Verifique sua caixa de entrada.</p>
+                <button
+                  onClick={() => { setShowModal(false); setEnviado(false); setCarrinho([]); }}
+                  style={{
+                    padding: '0.75rem 2rem', background: COR, color: '#fff',
+                    border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer',
+                  }}
+                >
+                  Fechar
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+===== mercado ===== 
+'use client';
+
+import { useEffect, useState } from 'react';
+
+const TIPOS = ['Bebidas', 'Alimentos', 'Café', 'Snacks', 'Hortifruti', 'Limpeza', 'Pet'];
+
+const COR = '#059669';
+const COR_LIGHT = '#ecfdf5';
+const COR_BADGE = '#a7f3d0';
+
+export default function MercadoPage() {
+  const [dados, setDados] = useState<Record<string, any[]>>({});
+  const [tipoAtivo, setTipoAtivo] = useState('');
+  const [carrinho, setCarrinho] = useState<any[]>([]);
+  const [email, setEmail] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [enviado, setEnviado] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/mercado')
+      .then(r => r.json())
+      .then(d => {
+        setDados(d);
+        const primeiro = TIPOS.find(t => d[t]?.length > 0);
+        if (primeiro) setTipoAtivo(primeiro);
+        setLoading(false);
+      });
+  }, []);
+
+  const produtos = dados[tipoAtivo] || [];
+  const tiposComProdutos = TIPOS.filter(t => dados[t]?.length > 0);
+
+  function toggleCarrinho(p: any) {
+    setCarrinho(prev =>
+      prev.find(x => x.id === p.id) ? prev.filter(x => x.id !== p.id) : [...prev, p]
+    );
+  }
+
+  function noCarrinho(p: any) {
+    return carrinho.some(x => x.id === p.id);
+  }
+
+  async function enviarLista() {
+    if (!email || carrinho.length === 0) return;
+    await fetch('/api/ambientes/enviar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        produtos: carrinho.map(p => ({
+          nome: p.nome || '',
+          preco: p.preco || 0,
+          link: p.link || '',
+          imagem: p.imagem || '',
+          loja: p.loja || '',
+        })),
+      }),
+    });
+    setEnviado(true);
+  }
+
+  const total = carrinho.reduce((s, p) => s + (parseFloat(p.preco || '0') || 0), 0);
+
+  return (
+    <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: COR_LIGHT }}>
+
+      {/* Banner */}
+      <div style={{ backgroundImage: 'url(/universo/mercado.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', color: '#fff', padding: '48px 24px', textAlign: 'center', position: 'relative' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(5,150,105,0.5), rgba(4,120,87,0.85))' }} />
+        <div style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ fontSize: '2rem' }}>🛒</div>
+        <h1 style={{ margin: '0.5rem 0 0.25rem', fontSize: '1.8rem', fontWeight: 700 }}>Mercado</h1>
+        <p style={{ margin: '0 0 10px', opacity: 0.9, fontSize: '1rem' }}>
+          Bebidas, alimentos e produtos do dia a dia com as melhores ofertas
+        </p>
+        <p style={{ margin: 0, opacity: 0.65, fontSize: '0.72rem', maxWidth: '520px', marginInline: 'auto' }}>
+          Atenção: os preços, descontos, frete, disponibilidade e demais condições apresentados são apenas referenciais.<br />
+Valem as condições exibidas no momento da compra, diretamente na loja e no carrinho do site. Lojas com a indicação 💵 Preço convertido de USD estão localizadas em outro país, e as compras podem estar sujeitas a tributação de importação, que nem sempre aparece no carrinho e pode ser cobrada na entrega.
+
+        </p>
+      </div>      </div>
+
+
+      {/* Abas */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', padding: '1rem', flexWrap: 'wrap', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+        {tiposComProdutos.map(t => (
+          <button key={t} onClick={() => setTipoAtivo(t)}
+            style={{ padding: '0.5rem 1.25rem', borderRadius: '2rem', border: 'none', cursor: 'pointer', fontWeight: tipoAtivo === t ? 700 : 400, background: tipoAtivo === t ? COR : '#f3f4f6', color: tipoAtivo === t ? '#fff' : '#374151', fontSize: '0.95rem', transition: 'all 0.2s' }}>
+            {t} {dados[t] ? `(${dados[t].length})` : ''}
+          </button>
+        ))}
+      </div>
+
+      {/* Produtos */}
+      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '1.5rem 1rem' }}>
+        {loading ? (
+          <p style={{ textAlign: 'center', color: '#9ca3af' }}>Carregando...</p>
+        ) : tiposComProdutos.length === 0 ? (
+          <p style={{ textAlign: 'center', color: '#9ca3af' }}>Nenhum produto cadastrado ainda.</p>
+        ) : produtos.length === 0 ? (
+          <p style={{ textAlign: 'center', color: '#9ca3af' }}>Nenhum produto nesta categoria.</p>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+            {produtos.map((p: any) => {
+              const nome = p.nome || '';
+              const preco = p.preco || '';
+              const img = p.imagem || p.thumbnail || '';
+              const loja = p.loja || '';
+              const selected = noCarrinho(p);
+              return (
+                <div key={p.id} onClick={() => toggleCarrinho(p)}
+                  style={{ background: '#fff', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer', border: selected ? `2px solid ${COR}` : '2px solid transparent', boxShadow: selected ? `0 0 0 3px ${COR_BADGE}` : '0 1px 4px rgba(0,0,0,0.08)', transition: 'all 0.2s', position: 'relative' }}>
+                  {selected && (
+                    <div style={{ position: 'absolute', top: 8, right: 8, background: COR, color: '#fff', borderRadius: '50%', width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 700 }}>✓</div>
+                  )}
+                  {img && <img src={img} alt={nome} style={{ width: '100%', height: '160px', objectFit: 'cover' }} />}
+                  <div style={{ padding: '0.75rem' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '0.25rem' }}>{loja}</div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#1f2937', lineHeight: 1.3, marginBottom: '0.4rem' }}>
+                      {nome.length > 60 ? nome.slice(0, 57) + '...' : nome}
+                    </div>
+                    {(p.moedaUSD || (p as any).moedaOriginal === 'USD') && (
+                      <div style={{ fontSize: '0.68rem', color: '#92400e', background: '#fef3c7', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', marginBottom: '0.25rem', fontWeight: 600 }}>
+                        💵 Preço convertido de USD
+                      </div>
+                    )}
+                    {preco && (
+                      <div style={{ fontSize: '0.95rem', fontWeight: 700, color: COR }}>
+                        R$ {parseFloat(preco).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+                      <a href={p.link} target="_blank" rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        style={{ flex: 1, textAlign: 'center', padding: '7px', backgroundColor: '#2563eb', color: '#fff', borderRadius: '8px', textDecoration: 'none', fontSize: '0.78rem', fontWeight: 700 }}>
+                        Ver oferta
+                      </a>
+                      <button onClick={e => { e.stopPropagation(); toggleCarrinho(p); }}
+                        style={{ flex: 1, padding: '7px', backgroundColor: selected ? COR : '#f3f4f6', color: selected ? '#fff' : '#374151', border: 'none', borderRadius: '8px', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer' }}>
+                        {selected ? '✓ Na lista' : '+ Lista'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Carrinho flutuante */}
+      {carrinho.length > 0 && (
+        <div style={{ position: 'fixed', bottom: '1.5rem', right: '1.5rem', background: COR, color: '#fff', borderRadius: '16px', padding: '1rem 1.25rem', boxShadow: '0 4px 20px rgba(0,0,0,0.2)', minWidth: '220px', zIndex: 100 }}>
+          <div style={{ fontWeight: 700, marginBottom: '0.5rem' }}>
+            🛒 {carrinho.length} {carrinho.length === 1 ? 'item' : 'itens'}
+          </div>
+          {total > 0 && (
+            <div style={{ fontSize: '0.85rem', marginBottom: '0.75rem', opacity: 0.9 }}>
+              Total aprox: R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+          )}
+          <button onClick={() => setShowModal(true)}
+            style={{ width: '100%', padding: '0.5rem', background: '#fff', color: COR, border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}>
+            Receber links por e-mail
+          </button>
+        </div>
+      )}
+
+      {/* Modal email */}
+      {showModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
+          <div style={{ background: '#fff', borderRadius: '16px', padding: '2rem', width: '90%', maxWidth: '400px', textAlign: 'center' }}>
+            {!enviado ? (
+              <>
+                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🛒</div>
+                <h2 style={{ margin: '0 0 0.5rem', color: '#1f2937' }}>Receber minha lista</h2>
+                <p style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '1rem' }}>
+                  {carrinho.length} {carrinho.length === 1 ? 'item selecionado' : 'itens selecionados'}
+                </p>
+                <input type="email" placeholder="seu@email.com" value={email} onChange={e => setEmail(e.target.value)}
+                  style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '1rem', boxSizing: 'border-box', marginBottom: '0.75rem' }} />
+                <button onClick={enviarLista}
+                  style={{ width: '100%', padding: '0.75rem', background: COR, color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '1rem', marginBottom: '0.5rem' }}>
+                  Enviar links
+                </button>
+                <button onClick={() => setShowModal(false)}
+                  style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer' }}>
+                  Cancelar
+                </button>
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>✅</div>
+                <h2 style={{ color: '#1f2937' }}>Enviado!</h2>
+                <p style={{ color: '#6b7280' }}>Verifique sua caixa de entrada.</p>
+                <button onClick={() => { setShowModal(false); setEnviado(false); setCarrinho([]); }}
+                  style={{ padding: '0.75rem 2rem', background: COR, color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}>
+                  Fechar
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}===== monte-seu-ambiente ===== 
+'use client';
+
+import { useState, useEffect } from 'react';
+
+const AMBIENTES = ['Sala', 'Quarto', 'Escritório', 'Cozinha', 'Banheiro', 'Área externa'];
+const TIPOS_AMBIENTE = ['Iluminação', 'Climatização', 'Móveis', 'Decoração', 'Organização', 'Eletrônicos'];
+
+const AMBIENTE_EMOJI: Record<string, string> = {
+  'Sala': '🛋',
+  'Quarto': '🛏',
+  'Escritório': '💻',
+  'Cozinha': '🍳',
+  'Banheiro': '🚿',
+  'Área externa': '🌿',
+};
+
+const TIPO_EMOJI: Record<string, string> = {
+  'Iluminação': '💡',
+  'Climatização': '❄️',
+  'Móveis': '🪑',
+  'Decoração': '🎨',
+  'Organização': '📦',
+  'Eletrônicos': '🔌',
+};
+
+interface Produto {
+  id: string;
+  nome: string;
+  imagem: string;
+  link: string;
+  preco: number;
+  precoOriginal: number;
+  desconto: number;
+  parcelas?: string;
+  valorParcela?: string;
+  loja?: string;
+  ambiente?: string;
+  tipoAmbiente?: string;
+}
+
+export default function MonteSeuAmbientePage() {
+  const [mapa, setMapa] = useState<Record<string, Record<string, Produto[]>>>({});
+  const [loading, setLoading] = useState(true);
+  const [ambienteSel, setAmbienteSel] = useState('');
+  const [tipoSel, setTipoSel] = useState('');
+  const [carrinho, setCarrinho] = useState<Produto[]>([]);
+  const [modalEmail, setModalEmail] = useState(false);
+  const [email, setEmail] = useState('');
+  const [emailsExtra, setEmailsExtra] = useState('');
+  const [enviando, setEnviando] = useState(false);
+  const [enviado, setEnviado] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/ambientes')
+      .then(r => r.json())
+      .then(d => { setMapa(d); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const ambientesDisponiveis = AMBIENTES.filter(a => mapa[a]);
+  const tiposDisponiveis = ambienteSel
+    ? TIPOS_AMBIENTE.filter(t => mapa[ambienteSel]?.[t]?.length > 0)
+    : [];
+
+  const produtosVisiveis: Produto[] = (() => {
+    if (!ambienteSel) return [];
+    if (tipoSel) return mapa[ambienteSel]?.[tipoSel] || [];
+    // todos os tipos do ambiente selecionado
+    return Object.values(mapa[ambienteSel] || {}).flat();
+  })();
+
+  function toggleCarrinho(p: Produto) {
+    setCarrinho(prev =>
+      prev.find(x => x.id === p.id)
+        ? prev.filter(x => x.id !== p.id)
+        : [...prev, p]
+    );
+  }
+
+  const noCarrinho = (id: string) => carrinho.some(x => x.id === id);
+
+    async function handleEnviar() {
+    if (!email.trim()) return;
+    setEnviando(true);
+    try {
+      const ambientesInteresse = [...new Set(carrinho.map(p => p.ambiente).filter(Boolean))];
+      await fetch('/api/ambientes/lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, ambientes: ambientesInteresse }),
+      });
+
+      const res = await fetch('/api/ambientes/enviar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, emailsExtra, produtos: carrinho }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        alert('Erro ao enviar: ' + (err.error || res.status));
+        return;
+      }
+
+      setEnviado(true);
+    } catch (e) {
+      alert('Erro inesperado: ' + String(e));
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  return (
+    <main style={{ fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+    <div style={{ maxWidth: '1060px', margin: '0 auto' }}>
+
+      {/* Hero */}
+      <div style={{ backgroundImage: 'url(/universo/ambiente.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', color: '#fff', padding: '48px 24px', textAlign: 'center', position: 'relative' }}>
+<div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(124,58,237,0.5), rgba(37,99,235,0.85))' }} />
+<div style={{ position: 'relative', zIndex: 1 }}>
+        <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: '0 0 12px', letterSpacing: '-0.5px' }}>
+          🏠 Monte seu Ambiente
+        </h1>
+        <p style={{ fontSize: '1.05rem', margin: 0, opacity: 0.9, maxWidth: '520px', marginInline: 'auto', lineHeight: 1.5 }}>
+          Escolha o ambiente, descubra produtos selecionados e monte sua lista de compras com links de oferta.</p>
+<p style={{ margin: 0, opacity: 0.65, fontSize: '0.65rem' }}>
+         Atenção: os preços, descontos, frete, disponibilidade e demais condições apresentados são apenas referenciais.<br />
+Valem as condições exibidas no momento da compra, diretamente na loja e no carrinho do site. Lojas com a indicação 💵 Preço convertido de USD estão localizadas em outro país, e as compras podem estar sujeitas a tributação de importação, que nem sempre aparece no carrinho e pode ser cobrada na entrega.
+        </p>
+      </div>
+</div></div>
+
+      <div style={{ maxWidth: '1060px', margin: '0 auto', padding: '32px 20px' }}>
+
+        {loading && (
+          <div style={{ textAlign: 'center', padding: '60px', color: '#9ca3af' }}>⏳ Carregando ambientes...</div>
+        )}
+
+        {!loading && ambientesDisponiveis.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '60px', color: '#9ca3af' }}>
+            Nenhum produto categorizado ainda.
+          </div>
+        )}
+
+        {!loading && ambientesDisponiveis.length > 0 && (
+          <>
+            {/* Seleção de ambiente */}
+            <div style={{ marginBottom: '28px' }}>
+              <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#374151', margin: '0 0 14px' }}>
+                1. Qual ambiente você quer montar?
+              </h2>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                {ambientesDisponiveis.map(a => {
+                  const total = Object.values(mapa[a] || {}).flat().length;
+                  const ativo = ambienteSel === a;
+                  return (
+                    <button key={a} onClick={() => { setAmbienteSel(a); setTipoSel(''); }}
+                      style={{
+                        padding: '12px 20px', borderRadius: '12px', border: `2px solid ${ativo ? '#7c3aed' : '#e5e7eb'}`,
+                        backgroundColor: ativo ? '#7c3aed' : '#fff', color: ativo ? '#fff' : '#374151',
+                        fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer',
+                        boxShadow: ativo ? '0 4px 12px rgba(124,58,237,0.25)' : '0 1px 3px rgba(0,0,0,0.06)',
+                        transition: 'all 0.15s',
+                      }}>
+                      {AMBIENTE_EMOJI[a] || '🏠'} {a}
+                      <span style={{ marginLeft: '6px', fontSize: '0.75rem', opacity: 0.75 }}>({total})</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Seleção de tipo */}
+            {ambienteSel && tiposDisponiveis.length > 1 && (
+              <div style={{ marginBottom: '28px' }}>
+                <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#374151', margin: '0 0 14px' }}>
+                  2. Filtrar por categoria <span style={{ fontWeight: 400, color: '#9ca3af' }}>(opcional)</span>
+                </h2>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <button onClick={() => setTipoSel('')}
+                    style={{ padding: '7px 16px', borderRadius: '999px', border: `2px solid ${tipoSel === '' ? '#2563eb' : '#e5e7eb'}`, backgroundColor: tipoSel === '' ? '#2563eb' : '#fff', color: tipoSel === '' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}>
+                    Todos
+                  </button>
+                  {tiposDisponiveis.map(t => (
+                    <button key={t} onClick={() => setTipoSel(t)}
+                      style={{ padding: '7px 16px', borderRadius: '999px', border: `2px solid ${tipoSel === t ? '#2563eb' : '#e5e7eb'}`, backgroundColor: tipoSel === t ? '#2563eb' : '#fff', color: tipoSel === t ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}>
+                      {TIPO_EMOJI[t] || ''} {t} ({mapa[ambienteSel]?.[t]?.length || 0})
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Produtos */}
+            {ambienteSel && produtosVisiveis.length > 0 && (
+              <div style={{ marginBottom: '32px' }}>
+                <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#374151', margin: '0 0 14px' }}>
+                  {tipoSel ? `${TIPO_EMOJI[tipoSel] || ''} ${tipoSel} — ${ambienteSel}` : `🏠 ${ambienteSel} — todos os produtos`}
+                </h2>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: '16px' }}>
+                  {produtosVisiveis.map(p => {
+                    const sel = noCarrinho(p.id);
+                    return (
+                      <div key={p.id} style={{
+                        backgroundColor: '#fff', borderRadius: '12px',
+                        border: `2px solid ${sel ? '#7c3aed' : '#e5e7eb'}`,
+                        boxShadow: sel ? '0 0 0 3px rgba(124,58,237,0.15)' : '0 2px 6px rgba(0,0,0,0.04)',
+                        overflow: 'hidden', display: 'flex', flexDirection: 'column', transition: 'all 0.15s',
+                      }}>
+                        <div style={{ height: '150px', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', position: 'relative' }}>
+                          {p.imagem && <img src={p.imagem} alt={p.nome} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />}
+                          {p.desconto > 0 && (
+                            <span style={{ position: 'absolute', top: '8px', left: '8px', backgroundColor: '#dc2626', color: '#fff', fontSize: '0.68rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px' }}>
+                              -{p.desconto}%
+                            </span>
+                          )}
+                          {p.tipoAmbiente && (
+                            <span style={{ position: 'absolute', top: '8px', right: '8px', backgroundColor: '#f3f4f6', color: '#6b7280', fontSize: '0.65rem', fontWeight: 600, padding: '2px 6px', borderRadius: '4px' }}>
+                              {TIPO_EMOJI[p.tipoAmbiente] || ''} {p.tipoAmbiente}
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', flexGrow: 1, gap: '6px' }}>
+                          <h3 style={{ fontSize: '0.8rem', fontWeight: 600, color: '#111827', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                            {p.nome}
+                          </h3>
+                           {p.loja && (
+                            <div style={{ fontSize: '0.68rem', color: '#047857', fontWeight: 600 }}>🏪 {p.loja}</div>
+                          )}
+                          {((p as any).moedaUSD || (p as any).moedaOriginal === 'USD') && (
+                            <div style={{ fontSize: '0.68rem', color: '#92400e', background: '#fef3c7', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', marginBottom: '0.25rem', fontWeight: 600 }}>
+                              💵 Preço convertido de USD
+                            </div>
+                          )}
+                          <div style={{ marginTop: 'auto' }}>
+                            {p.precoOriginal > p.preco && (
+                              <div style={{ fontSize: '0.7rem', color: '#9ca3af', textDecoration: 'line-through' }}>
+                                R$ {p.precoOriginal.toFixed(2).replace('.', ',')}
+                              </div>
+                            )}
+                            <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#dc2626' }}>
+                              R$ {p.preco.toFixed(2).replace('.', ',')}
+                            </div>
+                            {p.parcelas && p.valorParcela && (
+                              <div style={{ fontSize: '0.7rem', color: '#047857', fontWeight: 600 }}>
+                                {p.parcelas}x de R$ {parseFloat(p.valorParcela).toFixed(2).replace('.', ',')}
+                              </div>
+                            )}
+                          </div>
+                          <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
+                            <a href={p.link} target="_blank" rel="noopener noreferrer"
+                              style={{ flex: 1, padding: '6px', borderRadius: '6px', border: '1px solid #e5e7eb', backgroundColor: '#f9fafb', color: '#374151', fontWeight: 600, fontSize: '0.75rem', textAlign: 'center', textDecoration: 'none' }}>
+                              🔗 Ver
+                            </a>
+                            <button onClick={() => toggleCarrinho(p)}
+                              style={{ flex: 2, padding: '6px', borderRadius: '6px', border: 'none', backgroundColor: sel ? '#7c3aed' : '#2563eb', color: '#fff', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer' }}>
+                              {sel ? '✅ Na lista' : '+ Adicionar'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Carrinho / lista montada */}
+            {carrinho.length > 0 && (
+              <div style={{ backgroundColor: '#fff', borderRadius: '16px', border: '2px solid #7c3aed', padding: '24px', marginBottom: '32px', boxShadow: '0 4px 20px rgba(124,58,237,0.1)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+                  <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#7c3aed', margin: 0 }}>
+                    🛒 Sua lista ({carrinho.length} produto{carrinho.length > 1 ? 's' : ''})
+                  </h2>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={() => setCarrinho([])}
+                      style={{ padding: '6px 14px', borderRadius: '8px', border: '1px solid #fca5a5', backgroundColor: '#fff', color: '#dc2626', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer' }}>
+                      Limpar lista
+                    </button>
+                    <button onClick={() => setModalEmail(true)}
+                      style={{ padding: '8px 18px', borderRadius: '8px', border: 'none', backgroundColor: '#7c3aed', color: '#fff', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}>
+                      📧 Enviar para meu e-mail
+                    </button>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {carrinho.map(p => (
+                    <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px', borderRadius: '8px', backgroundColor: '#faf5ff', border: '1px solid #ede9fe' }}>
+                      {p.imagem && <img src={p.imagem} alt={p.nome} style={{ width: '48px', height: '48px', objectFit: 'contain', borderRadius: '6px', backgroundColor: '#fff' }} />}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.nome}</div>
+                        <div style={{ fontSize: '0.75rem', color: '#dc2626', fontWeight: 700 }}>R$ {p.preco.toFixed(2).replace('.', ',')}</div>
+                        {p.ambiente && <div style={{ fontSize: '0.68rem', color: '#7c3aed', fontWeight: 600 }}>{AMBIENTE_EMOJI[p.ambiente] || '🏠'} {p.ambiente}{p.tipoAmbiente ? ` · ${p.tipoAmbiente}` : ''}</div>}
+                      </div>
+                      <a href={p.link} target="_blank" rel="noopener noreferrer"
+                        style={{ padding: '5px 10px', borderRadius: '6px', border: '1px solid #ddd6fe', backgroundColor: '#fff', color: '#7c3aed', fontWeight: 600, fontSize: '0.75rem', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                        Ver oferta
+                      </a>
+                      <button onClick={() => toggleCarrinho(p)}
+                        style={{ padding: '4px 8px', borderRadius: '6px', border: 'none', backgroundColor: '#fecaca', color: '#dc2626', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop: '16px', padding: '12px', backgroundColor: '#f5f3ff', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.88rem', color: '#6b7280' }}>Total estimado:</span>
+                  <span style={{ fontSize: '1.2rem', fontWeight: 900, color: '#7c3aed' }}>
+                    R$ {carrinho.reduce((s, p) => s + p.preco, 0).toFixed(2).replace('.', ',')}
+                  </span>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Modal e-mail */}
+      {modalEmail && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
+          <div style={{ backgroundColor: '#fff', borderRadius: '16px', padding: '28px', maxWidth: '420px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
+            {!enviado ? (
+              <>
+                <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#111827', margin: '0 0 6px' }}>📧 Enviar minha lista</h2>
+                <p style={{ fontSize: '0.82rem', color: '#6b7280', margin: '0 0 20px', lineHeight: 1.5 }}>
+                  Enviaremos sua lista com os links de oferta direto para o seu e-mail. Ao enviar, você concorda em receber novidades sobre produtos para o seu ambiente.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+                  <div>
+                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#374151', display: 'block', marginBottom: '4px' }}>Seu e-mail *</label>
+                    <input value={email} onChange={e => setEmail(e.target.value)} placeholder="voce@email.com" type="email"
+                      style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#374151', display: 'block', marginBottom: '4px' }}>
+                      Compartilhar com <span style={{ fontWeight: 400, color: '#9ca3af' }}>(opcional — outros e-mails separados por vírgula)</span>
+                    </label>
+                    <input value={emailsExtra} onChange={e => setEmailsExtra(e.target.value)} placeholder="amigo@email.com, parceiro@email.com"
+                      style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }} />
+                  </div>
+                </div>
+                  <p style={{ fontSize: '0.7rem', color: '#9ca3af', margin: '0 0 16px', lineHeight: 1.4 }}>
+                  Ao confirmar, você receberá a lista com os links de oferta e concorda em receber novidades sobre produtos para o seu ambiente.
+                </p>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button onClick={() => setModalEmail(false)}
+                    style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, cursor: 'pointer' }}>
+                    Cancelar
+                  </button>
+                  <button onClick={handleEnviar} disabled={!email.trim() || enviando}
+                    style={{ flex: 2, padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: '#7c3aed', color: '#fff', fontWeight: 700, cursor: 'pointer', opacity: !email.trim() ? 0.6 : 1 }}>
+                    {enviando ? '⏳ Salvando...' : '📧 Confirmar'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                <div style={{ fontSize: '3rem', marginBottom: '12px' }}>✅</div>
+                <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#111827', margin: '0 0 8px' }}>Interesse registrado!</h2>
+                  <p style={{ fontSize: '0.85rem', color: '#6b7280', margin: '0 0 20px', lineHeight: 1.5 }}>
+                  Sua lista foi enviada! Verifique sua caixa de entrada com os links de oferta.
+                </p>
+                <button onClick={() => { setModalEmail(false); setEnviado(false); }}
+                  style={{ padding: '10px 24px', borderRadius: '8px', border: 'none', backgroundColor: '#7c3aed', color: '#fff', fontWeight: 700, cursor: 'pointer' }}>
+                  Fechar
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+    </main>
+  );
+}
+===== monte-seu-momento ===== 
+'use client';
+
+import { useState, useEffect } from 'react';
+
+const MOMENTOS = ['Café da manhã', 'Vinho', 'Churrasco', 'Lareira', 'Domingo relaxado', 'Festa em casa'];
+const TIPOS_MOMENTO = ['Eletro', 'Móveis', 'Acessórios', 'Alimentos', 'Bebidas', 'Vinhos'];
+
+
+
+const MOMENTO_EMOJI: Record<string, string> = {
+  'Café da manhã': '☕', 'Vinho': '🍷', 'Churrasco': '🥩',
+  'Lareira': '🔥', 'Domingo relaxado': '🌅', 'Festa em casa': '🎉',
+};
+
+const TIPO_EMOJI: Record<string, string> = {
+  'Eletro': '🔌', 'Móveis': '🪑', 'Acessórios': '✨', 'Alimentos': '🛒',
+  'Bebidas': '🍷', 'Vinhos': '🍾',
+};
+
+interface Produto {
+  nome: string;
+  preco: number;
+  precoOriginal?: number;
+  desconto?: number;
+  parcelas?: string;
+  valorParcela?: string;
+  link: string;
+  imagem?: string;
+  momento?: string;
+  tipoMomento?: string;
+  loja?: string;
+}
+
+export default function MonteSeuMomentoPage() {
+  const [mapa, setMapa] = useState<Record<string, Record<string, Produto[]>>>({});
+  const [momentoSel, setMomentoSel] = useState('');
+  const [tipoSel, setTipoSel] = useState('');
+  const [carrinho, setCarrinho] = useState<Produto[]>([]);
+  const [modalAberto, setModalAberto] = useState(false);
+  const [email, setEmail] = useState('');
+  const [emailsExtra, setEmailsExtra] = useState('');
+  const [enviando, setEnviando] = useState(false);
+  const [enviado, setEnviado] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/momentos')
+      .then(r => r.json())
+      .then(d => { setMapa(d || {}); setLoading(false); });
+  }, []);
+
+  const momentosDisponiveis = MOMENTOS.filter(m => mapa[m] && Object.keys(mapa[m]).length > 0);
+
+  const produtosFiltrados: Produto[] = momentoSel
+    ? Object.entries(mapa[momentoSel] || {})
+        .filter(([tipo]) => !tipoSel || tipo === tipoSel)
+        .flatMap(([, prods]) => prods)
+    : [];
+
+  const noCarrinho = (p: Produto) => carrinho.some(c => c.link === p.link);
+
+  const toggleCarrinho = (p: Produto) => {
+    setCarrinho(prev => noCarrinho(p) ? prev.filter(c => c.link !== p.link) : [...prev, p]);
+  };
+
+  const total = carrinho.reduce((s, p) => s + p.preco, 0);
+
+  const handleEnviar = async () => {
+    if (!email) return;
+    setEnviando(true);
+    try {
+      await fetch('/api/momentos/lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, momentos: [...new Set(carrinho.map(p => p.momento).filter(Boolean))] }),
+      });
+      const res = await fetch('/api/ambientes/enviar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, emailsExtra, produtos: carrinho }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        alert('Erro ao enviar: ' + (err.error || 'tente novamente'));
+        return;
+      }
+      setEnviado(true);
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  return (
+          <main style={{ fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+
+        {/* Banner */}
+        <div style={{ backgroundImage: 'url(/universo/momento.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', color: '#fff', padding: '48px 24px', textAlign: 'center', position: 'relative' }}>
+<div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(217,119,6,0.5), rgba(180,83,9,0.85))' }} />
+<div style={{ position: 'relative', zIndex: 1 }}>
+          <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: '0 0 12px', letterSpacing: '-0.5px' }}>
+            ✨ Monte seu Momento
+          </h1>
+          <p style={{ fontSize: '1.05rem', margin: '0 0 10px', opacity: 0.9, maxWidth: '520px', marginInline: 'auto', lineHeight: 1.5 }}>
+            Escolha o clima, monte sua lista e receba os links de oferta no e-mail
+          </p>
+          <p style={{ margin: 0, opacity: 0.7, fontSize: '0.72rem', maxWidth: '520px', marginInline: 'auto', lineHeight: 1.5 }}>
+            Atenção: os preços, descontos, frete, disponibilidade e demais condições apresentados são apenas referenciais.<br />
+Valem as condições exibidas no momento da compra, diretamente na loja e no carrinho do site. Lojas com a indicação 💵 Preço convertido de USD estão localizadas em outro país, e as compras podem estar sujeitas a tributação de importação, que nem sempre aparece no carrinho e pode ser cobrada na entrega.
+          </p>
+        </div></div>
+
+
+      <div style={{ maxWidth: '1060px', margin: '0 auto', padding: '32px 20px' }}>
+
+
+        {/* Seletor de momento */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center', marginBottom: '28px' }}>
+          {loading ? (
+            <span style={{ color: '#9ca3af' }}>⏳ Carregando momentos...</span>
+          ) : momentosDisponiveis.length === 0 ? (
+            <span style={{ color: '#9ca3af' }}>Nenhum momento disponível ainda.</span>
+          ) : MOMENTOS.map(m => {
+            const disponivel = momentosDisponiveis.includes(m);
+            const ativo = momentoSel === m;
+            return (
+              <button key={m} onClick={() => { if (disponivel) { setMomentoSel(ativo ? '' : m); setTipoSel(''); } }}
+                style={{
+                  padding: '12px 20px', borderRadius: '999px', border: '2px solid',
+                  borderColor: ativo ? '#d97706' : disponivel ? '#e5e7eb' : '#f3f4f6',
+                  backgroundColor: ativo ? '#d97706' : disponivel ? '#fff' : '#f9fafb',
+                  color: ativo ? '#fff' : disponivel ? '#374151' : '#d1d5db',
+                  fontWeight: 700, fontSize: '0.95rem', cursor: disponivel ? 'pointer' : 'default',
+                  boxShadow: ativo ? '0 2px 8px rgba(217,119,6,0.3)' : 'none',
+                  transition: 'all 0.15s',
+                }}>
+                {MOMENTO_EMOJI[m]} {m}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Filtro por tipo */}
+        {momentoSel && (
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '24px' }}>
+            <button onClick={() => setTipoSel('')}
+              style={{ padding: '6px 14px', borderRadius: '999px', border: `2px solid ${tipoSel === '' ? '#d97706' : '#e5e7eb'}`, backgroundColor: tipoSel === '' ? '#d97706' : '#fff', color: tipoSel === '' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer' }}>
+              Todos
+            </button>
+            {TIPOS_MOMENTO.filter(t => mapa[momentoSel]?.[t]?.length).map(t => (
+              <button key={t} onClick={() => setTipoSel(tipoSel === t ? '' : t)}
+                style={{ padding: '6px 14px', borderRadius: '999px', border: `2px solid ${tipoSel === t ? '#d97706' : '#e5e7eb'}`, backgroundColor: tipoSel === t ? '#d97706' : '#fff', color: tipoSel === t ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer' }}>
+                {TIPO_EMOJI[t]} {t}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Grid de produtos */}
+        {momentoSel && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+            {produtosFiltrados.map((p, i) => {
+              const adicionado = noCarrinho(p);
+              return (
+                <div key={i} style={{ backgroundColor: '#fff', borderRadius: '14px', border: `2px solid ${adicionado ? '#d97706' : '#e5e7eb'}`, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', transition: 'border-color 0.15s' }}>
+                  {p.imagem && (
+                    <div style={{ height: '160px', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px', position: 'relative' }}>
+                      <img src={p.imagem} alt={p.nome} style={{ maxHeight: '136px', maxWidth: '100%', objectFit: 'contain' }} />
+                      {!!p.desconto && p.desconto > 0 && (
+                        <span style={{ position: 'absolute', top: '8px', right: '8px', backgroundColor: '#dc2626', color: '#fff', fontSize: '0.7rem', fontWeight: 800, padding: '2px 7px', borderRadius: '999px' }}>
+                          -{p.desconto}%
+                        </span>
+                      )}
+                      {p.tipoMomento && (
+                        <span style={{ position: 'absolute', top: '8px', left: '8px', backgroundColor: '#fef3c7', color: '#92400e', fontSize: '0.68rem', fontWeight: 700, padding: '2px 7px', borderRadius: '999px' }}>
+                        {TIPO_EMOJI[p.tipoMomento] ?? ''} {p.tipoMomento}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  <div style={{ padding: '12px' }}>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#111827', marginBottom: '6px', lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {p.nome}
+                    </div>
+                     {p.loja && (
+                            <div style={{ fontSize: '0.68rem', color: '#047857', fontWeight: 600 }}>🏪 {p.loja}</div>
+                          )}
+                          {((p as any).moedaUSD || (p as any).moedaOriginal === 'USD') && (
+                            <div style={{ fontSize: '0.68rem', color: '#92400e', background: '#fef3c7', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', marginBottom: '0.25rem', fontWeight: 600 }}>
+                              💵 Preço convertido de USD
+                            </div>
+                          )}
+                                                   <div style={{ marginTop: 'auto' }}>
+                                {p.precoOriginal != null && p.precoOriginal > p.preco && (
+                              <div style={{ fontSize: '0.7rem', color: '#9ca3af', textDecoration: 'line-through' }}>
+                                R$ {(p.precoOriginal as number).toFixed(2).replace('.', ',')}
+                              </div>
+                            )}
+                            <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#dc2626' }}>
+                              R$ {p.preco.toFixed(2).replace('.', ',')}
+                            </div>
+                          </div>
+                    {p.parcelas && p.valorParcela && (
+                      <div style={{ fontSize: '0.72rem', color: '#047857', fontWeight: 600, marginBottom: '10px' }}>
+                        {p.parcelas}x de R$ {parseFloat(p.valorParcela).toFixed(2).replace('.', ',')}
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <a href={p.link} target="_blank" rel="noopener noreferrer"
+                        style={{ flex: 1, textAlign: 'center', padding: '7px', backgroundColor: '#2563eb', color: '#fff', borderRadius: '8px', textDecoration: 'none', fontSize: '0.78rem', fontWeight: 700 }}>
+                        Ver
+                      </a>
+                      <button onClick={() => toggleCarrinho(p)}
+                        style={{ flex: 1, padding: '7px', backgroundColor: adicionado ? '#d97706' : '#f3f4f6', color: adicionado ? '#fff' : '#374151', border: 'none', borderRadius: '8px', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer' }}>
+                        {adicionado ? '✓ Na lista' : '+ Lista'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Carrinho */}
+        {carrinho.length > 0 && (
+          <div style={{ backgroundColor: '#fff', borderRadius: '16px', border: '2px solid #d97706', padding: '20px', marginBottom: '24px', boxShadow: '0 4px 16px rgba(217,119,6,0.1)' }}>
+            <h2 style={{ fontSize: '1rem', fontWeight: 800, color: '#92400e', margin: '0 0 14px' }}>
+              ✨ Sua lista — {carrinho.length} produto{carrinho.length !== 1 ? 's' : ''}
+            </h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+              {carrinho.map((p, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #fef3c7' }}>
+                  <div>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#111827' }}>{p.nome}</div>
+                    {p.momento && <div style={{ fontSize: '0.72rem', color: '#d97706' }}>{MOMENTO_EMOJI[p.momento]} {p.momento}</div>}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#dc2626' }}>R$ {p.preco.toFixed(2).replace('.', ',')}</span>
+                    <button onClick={() => toggleCarrinho(p)}
+                      style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', fontSize: '1rem' }}>✕</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderTop: '2px solid #fef3c7', marginBottom: '14px' }}>
+              <span style={{ fontSize: '0.9rem', color: '#6b7280', fontWeight: 600 }}>Total estimado:</span>
+              <span style={{ fontSize: '1.4rem', fontWeight: 900, color: '#d97706' }}>R$ {total.toFixed(2).replace('.', ',')}</span>
+            </div>
+            <button onClick={() => setModalAberto(true)}
+              style={{ width: '100%', padding: '14px', backgroundColor: '#d97706', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '1rem', fontWeight: 800, cursor: 'pointer' }}>
+              📧 Enviar para meu e-mail
+            </button>
+          </div>
+        )}
+
+        {/* Modal de e-mail */}
+        {modalAberto && (
+          <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '20px' }}>
+            <div style={{ backgroundColor: '#fff', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '440px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+              {enviado ? (
+                <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                  <div style={{ fontSize: '3rem', marginBottom: '12px' }}>✅</div>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#111827', margin: '0 0 8px' }}>Lista enviada!</h3>
+                  <p style={{ color: '#6b7280', fontSize: '0.88rem', margin: '0 0 20px' }}>Verifique sua caixa de entrada com os links de oferta.</p>
+                  <button onClick={() => { setModalAberto(false); setEnviado(false); }}
+                    style={{ padding: '10px 24px', backgroundColor: '#d97706', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}>
+                    Fechar
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#111827', margin: '0 0 6px' }}>📧 Enviar sua lista</h3>
+                  <p style={{ color: '#6b7280', fontSize: '0.82rem', margin: '0 0 20px' }}>Você receberá os links de oferta diretamente no e-mail.</p>
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Seu e-mail *</label>
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="voce@email.com"
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid #e5e7eb', fontSize: '0.9rem', marginBottom: '14px', boxSizing: 'border-box' }} />
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Compartilhar com (opcional)</label>
+                  <input type="text" value={emailsExtra} onChange={e => setEmailsExtra(e.target.value)} placeholder="amigo@email.com, outro@email.com"
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid #e5e7eb', fontSize: '0.9rem', marginBottom: '20px', boxSizing: 'border-box' }} />
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button onClick={() => setModalAberto(false)}
+                      style={{ flex: 1, padding: '11px', backgroundColor: '#f3f4f6', color: '#374151', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}>
+                      Cancelar
+                    </button>
+                    <button onClick={handleEnviar} disabled={!email || enviando}
+                      style={{ flex: 2, padding: '11px', backgroundColor: email && !enviando ? '#d97706' : '#d1d5db', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 800, cursor: email && !enviando ? 'pointer' : 'default' }}>
+                      {enviando ? 'Enviando...' : 'Enviar lista →'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+      </div>
+    </main>
+  );
+}

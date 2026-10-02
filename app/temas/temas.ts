@@ -14,6 +14,7 @@ export type Tema = {
   deco: [string, string];
   data?: boolean;     // datas festivas: botão "♡ Pedir"
   filtro: 'tipo' | 'preco';
+  mascote?: string;   // imagem da mascote no banner grande (no lugar da lupa)
   leadTipo: string;   // identifica a origem da lista no e-mail
   faixas?: Faixa[];   // faixas de preço próprias (sem isso, usa FAIXAS_PRECO)
 };
@@ -81,6 +82,7 @@ export const TEMAS: Record<string, Tema> = {
     titulo: ['A festa da ', 'criançada', ' começa aqui'],
     sub: 'Brinquedos, roupas e calçados por faixa de preço. Toque em ♡ Pedir para montar a lista de desejos.',
     cta: '🎁 Ver presentes', emoji: '🎈', chapeu: '🎉', deco: ['🎉', '🪁'], data: true, filtro: 'preco', leadTipo: 'criancas',
+    mascote: '/mascote/lupa-deitada.webp',
   },
   natal: {
     cores: ['#FFF9F5', '#C62828', '#1F6F5C', '#F4A261', '#FDE3DA', '#2B1D1A'],
@@ -100,6 +102,6 @@ export const FAIXAS_PRECO: Faixa[] = [
 
 // Calendário das datas festivas: a faixa da home aparece entre "de" e "ate" (MM-DD, horário de Brasília).
 // Só coloque aqui datas que já têm página pronta.
-export const CALENDARIO: { tema: string; href: string; de: string; ate: string; chamada: string }[] = [
-  { tema: 'criancas', href: '/dia-das-criancas', de: '09-25', ate: '10-12', chamada: 'Presentes por faixa de preço. Monte a lista e receba os links.' },
+export const CALENDARIO: { tema: string; href: string; de: string; ate: string; chamada: string; mascote?: string }[] = [
+  { tema: 'criancas', href: '/dia-das-criancas', de: '09-25', ate: '10-12', chamada: 'Presentes por faixa de preço. Monte a lista e receba os links.', mascote: '/mascote/lupa-sentada.webp' },
 ];
