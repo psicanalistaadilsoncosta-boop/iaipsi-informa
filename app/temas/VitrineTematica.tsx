@@ -2,6 +2,10 @@
 // app/temas/VitrineTematica.tsx
 // Molde único das vitrines temáticas. O visual vem da ficha em temas.ts;
 // os produtos vêm da função "carregar" que cada página passa.
+//
+// Formatos aceitos em "carregar":
+//   1 nível  -> { tipo: produtos[] }                      (vista-se, beleza, mercado, filho, datas)
+//   2 níveis -> { ambiente: { tipo: produtos[] } }        (monte-seu-ambiente, monte-seu-momento) — use a prop "niveis"
 
 import { useEffect, useMemo, useState } from 'react';
 import { Baloo_2 } from 'next/font/google';
@@ -10,79 +14,121 @@ import { TEMAS, FAIXAS_PRECO } from './temas';
 
 const baloo = Baloo_2({ subsets: ['latin'], weight: ['700', '800'], display: 'swap' });
 
+type Niveis = {
+  ordem: string[];                  // ex: ['Sala','Quarto',...]
+  emoji?: Record<string, string>;   // emoji de cada ambiente/momento
+  ordemTipos?: string[];            // ex: ['Iluminação','Móveis',...]
+  emojiTipos?: Record<string, string>;
+  pergunta?: string;                // ex: 'Qual ambiente você quer montar?'
+};
+
 type Props = {
   temaId: keyof typeof TEMAS;
-  carregar: () => Promise<Record<string, any[]>>; // { tipo: produtos[] }
-  tiposOrdem?: string[];                           // ordem das abas no filtro por tipo
+  carregar: () => Promise<any>;
+  tiposOrdem?: string[];
+  niveis?: Niveis;
+  registrarLead?: (email: string, lista: any[]) => Promise<any>; // sem isso, usa /api/vista-se/lead
 };
 
 const num = (v: any) => parseFloat(String(v ?? '').replace(',', '.')) || 0;
 const brl = (v: number) => 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const chave = (p: any) => String(p.id || p.link || p.nome);
+const unicos = (arr: any[]) => { const v = new Set<string>(); return arr.filter(p => (v.has(chave(p)) ? false : (v.add(chave(p)), true))); };
 
-export default function VitrineTematica({ temaId, carregar, tiposOrdem }: Props) {
+export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, registrarLead }: Props) {
   const T = TEMAS[temaId];
-  const [dados, setDados] = useState<Record<string, any[]>>({});
+  const FAIXAS = T.faixas || FAIXAS_PRECO;
+  const [bruto, setBruto] = useState<any>({});
   const [loading, setLoading] = useState(true);
+  const [nivel1, setNivel1] = useState<string | null>(null);
   const [filtro, setFiltro] = useState<string | null>(null);
+  const [faixa, setFaixa] = useState<string | null>(null);
   const [lista, setLista] = useState<any[]>([]);
   const [email, setEmail] = useState('');
+  const [emailsExtra, setEmailsExtra] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [enviando, setEnviando] = useState(false);
   const [enviado, setEnviado] = useState(false);
+  const [erro, setErro] = useState('');
 
   useEffect(() => {
-    carregar().then(d => { setDados(d || {}); setLoading(false); }).catch(() => setLoading(false));
+    carregar().then(d => { setBruto(d || {}); setLoading(false); }).catch(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // grupos do filtro: por tipo (abas da vitrine) ou por faixa de preço (datas)
+  // 2 níveis: lista de ambientes/momentos com produtos
+  const opcoesNivel1 = useMemo(() => {
+    if (!niveis) return [];
+    return niveis.ordem
+      .map(n => ({ nome: n, total: unicos(Object.values(bruto[n] || {}).flat() as any[]).length }))
+      .filter(o => o.total > 0);
+  }, [bruto, niveis]);
+
+  const n1 = niveis ? (nivel1 ?? opcoesNivel1[0]?.nome ?? null) : null;
+  const dados: Record<string, any[]> = niveis ? (n1 ? bruto[n1] || {} : {}) : bruto;
+
+  // grupos: por tipo (abas) ou por faixa de preço (datas)
   const grupos = useMemo(() => {
     if (T.filtro === 'tipo') {
-      const nomes = tiposOrdem?.length ? tiposOrdem.filter(t => dados[t]?.length) : Object.keys(dados).filter(t => dados[t]?.length);
+      const ordem = niveis?.ordemTipos || tiposOrdem;
+      const nomes = ordem?.length ? ordem.filter(t => dados[t]?.length) : Object.keys(dados).filter(t => dados[t]?.length);
       return nomes.map(n => ({ nome: n, itens: dados[n] }));
     }
-    const vistos = new Set<string>();
-    const todos = Object.values(dados).flat().filter(p => (vistos.has(p.id) ? false : (vistos.add(p.id), true)));
-    return FAIXAS_PRECO.map(f => ({ nome: f.nome, itens: todos.filter(p => { const v = num(p.preco ?? p.price); return v >= f.min && v <= f.max; }) }))
+    const todos = unicos(Object.values(dados).flat());
+    return FAIXAS.map(f => ({ nome: f.nome, itens: todos.filter(p => { const v = num(p.preco ?? p.price); return v >= f.min && v <= f.max; }) }))
       .filter(g => g.itens.length);
-  }, [dados, T.filtro, tiposOrdem]);
+  }, [dados, T.filtro, tiposOrdem, niveis, FAIXAS]);
 
-  const todosUnicos = useMemo(() => {
-    const vistos = new Set<string>();
-    return grupos.flatMap(g => g.itens).filter(p => (vistos.has(p.id) ? false : (vistos.add(p.id), true)));
-  }, [grupos]);
+  const todosUnicos = useMemo(() => unicos(grupos.flatMap(g => g.itens)), [grupos]);
 
-  // vitrines por tipo abrem na primeira aba; datas abrem em "Todos"
-  const ativo = filtro ?? (T.filtro === 'tipo' ? grupos[0]?.nome ?? null : null);
-  const produtos = ativo ? grupos.find(g => g.nome === ativo)?.itens || [] : todosUnicos;
+  // abas por tipo abrem na primeira (exceto em 2 níveis, que abrem em "Todos"); datas abrem em "Todos"
+  const comTodos = T.filtro === 'preco' || !!niveis;
+  const ativo = filtro ?? (comTodos ? null : grupos[0]?.nome ?? null);
+  const base = ativo ? grupos.find(g => g.nome === ativo)?.itens || [] : todosUnicos;
+  const naFaixa = (p: any, nome: string) => {
+    const f = FAIXAS.find(x => x.nome === nome)!;
+    const v = num(p.preco ?? p.price);
+    return v >= f.min && v <= f.max;
+  };
+  const produtos = T.filtro === 'tipo' && faixa ? base.filter(p => naFaixa(p, faixa)) : base;
 
-  const naLista = (p: any) => lista.some(x => x.id === p.id);
-  const alternar = (p: any) => setLista(prev => (prev.some(x => x.id === p.id) ? prev.filter(x => x.id !== p.id) : [...prev, p]));
+  const naLista = (p: any) => lista.some(x => chave(x) === chave(p));
+  const alternar = (p: any) => setLista(prev => (prev.some(x => chave(x) === chave(p)) ? prev.filter(x => chave(x) !== chave(p)) : [...prev, p]));
   const total = lista.reduce((s, p) => s + num(p.preco ?? p.price), 0);
 
   async function enviarLista() {
-    if (!email || lista.length === 0) return;
-    await fetch('/api/vista-se/lead', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, tipo: T.leadTipo, itens: lista.map(p => p.nome || p.name) }),
-    });
-    await fetch('/api/ambientes/enviar', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email,
-        produtos: lista.map(p => ({
-          nome: p.nome || p.name || '',
-          preco: num(p.preco ?? p.price),
-          precoOriginal: num(p.precoOriginal) || undefined,
-          desconto: p.desconto || undefined,
-          parcelas: p.parcelas || undefined,
-          valorParcela: p.valorParcela || undefined,
-          link: p.link || '',
-          imagem: p.imagem || p.thumbnail || p.imageUrl || '',
-          loja: p.loja || p.storeName || p.nomeLoja || '',
-        })),
-      }),
-    });
-    setEnviado(true);
+    if (!email.trim() || lista.length === 0) return;
+    setEnviando(true); setErro('');
+    try {
+      if (registrarLead) await registrarLead(email, lista).catch(() => {});
+      else await fetch('/api/vista-se/lead', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, tipo: T.leadTipo, itens: lista.map(p => p.nome || p.name) }),
+      }).catch(() => {});
+      const res = await fetch('/api/ambientes/enviar', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email, emailsExtra,
+          produtos: lista.map(p => ({
+            nome: p.nome || p.name || '',
+            preco: num(p.preco ?? p.price),
+            precoOriginal: num(p.precoOriginal) || undefined,
+            desconto: p.desconto || undefined,
+            parcelas: p.parcelas || undefined,
+            valorParcela: p.valorParcela || undefined,
+            link: p.link || '',
+            imagem: p.imagem || p.thumbnail || p.imageUrl || '',
+            loja: p.loja || p.storeName || p.nomeLoja || '',
+          })),
+        }),
+      });
+      if (!res.ok) { setErro('Não foi possível enviar agora. Confira o e-mail e tente de novo.'); return; }
+      setEnviado(true);
+    } catch {
+      setErro('Não foi possível enviar agora. Confira sua conexão e tente de novo.');
+    } finally {
+      setEnviando(false);
+    }
   }
 
   const vars = {
@@ -116,20 +162,49 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem }: Props)
       </section>
 
       <main className="vt-main" id="vt-produtos">
+        {niveis && opcoesNivel1.length > 0 && (
+          <>
+            {niveis.pergunta && <h2 className="vt-pergunta" style={{ fontFamily: display }}>{niveis.pergunta}</h2>}
+            <div className="vt-chips vt-nivel1">
+              {opcoesNivel1.map(o => (
+                <button key={o.nome} type="button" className="vt-chip vt-chip-n1" aria-pressed={n1 === o.nome}
+                  onClick={() => { setNivel1(o.nome); setFiltro(null); setFaixa(null); }}>
+                  {niveis.emoji?.[o.nome] || ''} {o.nome} ({o.total})
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
         <div className="vt-chips">
-          {T.filtro === 'preco' && (
-            <button type="button" className="vt-chip" aria-pressed={!ativo} onClick={() => setFiltro(null)}>Todos</button>
+          {comTodos && grupos.length > 0 && (
+            <button type="button" className="vt-chip" aria-pressed={!ativo} onClick={() => { setFiltro(null); setFaixa(null); }}>Todos</button>
           )}
           {grupos.map(g => (
-            <button key={g.nome} type="button" className="vt-chip" aria-pressed={ativo === g.nome} onClick={() => setFiltro(g.nome)}>
-              {g.nome} ({g.itens.length})
+            <button key={g.nome} type="button" className="vt-chip" aria-pressed={ativo === g.nome} onClick={() => { setFiltro(g.nome); setFaixa(null); }}>
+              {niveis?.emojiTipos?.[g.nome] ? niveis.emojiTipos[g.nome] + ' ' : ''}{g.nome} ({unicos(g.itens).length})
             </button>
           ))}
         </div>
 
+        {T.filtro === 'tipo' && base.length > 0 && (
+          <div className="vt-chips vt-faixas">
+            <span className="vt-faixas-rot">Preço:</span>
+            <button type="button" className="vt-chip vt-chip-p" aria-pressed={!faixa} onClick={() => setFaixa(null)}>Todos</button>
+            {FAIXAS.map(f => {
+              const n = base.filter(p => naFaixa(p, f.nome)).length;
+              return n ? (
+                <button key={f.nome} type="button" className="vt-chip vt-chip-p" aria-pressed={faixa === f.nome} onClick={() => setFaixa(f.nome)}>
+                  {f.nome} ({n})
+                </button>
+              ) : null;
+            })}
+          </div>
+        )}
+
         <p className="vt-aviso">
           Preços, descontos, frete e disponibilidade são referenciais: valem as condições exibidas na loja no momento da compra.
-          Lojas com 💵 ficam em outro país e a compra pode ter imposto de importação, que nem sempre aparece no carrinho.
+          Lojas com indicação 💵 Preço convertido de USD, ficam em outro país e a compra pode ter imposto de importação, que nem sempre aparece no carrinho. Saiba que os valores sofrem alteração de acordo com a variação cambial no Brasil.
         </p>
 
         {loading ? (
@@ -147,7 +222,7 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem }: Props)
               const loja = p.lojaNome || p.loja || p.storeName || p.nomeLoja || '';
               const sel = naLista(p);
               return (
-                <article key={p.id} className={`vt-card${sel ? ' sel' : ''}`}>
+                <article key={chave(p)} className={`vt-card${sel ? ' sel' : ''}`}>
                   <div className="vt-foto">
                     {img ? <img src={img} alt={nome} loading="lazy" /> : <span aria-hidden="true">{T.emoji}</span>}
                     {off > 0 && <span className="vt-off">-{off}%</span>}
@@ -190,7 +265,10 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem }: Props)
                 <h2>Receber minha lista</h2>
                 <p>{lista.length} {lista.length === 1 ? 'item selecionado' : 'itens selecionados'}</p>
                 <input id="vt-email" type="email" placeholder="seu@email.com" value={email} onChange={e => setEmail(e.target.value)} />
-                <button type="button" className="vt-ok" onClick={enviarLista}>Enviar links</button>
+                <label htmlFor="vt-extra" className="vt-extra-rot">Enviar uma cópia para alguém? (opcional)</label>
+                <input id="vt-extra" type="text" placeholder="amigo@email.com, familia@email.com" value={emailsExtra} onChange={e => setEmailsExtra(e.target.value)} />
+                {erro && <p className="vt-erro">{erro}</p>}
+                <button type="button" className="vt-ok" onClick={enviarLista} disabled={enviando}>{enviando ? 'Enviando…' : 'Enviar links'}</button>
                 <button type="button" className="vt-cancela" onClick={() => setShowModal(false)}>Cancelar</button>
               </>
             ) : (
@@ -198,7 +276,7 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem }: Props)
                 <div style={{ fontSize: '3rem' }}>✅</div>
                 <h2>Enviado!</h2>
                 <p>Verifique sua caixa de entrada.</p>
-                <button type="button" className="vt-ok" onClick={() => { setShowModal(false); setEnviado(false); setLista([]); }}>Fechar</button>
+                <button type="button" className="vt-ok" onClick={() => { setShowModal(false); setEnviado(false); setLista([]); setEmailsExtra(''); }}>Fechar</button>
               </>
             )}
           </div>
@@ -229,9 +307,16 @@ const CSS = `
 .vt-deco.b{bottom:-70px;right:28%;transform:rotate(14deg);font-size:170px}
 @keyframes vtboia{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-10px) rotate(4deg)}}
 .vt-main{max-width:1180px;margin:0 auto;padding:0 16px 120px}
+.vt-pergunta{text-align:center;color:var(--t-ink);font-size:22px;margin:24px 0 0}
 .vt-chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:22px 0 8px}
+.vt-nivel1{padding-top:12px}
 .vt-chip{border:2px solid var(--t-soft);background:#fff;color:var(--t-ink);border-radius:999px;padding:8px 16px;font-weight:700;font-size:14px;cursor:pointer}
 .vt-chip[aria-pressed="true"]{background:var(--t-1);border-color:var(--t-1);color:#fff}
+.vt-chip-n1{padding:11px 20px;font-size:15px;border-radius:14px}
+.vt-faixas{padding-top:0}
+.vt-faixas-rot{align-self:center;font-weight:800;font-size:13px;color:var(--t-ink)}
+.vt-chip-p{padding:5px 12px;font-size:13px}
+.vt-chip-p[aria-pressed="true"]{background:var(--t-2);border-color:var(--t-2)}
 .vt-aviso{text-align:center;color:#6E6680;font-size:11px;max-width:760px;margin:4px auto 0}
 .vt-vazio{text-align:center;color:#9ca3af;padding:40px 0}
 .vt-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px;padding-top:20px}
@@ -255,11 +340,14 @@ const CSS = `
 .vt-flutua span{font-size:13px;opacity:.9}
 .vt-flutua button{background:#fff;color:var(--t-2);border:0;border-radius:10px;padding:8px;font-weight:800;cursor:pointer}
 .vt-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px}
-.vt-modal-in{background:#fff;border-radius:18px;padding:28px;width:100%;max-width:400px;text-align:center}
+.vt-modal-in{background:#fff;border-radius:18px;padding:28px;width:100%;max-width:420px;text-align:center}
 .vt-modal-in h2{margin:6px 0;color:#1f2937}
 .vt-modal-in p{color:#6b7280;font-size:14px}
-.vt-modal-in input{width:100%;padding:12px;border-radius:10px;border:1px solid #d1d5db;font-size:16px;box-sizing:border-box;margin:8px 0 10px}
+.vt-modal-in input{width:100%;padding:12px;border-radius:10px;border:1px solid #d1d5db;font-size:16px;box-sizing:border-box;margin:6px 0 10px}
+.vt-extra-rot{display:block;text-align:left;font-size:13px;color:#6b7280;margin-top:4px}
+.vt-erro{color:#b91c1c!important;font-weight:700}
 .vt-ok{width:100%;padding:12px;background:var(--t-1);color:#fff;border:0;border-radius:10px;font-weight:800;cursor:pointer;font-size:15px;margin-bottom:6px}
+.vt-ok:disabled{opacity:.6;cursor:wait}
 .vt-cancela{background:none;border:0;color:#9ca3af;cursor:pointer}
 @media (max-width:760px){
   .vt-banner-in{grid-template-columns:1fr;padding:22px 16px 26px}
