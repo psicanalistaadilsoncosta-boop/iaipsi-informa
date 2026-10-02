@@ -8,6 +8,8 @@ import ArtigosProdutoSection from './ArtigosProdutoSection';
 import ViagemDestaque from './ViagemDestaque';
 import BannerDestaque from './banners/BannerDestaque';
 import { TEMAS } from './temas/temas';
+import OfertasLupadas from './temas/OfertasLupadas';
+import LogoComAPalavra from './temas/LogoComAPalavra';
 
 // ─── GRID DAS 5 PÁGINAS DE PRODUTOS ──────────────────────────────────────────
 const PAGINAS_PRODUTOS = [
@@ -751,7 +753,7 @@ function NewsCard({ item }: { item: FeedItem }) {
 }
 
 // ─── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────
-export default function NewsClient({ posts, ads, editorial, sabores, ofertasMix, artigosProduto, viagemDestaque, viagensNoticias, comPalavraDestaque, bannerSlides }: { posts: FeedItem[]; ads: AdItem[]; editorial: EditorialItem[]; sabores: SaboresItem[]; ofertasMix: any[]; artigosProduto?: any[]; viagemDestaque?: any; viagensNoticias?: any[]; comPalavraDestaque?: any; bannerSlides?: any[] }) {
+export default function NewsClient({ posts, ads, editorial, sabores, ofertasMix, artigosProduto, viagemDestaque, viagensNoticias, comPalavraDestaque, bannerSlides, lupadas }: { posts: FeedItem[]; ads: AdItem[]; editorial: EditorialItem[]; sabores: SaboresItem[]; ofertasMix: any[]; artigosProduto?: any[]; viagemDestaque?: any; viagensNoticias?: any[]; comPalavraDestaque?: any; bannerSlides?: any[]; lupadas?: any[] }) {
   const safePosts = posts ?? [];
   const safeAds = ads ?? [];
   const safeEditorial = editorial ?? [];
@@ -836,6 +838,9 @@ export default function NewsClient({ posts, ads, editorial, sabores, ofertasMix,
         />
       )}
 
+      <OfertasLupadas itens={lupadas || []} />
+
+
       {/* Grid das 5 páginas de produtos */}
       <GridPaginasProdutos />
 
@@ -843,7 +848,7 @@ export default function NewsClient({ posts, ads, editorial, sabores, ofertasMix,
         <section style={{ marginBottom: '28px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
             <div style={{ width: '4px', height: '28px', backgroundColor: '#1e3a5f', borderRadius: '2px' }} />
-            <img src="/compalavra.png" alt="ComAPalavra" style={{ height: '32px', objectFit: 'contain' }} />
+            <LogoComAPalavra tamanho={24} fundo="claro" />
             <a href="/compalavra" style={{ marginLeft: 'auto', fontSize: '0.8rem', color: '#1e3a5f', fontWeight: 600, textDecoration: 'none' }}>Ver todos os artigos →</a>
           </div>
           <a href={`/compalavra/${comPalavraDestaque.slug}`} style={{ textDecoration: 'none', display: 'block' }}>

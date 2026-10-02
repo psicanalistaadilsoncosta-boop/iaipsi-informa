@@ -460,15 +460,31 @@ async function getBannerData(): Promise<{ slidesEditoriais: any[]; produtosBanne
     return { slidesEditoriais: [], produtosBanner: [] };
   }
 }
+// As 8 ofertas selecionadas mais recentes, para a faixa "Lupadas da semana"
+async function getLupadas(): Promise<any[]> {
+  try {
+    const data = (await kv.get<any[]>('produtos:pinados')) || [];
+    return data
+      .filter(p => p.destinos?.includes('ofertas-selecionadas') && p.ativo !== false && p.preco > 0)
+      .sort((a, b) => new Date(b.pinedAt || 0).getTime() - new Date(a.pinedAt || 0).getTime())
+      .slice(0, 8)
+      .map(p => ({
+        id: p.id, nome: p.nome, imagem: p.imagem, link: p.link,
+        preco: p.preco, precoOriginal: p.precoOriginal,
+        loja: p.lojaNome || p.loja,
+        moedaUSD: !!(p.moedaUSD || p.moedaOriginal === 'USD'),
+      }));
+  } catch { return []; }
+}
 
 export default async function Home() {
-  const [posts, ads, editorial, sabores, ofertasMix, artigosProduto, viagemDestaque, viagensNoticias, comPalavraDestaque, bannerData] = await Promise.all([
-    getNews(), getAds(), getEditorial(), getSabores(), Promise.resolve([] as any[]), getArtigosProduto(), getViagemDestaque(), getViagensNoticias(), getComPalavraDestaque(), getBannerData()
+  const [posts, ads, editorial, sabores, ofertasMix, artigosProduto, viagemDestaque, viagensNoticias, comPalavraDestaque, bannerData, lupadas] = await Promise.all([
+    getNews(), getAds(), getEditorial(), getSabores(), Promise.resolve([] as any[]), getArtigosProduto(), getViagemDestaque(), getViagensNoticias(), getComPalavraDestaque(), getBannerData(), getLupadas()
   ]);
 
   // Mescla slides editoriais + produtos de oferta e embaralha
   const bannerSlides = [...bannerData.slidesEditoriais, ...bannerData.produtosBanner]
     .sort(() => Math.random() - 0.5);
 
-    return <><FaixaSazonal /><NewsClient posts={posts} ads={ads} editorial={editorial} sabores={sabores} ofertasMix={ofertasMix} artigosProduto={artigosProduto} viagemDestaque={viagemDestaque} viagensNoticias={viagensNoticias} comPalavraDestaque={comPalavraDestaque} bannerSlides={bannerSlides} /></>
+    return <><FaixaSazonal /><NewsClient posts={posts} ads={ads} editorial={editorial} sabores={sabores} ofertasMix={ofertasMix} artigosProduto={artigosProduto} viagemDestaque={viagemDestaque} viagensNoticias={viagensNoticias} comPalavraDestaque={comPalavraDestaque} bannerSlides={bannerSlides} lupadas={lupadas} /></>
 }
