@@ -7,7 +7,7 @@
 //   1 nível  -> { tipo: produtos[] }                      (vista-se, beleza, mercado, filho, datas)
 //   2 níveis -> { ambiente: { tipo: produtos[] } }        (monte-seu-ambiente, monte-seu-momento) — use a prop "niveis"
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Baloo_2 } from 'next/font/google';
 import SeloLoja from '../SeloLoja';
 import { TEMAS, FAIXAS_PRECO } from './temas';
@@ -65,6 +65,10 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
   const [lista, setLista] = useState<any[]>([]);
   const [email, setEmail] = useState('');
   const [hp, setHp] = useState(''); // campo-armadilha: só robô preenche
+  const [tsToken, setTsToken] = useState('');           // comprovante do Turnstile
+  const tsBox = useRef<HTMLDivElement | null>(null);
+  const tsId = useRef<string | null>(null);
+  const TS_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '';
   const [emailsExtra, setEmailsExtra] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [enviando, setEnviando] = useState(false);
@@ -105,7 +109,9 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
     }
   }
   async function iaPedirCodigo() {
-    const { ok, d } = await iaPost('/api/ia-pedido/codigo', { email: ia.email, site: hp });
+    if (TS_KEY && !tsToken) { setIa(v => ({ ...v, erro: 'Aguarde a verificação de segurança terminar e tente de novo.' })); return; }
+    const { ok, d } = await iaPost('/api/ia-pedido/codigo', { email: ia.email, site: hp, turnstile: tsToken });
+    renovarTs();
     if (ok) setIa(v => ({ ...v, etapa: 'codigo', aviso: `Enviamos um código para ${v.email}. Confira também o spam.` }));
     else setIa(v => ({ ...v, erro: d.erro || 'Não foi possível enviar o código.' }));
   }
@@ -233,7 +239,47 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
     catch { window.prompt('Copie o texto do pedido:', t); }
   }
 
+  // Turnstile (Cloudflare): verificação contra robôs, carregada quando a lista abre
+  useEffect(() => {
+    if (!showModal || !TS_KEY) return;
+    let vivo = true;
+    const montar = () => {
+      const w = (window as any).turnstile;
+      if (!vivo || !w || !tsBox.current || tsId.current) return;
+      tsId.current = w.render(tsBox.current, {
+        sitekey: TS_KEY,
+        callback: (t: string) => setTsToken(t),
+        'expired-callback': () => setTsToken(''),
+        'error-callback': () => setTsToken(''),
+      });
+    };
+    const existente = document.getElementById('cf-turnstile');
+    if ((window as any).turnstile) montar();
+    else if (existente) existente.addEventListener('load', montar);
+    else {
+      const s = document.createElement('script');
+      s.id = 'cf-turnstile';
+      s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+      s.async = true;
+      s.onload = montar;
+      document.head.appendChild(s);
+    }
+    return () => {
+      vivo = false;
+      const w = (window as any).turnstile;
+      if (w && tsId.current) w.remove(tsId.current);
+      tsId.current = null;
+      setTsToken('');
+    };
+  }, [showModal, TS_KEY]);
+  const renovarTs = () => {
+    const w = (window as any).turnstile;
+    if (w && tsId.current) w.reset(tsId.current);
+    setTsToken('');
+  };
+
   async function enviarLista() {
+    if (TS_KEY && !tsToken) { setErro('Aguarde a verificação de segurança terminar e tente de novo.'); return; }
     if (!email.trim() || lista.length === 0) return;
     setEnviando(true); setErro('');
     try {
@@ -245,7 +291,7 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
       const res = await fetch('/api/ambientes/enviar', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email, emailsExtra, site: hp,
+          email, emailsExtra, site: hp, turnstile: tsToken,
           mensagem: T.data ? corpoPedido() : undefined,
           produtos: lista.map(p => ({
             nome: p.nome || p.name || '',
@@ -260,6 +306,7 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
           })),
         }),
       });
+      renovarTs();
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
         setErro(res.status < 500 && d.error
@@ -539,6 +586,7 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
                 <button type="button" className="vt-ok" onClick={() => { setShowModal(false); setEnviado(false); if (!T.data) setLista([]); setEmailsExtra(''); }}>Fechar</button>
               </>
             )}
+                     <div ref={tsBox} className="vt-ts" />
           </div>
         </div>
       )}
@@ -622,6 +670,7 @@ const CSS = `
 .vt-erro{color:#b91c1c!important;font-weight:700}
 .vt-ok{width:100%;padding:12px;background:var(--t-1);color:#fff;border:0;border-radius:10px;font-weight:800;cursor:pointer;font-size:15px;margin-bottom:6px}
 .vt-ok:disabled{opacity:.6;cursor:wait}
+.vt-ts{display:flex;justify-content:center;margin-top:12px}
 .vt-cancela{background:none;border:0;color:#9ca3af;cursor:pointer}
 .vt-modal-in{max-height:92vh;overflow-y:auto}
 .vt-modal-in.largo{max-width:560px;text-align:left}

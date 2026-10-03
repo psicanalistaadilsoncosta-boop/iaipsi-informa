@@ -3,12 +3,17 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { kv } from '@/lib/kv';
+import { turnstileOk } from '@/lib/turnstile';
 import { emailValido, normalizar, hash, enviarCodigo, CODIGO_MIN, estourou } from '@/lib/ia-pedido';
 
 export async function POST(req: NextRequest) {
   try {
-    const { email: bruto, site } = await req.json();
+    const { email: bruto, site, turnstile } = await req.json();
     if (site) return NextResponse.json({ ok: true }); // robô: finge que enviou
+    const ipTs = (req.headers.get('x-forwarded-for') || '').split(',')[0].trim();
+    if (!(await turnstileOk(turnstile, ipTs))) {
+      return NextResponse.json({ erro: 'Não conseguimos confirmar que você não é um robô. Recarregue a página e tente de novo.' }, { status: 403 });
+    }
     const email = normalizar(bruto);
     if (!emailValido(email)) return NextResponse.json({ erro: 'Confira o e-mail digitado.' }, { status: 400 });
 

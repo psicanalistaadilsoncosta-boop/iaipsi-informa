@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 import { kv } from '@/lib/kv';
 import { linkAfiliadoOk } from '@/lib/links-afiliados';
+import { turnstileOk } from '@/lib/turnstile';
 
 
 function criarTransporter() {
@@ -177,8 +178,12 @@ async function estourou(chave: string, max: number, janelaMin: number) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { site, email, emailsExtra, produtos, mensagem } = await req.json();
+      const { site, email, emailsExtra, produtos, mensagem, turnstile } = await req.json();
     if (site) return NextResponse.json({ success: true }); // robô: finge que enviou
+    const ipTs = (req.headers.get('x-forwarded-for') || '').split(',')[0].trim();
+    if (!(await turnstileOk(turnstile, ipTs))) {
+      return NextResponse.json({ error: 'Não conseguimos confirmar que você não é um robô. Recarregue a página e tente de novo.' }, { status: 403 });
+    }
     const msg = typeof mensagem === 'string' ? mensagem.trim().slice(0, 3000) : '';
 
     if (!email) return NextResponse.json({ error: 'E-mail obrigatório' }, { status: 400 });
