@@ -33,7 +33,7 @@ export default function OfertasLupadas({ itens }: { itens: Lupada[] }) {
       <div className="ol-trilho">
         {itens.map(p => {
           const off = p.precoOriginal && p.precoOriginal > p.preco ? Math.round((1 - p.preco / p.precoOriginal) * 100) : 0;
-          const href = `/ir?url=${encodeURIComponent(p.link)}&nome=${encodeURIComponent(p.nome)}&imagem=${encodeURIComponent(p.imagem || '')}`;
+         const href = `/ir?url=${encodeURIComponent(p.link)}&nome=${encodeURIComponent(p.nome)}&imagem=${encodeURIComponent(p.imagem || '')}&loja=${encodeURIComponent(p.loja || '')}`;
           return (
             <a key={p.id} href={href} className="ol-card">
               <div className="ol-foto">

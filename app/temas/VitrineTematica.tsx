@@ -9,6 +9,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Baloo_2 } from 'next/font/google';
+import { usePathname } from 'next/navigation';
 import SeloLoja from '../SeloLoja';
 import { TEMAS, FAIXAS_PRECO } from './temas';
 
@@ -193,6 +194,14 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
 
   const naLista = (p: any) => lista.some(x => chave(x) === chave(p));
   const [cheia, setCheia] = useState(false);
+  const caminho = usePathname();
+  // link de saída pela /ir (conta o clique), levando a loja e a vitrine de origem
+  const linkIr = (p: any) =>
+    `/ir?url=${encodeURIComponent(p.link || '')}` +
+    `&nome=${encodeURIComponent(p.nome || p.name || '')}` +
+    `&imagem=${encodeURIComponent(p.imagem || p.thumbnail || p.imageUrl || '')}` +
+    `&loja=${encodeURIComponent(p.loja || p.storeName || p.nomeLoja || '')}` +
+    `&de=${encodeURIComponent(caminho || '')}`;
   const alternar = (p: any) => {
     const jaTem = lista.some(x => chave(x) === chave(p));
     if (!jaTem && lista.length >= MAX_LISTA) {
@@ -443,7 +452,7 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
                     {antigo > preco && <div className="vt-antigo">{brl(antigo)}</div>}
                     {preco > 0 && <div className="vt-preco" style={{ fontFamily: display }}>{brl(preco)}</div>}
                     <div className="vt-acoes">
-                      <a className="vt-ver" href={p.link} target="_blank" rel="noopener noreferrer sponsored">Ver na loja ↗</a>
+                      <a className="vt-ver" href={linkIr(p)} target="_blank" rel="noopener">Ver na loja ↗</a>
                       <button type="button" className="vt-pedir" aria-pressed={sel} onClick={() => alternar(p)}>
                         {T.data ? (sel ? '✓ Pedido' : '♡ Pedir') : (sel ? '✓ Na lista' : '+ Lista')}
                       </button>

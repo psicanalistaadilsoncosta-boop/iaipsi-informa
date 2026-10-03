@@ -16,6 +16,11 @@ export default function AdminGate({ titulo, children }: { titulo: string; childr
       .catch(() => setAuth(false));
   }, []);
 
+  // marca este navegador como do admin: a /ir não conta os cliques dele
+  useEffect(() => {
+    if (auth) { try { localStorage.setItem('comlupa:admin', '1'); } catch {} }
+  }, [auth]);
+
   async function entrar(e: React.FormEvent) {
     e.preventDefault();
     setCarregando(true);

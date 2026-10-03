@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { linkAfiliadoOk } from '@/lib/links-afiliados';
 
@@ -18,11 +18,29 @@ function IrContent() {
   if (bruto && url === '/') console.warn('[ir] link recusado:', bruto);
   const nome = searchParams.get('nome') || 'oferta';
   const imagem = searchParams.get('imagem') || '';
+  const loja = searchParams.get('loja') || '';
+  const de = searchParams.get('de') || '';
+  const contou = useRef(false);
   const [progresso, setProgresso] = useState(0);
   const mensagem = MENSAGENS[Math.floor(Math.random() * MENSAGENS.length)];
 
   useEffect(() => {
-    const inicio = Date.now();
+    // conta o clique (não atrasa o redirecionamento; não conta os testes do admin)
+    try {
+      if (!contou.current && url !== '/' && localStorage.getItem('comlupa:admin') !== '1') {
+        contou.current = true;
+        let origem = de.startsWith('/') ? de.slice(0, 60) : '';
+        if (!origem) { try { const r = new URL(document.referrer); if (r.host === location.host) origem = r.pathname; } catch {} }
+        let nomeLimpo = nome;
+        try { nomeLimpo = decodeURIComponent(nome); } catch {}
+        const dados = JSON.stringify({ url, nome: nomeLimpo, loja, origem });
+        if (!navigator.sendBeacon?.('/api/clique', dados)) {
+          fetch('/api/clique', { method: 'POST', body: dados, keepalive: true }).catch(() => {});
+        }
+      }
+    } catch {}
+
+    const inicio = Date.now();   
     const duracao = 2000;
 
     const interval = setInterval(() => {
