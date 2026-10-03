@@ -174,7 +174,7 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
   const todosUnicos = useMemo(() => unicos(grupos.flatMap(g => g.itens)), [grupos]);
 
   // abas por tipo abrem na primeira (exceto em 2 níveis, que abrem em "Todos"); datas abrem em "Todos"
-  const comTodos = T.filtro === 'preco' || !!niveis;
+  const comTodos = T.filtro === 'preco' || !!niveis || !!T.todos;
   const ativo = filtro ?? (comTodos ? null : grupos[0]?.nome ?? null);
   const base = ativo ? grupos.find(g => g.nome === ativo)?.itens || [] : todosUnicos;
   const naFaixa = (p: any, nome: string) => {

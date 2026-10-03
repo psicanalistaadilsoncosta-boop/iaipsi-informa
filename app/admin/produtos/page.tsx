@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import AdminGate from '../../AdminGate';
 
-type Categoria = 'ambiente' | 'vistaSe' | 'beleza' | 'momento' | 'mercado' | null;
+type Categoria = 'ambiente' | 'vistaSe' | 'beleza' | 'momento' | 'mercado' | 'praVoce' | null;
 
 interface Produto {
   id: string;
@@ -23,6 +23,8 @@ interface Produto {
   tipoBeleza?: string;
   mercado?: boolean;
   tipoMercado?: string;
+  praVoce?: boolean;
+  tipoPraVoce?: string;
   aCatalogar?: boolean;
   lojaNome?: string;
   // Banner
@@ -37,6 +39,7 @@ const BADGE_COLORS: Record<string, string> = {
   beleza: '#9d174d',
   momento: '#d97706',
   mercado: '#059669',
+  praVoce: '#0e7490',
 };
 
 const CATEGORIA_LABELS: Record<string, string> = {
@@ -45,6 +48,7 @@ const CATEGORIA_LABELS: Record<string, string> = {
   beleza: 'Beleza',
   momento: 'Momento',
   mercado: 'Mercado',
+  praVoce: 'Pra você',
 };
 
 // Ambiente: primeiro nível = cômodo, segundo nível = tipo
@@ -63,6 +67,7 @@ const TIPOS_POR_CATEGORIA: Record<string, string[]> = {
   momento:  MOMENTOS,
   beleza:   ['Perfumes', 'Skincare', 'Maquiagem', 'Cabelos', 'Massagem', 'Solar', 'Cuidados'],
   mercado:  TIPOS_MERCADO,
+  praVoce:  ['Trabalhar e estudar', 'Mexer o corpo', 'Ficar conectado'],
 };
 
 const MOVER_OPTIONS: { value: Categoria; label: string }[] = [
@@ -71,6 +76,7 @@ const MOVER_OPTIONS: { value: Categoria; label: string }[] = [
   { value: 'beleza', label: 'Beleza' },
   { value: 'momento', label: 'Momento' },
   { value: 'mercado', label: 'Mercado' },
+  { value: 'praVoce', label: 'Pra você' },
 ];
 
 const PAGE_SIZE = 50;
@@ -81,6 +87,7 @@ function getCategoria(p: Produto): Categoria {
   if (p.vistaSe) return 'vistaSe';
   if (p.beleza) return 'beleza';
   if (p.mercado) return 'mercado';
+  if (p.praVoce) return 'praVoce';
   return null;
 }
 
@@ -666,6 +673,7 @@ function AdminProdutos() {
           tipoVistaSe: tipo,
           tipoBeleza: tipo,
           tipoMercado: tipo,
+          tipoPraVoce: tipo,
         }),
       });
       setSelecionados(new Set());
@@ -683,6 +691,7 @@ function AdminProdutos() {
     delete novo.vistaSe; delete novo.tipoVistaSe;
     delete novo.beleza; delete novo.tipoBeleza;
     delete novo.mercado; delete novo.tipoMercado;
+    delete novo.praVoce; delete novo.tipoPraVoce;
 
     if (novaCategoria === 'ambiente') {
       novo.ambiente = nomeAmb || 'Sala';
@@ -700,6 +709,9 @@ function AdminProdutos() {
     } else if (novaCategoria === 'mercado') {
       novo.mercado = true;
       novo.tipoMercado = tipo || 'Alimentos';
+    } else if (novaCategoria === 'praVoce') {
+      novo.praVoce = true;
+      novo.tipoPraVoce = tipo || 'Ficar conectado';
     }
     return novo;
   }
@@ -741,6 +753,7 @@ function AdminProdutos() {
           tipoVistaSe: tipo,
           tipoBeleza: tipo,
           tipoMercado: tipo,
+          tipoPraVoce: tipo,
         }),
       });
     } catch {
@@ -793,6 +806,7 @@ function AdminProdutos() {
           tipoVistaSe: tipo,
           tipoBeleza: tipo,
           tipoMercado: tipo,
+          tipoPraVoce: tipo,
           limparACatalogar: true,
         }),
       });
@@ -1283,6 +1297,7 @@ function AdminProdutos() {
             <option value="beleza">Beleza</option>
             <option value="momento">Momento</option>
             <option value="mercado">Mercado</option>
+            <option value="praVoce">Pra você</option>
             <option value="sem-categoria">Sem categoria</option>
           </select>
           <span style={{ fontSize: 13, color: '#9ca3af', whiteSpace: 'nowrap' }}>
@@ -1460,6 +1475,11 @@ function AdminProdutos() {
                             {cat === 'mercado' && produto.tipoMercado && (
                               <span style={{ fontSize: 12, color: '#374151', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                 {produto.tipoMercado}
+                              </span>
+                            )}
+                            {cat === 'praVoce' && produto.tipoPraVoce && (
+                              <span style={{ fontSize: 12, color: '#374151', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {produto.tipoPraVoce}
                               </span>
                             )}
                           </>

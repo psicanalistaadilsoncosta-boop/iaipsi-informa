@@ -31,6 +31,7 @@ const SECOES: Record<string, Secao> = {
 
 SECOES['dia-das-criancas'] = { titulo: 'Dia das Crianças', emoji: '🎈' };
 SECOES['natal'] = { titulo: 'Natal', emoji: '🎄' };
+SECOES['pra-voce'] = { titulo: 'Lupa pra você', emoji: '🔍' };
 
 const SECAO_PADRAO: Secao = { titulo: 'Seu Universo', emoji: '✨' };
 

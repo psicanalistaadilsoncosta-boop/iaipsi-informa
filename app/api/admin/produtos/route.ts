@@ -16,12 +16,14 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(produtos);
 }
 
-function aplicarCat(p: any, categoria: string, nomeAmbiente?: string, tipoAmbiente?: string, tipoMomento?: string, tipoVistaSe?: string, tipoBeleza?: string) {
+function aplicarCat(p: any, categoria: string, nomeAmbiente?: string, tipoAmbiente?: string, tipoMomento?: string, tipoVistaSe?: string, tipoBeleza?: string, tipoMercado?: string, tipoPraVoce?: string) {
   const novo = { ...p };
   delete novo.ambiente; delete novo.tipoAmbiente;
   delete novo.momento; delete novo.tipoMomento;
   delete novo.vistaSe; delete novo.tipoVistaSe;
   delete novo.beleza; delete novo.tipoBeleza;
+  delete novo.mercado; delete novo.tipoMercado;
+  delete novo.praVoce; delete novo.tipoPraVoce;
 
   if (categoria === 'ambiente') {
     novo.ambiente = nomeAmbiente || 'Sala';
@@ -34,7 +36,13 @@ function aplicarCat(p: any, categoria: string, nomeAmbiente?: string, tipoAmbien
     novo.tipoVistaSe = tipoVistaSe || 'Roupas';
   } else if (categoria === 'beleza') {
     novo.beleza = true;
-    novo.tipoBeleza = tipoBeleza || 'Cuidados';
+        novo.tipoBeleza = tipoBeleza || 'Cuidados';
+  } else if (categoria === 'mercado') {
+    novo.mercado = true;
+    novo.tipoMercado = tipoMercado || 'Alimentos';
+  } else if (categoria === 'praVoce') {
+    novo.praVoce = true;
+    novo.tipoPraVoce = tipoPraVoce || 'Ficar conectado';
   }
   return novo;
 }
@@ -63,7 +71,7 @@ if ('valorParcela' in body) produtos[idx].valorParcela = body.valorParcela; // v
     revalidatePath('/'); return NextResponse.json({ ok: true });
   }
 
-  const { categoria, nomeAmbiente, tipoAmbiente, tipoMomento, tipoVistaSe, tipoBeleza } = body;
+  const { categoria, nomeAmbiente, tipoAmbiente, tipoMomento, tipoVistaSe, tipoBeleza, tipoMercado, tipoPraVoce } = body;
   if (!categoria) return NextResponse.json({ error: 'categoria obrigatória' }, { status: 400 });
 
   // Suporte a lote (ids[]) ou individual (id)
@@ -73,8 +81,7 @@ if ('valorParcela' in body) produtos[idx].valorParcela = body.valorParcela; // v
   for (const id of ids) {
     const idx = produtos.findIndex((p: any) => p.id === id);
     if (idx !== -1) {
-            produtos[idx] = aplicarCat(produtos[idx], categoria, nomeAmbiente, tipoAmbiente, tipoMomento, tipoVistaSe, tipoBeleza);
-      if (body.limparACatalogar) produtos[idx].aCatalogar = false;
+    produtos[idx] = aplicarCat(produtos[idx], categoria, nomeAmbiente, tipoAmbiente, tipoMomento, tipoVistaSe, tipoBeleza, tipoMercado, tipoPraVoce);
     }
   }
 

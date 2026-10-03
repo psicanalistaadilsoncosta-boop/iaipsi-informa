@@ -1,0 +1,1131 @@
+[
+  {
+    "tipo": "lomadee",
+    "nome": "Viva Vinho",
+    "url": "https://www.vivavinho.com.br/",
+    "reclameAqui": {
+      "reputacao": "GREAT",
+      "nota": 8,
+      "resolucao": 100,
+      "campea2025": false,
+      "url": "https://www.reclameaqui.com.br/empresa/vivavinho/",
+      "consultadoEm": "2026-09-30"
+    }
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Pneu Store",
+    "url": "https://www.pneustore.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "MegaMamute",
+    "url": "https://www.megamamute.com.br",
+    "reclameAqui": {
+      "reputacao": "GREAT",
+      "nota": 8.5,
+      "resolucao": 89.4,
+      "campea2025": false,
+      "url": "https://www.reclameaqui.com.br/empresa/megamamute/",
+      "consultadoEm": "2026-09-30"
+    }
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "FATOR 5",
+    "url": "https://www.fator5.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Soulier",
+    "url": "https://www.soulier.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "PneuBest",
+    "url": "https://www.pneubest.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Vivavinho",
+    "url": "https://www.vivavinho.com.br",
+    "cron": {
+      "ativo": false,
+      "frequencia": "semanal",
+      "destino": "ofertas-selecionadas",
+      "limite": 50,
+      "ultimaAtualizacao": null
+    },
+    "momento": "Vinho",
+    "reclameAqui": {
+      "reputacao": "GREAT",
+      "nota": 8,
+      "resolucao": 100,
+      "campea2025": false,
+      "url": "https://www.reclameaqui.com.br/empresa/vivavinho/",
+      "consultadoEm": "2026-09-30"
+    }
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Lojão dos Esportes",
+    "url": "https://www.lojaodosesportes.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Sestini",
+    "url": "https://www.sestini.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Le Loyn Parfums",
+    "url": "https://www.leloynparfums.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Casa do Fitness",
+    "url": "https://www.casadofitness.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Defitness",
+    "url": "https://www.defitness.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Lojas REDE",
+    "url": "https://www.lojasrede.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Concórdia Informática ",
+    "url": "https://www.concordia.inf.com",
+    "reclameAqui": {
+      "reputacao": "GREAT",
+      "nota": 8.5,
+      "resolucao": 85.7,
+      "campea2025": false,
+      "url": "https://www.reclameaqui.com.br/empresa/concordia-informatica_183828/",
+      "consultadoEm": "2026-09-30"
+    }
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Atlas",
+    "url": "https://www.atlaseletro.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Dako",
+    "url": "https://www.dako.com.br",
+    "cron": {
+      "ativo": false,
+      "frequencia": "semanal",
+      "destino": "ofertas-selecionadas",
+      "limite": 50,
+      "ultimaAtualizacao": null
+    },
+    "ambiente": "Cozinha",
+    "tipoAmbiente": "Eletrônicos"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "PCYES",
+    "url": "https://www.pcyes.com.br",
+    "reclameAqui": {
+      "reputacao": "GREAT",
+      "nota": 9.3,
+      "resolucao": 100,
+      "campea2025": false,
+      "url": "https://www.reclameaqui.com.br/empresa/pc-yes/",
+      "consultadoEm": "2026-09-30"
+    }
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Iodice",
+    "url": "https://www.iodice.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Sofá na Caixa",
+    "url": "https://www.sofanacaixa.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Livrarias Curitiba",
+    "url": "https://www.livrariascuritiba.com.br",
+    "reclameAqui": {
+      "reputacao": "GREAT",
+      "nota": 8.6,
+      "resolucao": 88.2,
+      "campea2025": true,
+      "url": "https://www.reclameaqui.com.br/empresa/livrarias-curitiba/",
+      "consultadoEm": "2026-09-30"
+    }
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Freeway",
+    "url": "https://www.lojafreeway.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "YSY Acessórios",
+    "url": "https://www.ysyacessorios.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Kappesberg",
+    "url": "https://www.kappesberg.com"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Cristais Cá d'Oro",
+    "url": "https://www.cristaiscadoro.com"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Lenovo",
+    "url": "https://www.lenovo.com"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Continental Brasil",
+    "url": "https://www.continentalbrasil.com.br",
+    "cron": {
+      "ativo": false,
+      "frequencia": "semanal",
+      "destino": "ofertas-selecionadas",
+      "limite": 50,
+      "ultimaAtualizacao": null
+    },
+    "ambiente": "Cozinha",
+    "tipoAmbiente": "Eletrônicos"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Pneunet",
+    "url": "https://www.pneunet.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "BioVittare Farmácia de Manipulação",
+    "url": "https://www.biovittare.com.br",
+    "reclameAqui": {
+      "reputacao": "GREAT",
+      "nota": 8.2,
+      "resolucao": 91.5,
+      "campea2025": false,
+      "url": "https://www.reclameaqui.com.br/empresa/bio-vittare/",
+      "consultadoEm": "2026-09-30"
+    }
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "FUNKO",
+    "url": "https://www.funko.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Drogaria Rosário",
+    "url": "https://www.drogasmil.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Coza",
+    "url": "https://www.coza.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Amakha Paris",
+    "url": "https://www.amakhaparis.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Brinox",
+    "url": "https://www.brinox.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Autoamerica Store",
+    "url": "https://www.autoamericastore.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "AmoKarité",
+    "url": "https://www.amokarite.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Multimóveis",
+    "url": "https://www.multimoveis.com",
+    "reclameAqui": {
+      "reputacao": "GOOD",
+      "nota": 7.7,
+      "resolucao": 83.9,
+      "campea2025": true,
+      "url": "https://www.reclameaqui.com.br/empresa/multimoveis/",
+      "consultadoEm": "2026-09-30"
+    }
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Santander Abertura de Conta - PJ",
+    "url": "https://www.santander.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Morena Rosa",
+    "url": "https://www.morenarosa.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "ECO FLAME GARDEN",
+    "url": "https://www.ecoflamegarden.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Mundo Vem",
+    "url": "https://www.mundovem.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Dona Coelha",
+    "url": "https://www.donacoelha.com"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "CervejaBox",
+    "url": "https://www.cervejabox.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Mérito Comercial",
+    "url": "https://www.meritocomercial.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Super Pro Atacado",
+    "url": "https://www.superproatacado.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Shein",
+    "url": "https://www.br.shein.com"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Esbelt",
+    "url": "https://www.esbelt.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "UP Kids",
+    "url": "https://www.upkids.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Camisaria Colombo",
+    "url": "https://www.camisariacolombo.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Hunter Fan",
+    "url": "https://www.hunterfan.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Hipervarejo",
+    "url": "https://www.hipervarejo.com"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Revest Acabamentos",
+    "url": "https://www.revestacabamentos.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Lauri Esporte",
+    "url": "https://www.lauriesporte.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Make Norte",
+    "url": "https://www.makenorte.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "WebBar",
+    "url": "https://www.webbar.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Serallê Calçados",
+    "url": "https://www.seralle.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "PromoFarma",
+    "url": "https://www.promofarma.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Clovis Calçados",
+    "url": "https://www.clovis.com.br",
+    "reclameAqui": {
+      "reputacao": "GOOD",
+      "nota": 7.5,
+      "resolucao": 84.2,
+      "campea2025": false,
+      "url": "https://www.reclameaqui.com.br/empresa/clovis-calcados-loja-online/",
+      "consultadoEm": "2026-09-30"
+    }
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "NutriBullet",
+    "url": "https://www.nutribulletbrasil.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Sottile Casa",
+    "url": "https://www.sottilecasa.com.br",
+    "cron": {
+      "ativo": false,
+      "frequencia": "semanal",
+      "destino": "ofertas-selecionadas",
+      "limite": 50,
+      "ultimaAtualizacao": null
+    },
+    "momento": "Churrasco",
+    "tipoMomento": "Eletro"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Shopinfo",
+    "url": "https://www.shopinfo.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Ferramentas Kennedy",
+    "url": "https://www.ferramentaskennedy.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "TeraByte",
+    "url": "https://www.terabyteshop.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Aéropostale Brasil",
+    "url": "https://www.aeropostale.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Hugart ",
+    "url": "https://www.hugart.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Cirurgica Sinete",
+    "url": "https://www.sinetecirurgica.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Loungerie",
+    "url": "https://www.loungerie.com.br",
+    "reclameAqui": {
+      "reputacao": "GOOD",
+      "nota": 7.7,
+      "resolucao": 76.7,
+      "campea2025": false,
+      "url": "https://www.reclameaqui.com.br/empresa/loungerie/",
+      "consultadoEm": "2026-09-30"
+    }
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Ortope",
+    "url": "https://www.ortope.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Vittal Calçados",
+    "url": "https://www.wwwlojavittal.com.br",
+    "reclameAqui": {
+      "reputacao": "GREAT",
+      "nota": 8.1,
+      "resolucao": 88.1,
+      "campea2025": true,
+      "url": "https://www.reclameaqui.com.br/empresa/calcados-vittal/",
+      "consultadoEm": "2026-09-30"
+    }
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Vinícola Jolimont",
+    "url": "https://www.vinhosjolimont.com.br",
+    "reclameAqui": {
+      "reputacao": "GREAT",
+      "nota": 8.1,
+      "resolucao": 81.5,
+      "campea2025": false,
+      "url": "https://www.reclameaqui.com.br/empresa/vinicola-jolimont/",
+      "consultadoEm": "2026-09-30"
+    }
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Probel",
+    "url": "https://www.probel.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Gazin",
+    "url": "https://www.gazin.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "iRobot",
+    "url": "https://www.irobotloja.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "WSS Brasil",
+    "url": "https://www.websurfshop.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "BabyStock",
+    "url": "https://www.babystock.com.br",
+    "reclameAqui": {
+      "reputacao": "GREAT",
+      "nota": 9,
+      "resolucao": 93.3,
+      "campea2025": false,
+      "url": "https://www.reclameaqui.com.br/empresa/babystock/",
+      "consultadoEm": "2026-09-30"
+    }
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Sieno Perfumes",
+    "url": "https://www.sieno.com.br",
+    "reclameAqui": {
+      "reputacao": "GREAT",
+      "nota": 8,
+      "resolucao": 91.3,
+      "campea2025": false,
+      "url": "https://www.reclameaqui.com.br/empresa/sieno-perfumaria/",
+      "consultadoEm": "2026-09-30"
+    }
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Noble Nature",
+    "url": "https://www.noblenature.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Kidy Calçados",
+    "url": "https://www.kidy.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Dyson",
+    "url": "https://www.dysonoficial.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "DeÔnibus",
+    "url": "https://www.deonibus.com",
+    "reclameAqui": {
+      "reputacao": "GREAT",
+      "nota": 8.2,
+      "resolucao": 89.3,
+      "campea2025": true,
+      "url": "https://www.reclameaqui.com.br/empresa/deonibus/",
+      "consultadoEm": "2026-09-30"
+    }
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Disney",
+    "url": "https://www.primevideo.com"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Desconto Aqui",
+    "url": "https://www.descontoaqui.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "BALAROTI",
+    "url": "https://www.balaroti.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Nobelpack",
+    "url": "https://www.nobelpack.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Up4you",
+    "url": "https://www.up4you.com.br",
+    "reclameAqui": {
+      "reputacao": "GOOD",
+      "nota": 7.3,
+      "resolucao": 70.6,
+      "campea2025": false,
+      "url": "https://www.reclameaqui.com.br/empresa/up4you/",
+      "consultadoEm": "2026-09-30"
+    }
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Casa das Alianças",
+    "url": "https://www.casadasaliancas.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Maria Valentina",
+    "url": "https://www.mariavalentina.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "LITTLE DUCK",
+    "url": "https://www.littleduck.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Mais Mu",
+    "url": "https://www.lojamaismu.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Remessa Online",
+    "url": "https://www.remessaonline.com.br",
+    "reclameAqui": {
+      "reputacao": "GREAT",
+      "nota": 8.1,
+      "resolucao": 90.6,
+      "campea2025": false,
+      "url": "https://www.reclameaqui.com.br/empresa/remessa-online/",
+      "consultadoEm": "2026-09-30"
+    }
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "China in Box",
+    "url": "https://www.chinainbox.com.br",
+    "reclameAqui": {
+      "reputacao": "RA1000",
+      "nota": 8.4,
+      "resolucao": 90.5,
+      "campea2025": false,
+      "url": "https://www.reclameaqui.com.br/empresa/china-in-box/",
+      "consultadoEm": "2026-09-30"
+    }
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Rovitex",
+    "url": "https://www.loja.rovitex.com.br",
+    "reclameAqui": {
+      "reputacao": "GOOD",
+      "nota": 7.4,
+      "resolucao": 80.2,
+      "campea2025": false,
+      "url": "https://www.reclameaqui.com.br/empresa/rovitex/",
+      "consultadoEm": "2026-09-30"
+    }
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Hostinger",
+    "url": "https://www.hostinger.com.br",
+    "reclameAqui": {
+      "reputacao": "RA1000",
+      "nota": 8.7,
+      "resolucao": 90.1,
+      "campea2025": false,
+      "url": "https://www.reclameaqui.com.br/empresa/hostinger/",
+      "consultadoEm": "2026-09-30"
+    }
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Mobly",
+    "url": "https://www.mobly.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Malwee",
+    "url": "https://www.malwee.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Editora Foco",
+    "url": "https://www.editorafoco.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "MiniPreço",
+    "url": "https://www.minipreco.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Homedock",
+    "url": "https://www.homedock.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "FOM",
+    "url": "https://www.fom.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Laluna",
+    "url": "https://www.lalunamodas.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Zupper",
+    "url": "https://www.zupper.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Zinco",
+    "url": "https://www.zinco.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Kärcher",
+    "url": "https://www.karcher.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Móveis Carraro",
+    "url": "https://www.loja.carraro.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Tiktok",
+    "url": "https://www.tiktok.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Vapza Alimentos",
+    "url": "https://www.vapza.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Webfones",
+    "url": "https://www.webfones.com.br",
+    "reclameAqui": {
+      "reputacao": "GREAT",
+      "nota": 9.4,
+      "resolucao": 100,
+      "campea2025": false,
+      "url": "https://www.reclameaqui.com.br/empresa/webfones/",
+      "consultadoEm": "2026-09-30"
+    }
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Cicatrissim",
+    "url": "https://www.cicatrissim.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Honor",
+    "url": "https://www.honor.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Xiaomi Brasil",
+    "url": "https://www.mibrasil.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Líquido",
+    "url": "https://www.liquidostore.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Catran",
+    "url": "https://www.catran.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Friopeças",
+    "url": "https://www.friopecas.com.br",
+    "reclameAqui": {
+      "reputacao": "GOOD",
+      "nota": 7.9,
+      "resolucao": 86.7,
+      "campea2025": false,
+      "url": "https://www.reclameaqui.com.br/empresa/friopecas/",
+      "consultadoEm": "2026-09-30"
+    }
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Descomplica",
+    "url": "https://www.descomplica.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Relax Saboaria",
+    "url": "https://www.relax.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Candide",
+    "url": "https://www.candide.com.br"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "motobr",
+    "url": "https://www.motobr.com.br/"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "speedmax (pneus)",
+    "url": "https://www.speedmax.com.br/"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "UVline",
+    "url": "https://www.uvline.com.br/"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Itatiaia",
+    "url": "https://www.minhaitatiaia.com.br/",
+    "reclameAqui": {
+      "reputacao": "RA1000",
+      "nota": 8.9,
+      "resolucao": 93.8,
+      "campea2025": true,
+      "url": "https://www.reclameaqui.com.br/empresa/itatiaia-moveis/",
+      "consultadoEm": "2026-09-30"
+    }
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Cacau Show",
+    "url": "https://www.cacaushow.com.br/"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Komo Wellness",
+    "url": "https://br.komowellness.com/"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Shopee",
+    "url": "https://www.shopee.com.br/"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Xiaomi Tablets",
+    "url": "https://www.mibrasil.com.br/celulares/tablets"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Xiaomi Celulares",
+    "url": "https://www.mibrasil.com.br/celulares/smartphones"
+  },
+  {
+    "tipo": "awin",
+    "nome": "Arno",
+    "url": "https://www.arno.com.br/",
+    "anuncianteId": "108626",
+    "moedaUSD": false,
+    "reclameAqui": {
+      "reputacao": "GOOD",
+      "nota": 7.6,
+      "resolucao": 82,
+      "campea2025": false,
+      "url": "https://www.reclameaqui.com.br/empresa/arno/",
+      "consultadoEm": "2026-09-30"
+    }
+  },
+  {
+    "tipo": "awin",
+    "nome": "Centauro",
+    "url": "https://www.centauro.com.br/",
+    "anuncianteId": "17806",
+    "moedaUSD": false
+  },
+  {
+    "tipo": "awin",
+    "nome": "Spicy",
+    "url": "https://www.spicy.com.br/",
+    "anuncianteId": "30615",
+    "moedaUSD": false
+  },
+  {
+    "tipo": "awin",
+    "nome": "Divvino BR",
+    "url": "https://www.divvino.com.br/",
+    "anuncianteId": "121002",
+    "moedaUSD": false,
+    "reclameAqui": {
+      "reputacao": "GOOD",
+      "nota": 7,
+      "resolucao": 71.8,
+      "campea2025": false,
+      "url": "https://www.reclameaqui.com.br/empresa/divvino/",
+      "consultadoEm": "2026-09-30"
+    }
+  },
+  {
+    "tipo": "awin",
+    "nome": "Italist",
+    "url": "https://www.italist.com/",
+    "anuncianteId": "127855",
+    "moedaUSD": true
+  },
+  {
+    "tipo": "awin",
+    "nome": "Hope Lingerie BR",
+    "url": "https://www.hopeoficial.com.br/",
+    "anuncianteId": "129583",
+    "moedaUSD": false
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Xiaomi Celular 2",
+    "url": "https://www.mibrasil.com.br/celulares/smartphones#/pagina-2"
+  },
+  {
+    "tipo": "awin",
+    "nome": "Alljoy",
+    "url": "https://alljoy.com/",
+    "anuncianteId": "130351",
+    "moedaUSD": true
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Sawary",
+    "url": "https://www.sawary.com/",
+    "moedaUSD": false
+  },
+  {
+    "tipo": "awin",
+    "nome": "Efacil BR",
+    "url": "https://www.efacil.com.br/",
+    "anuncianteId": "47533",
+    "moedaUSD": false
+  },
+  {
+    "tipo": "awin",
+    "nome": "Efacil",
+    "url": "https://www.efacil.com.br/loja/departamento/eletrodomesticos/",
+    "anuncianteId": "47533",
+    "moedaUSD": false
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Skeptic",
+    "url": "https://www.skeptic.com.br",
+    "moedaUSD": false
+  },
+  {
+    "tipo": "awin",
+    "nome": "Brastemp",
+    "url": "https://www.brastemp.com.br/",
+    "anuncianteId": "17772",
+    "moedaUSD": false,
+    "ambiente": "Cozinha",
+    "tipoAmbiente": "Eletrônicos",
+    "reclameAqui": {
+      "reputacao": "GOOD",
+      "nota": 7.9,
+      "resolucao": 85.2,
+      "campea2025": false,
+      "url": "https://www.reclameaqui.com.br/empresa/brastemp-consul/",
+      "consultadoEm": "2026-09-30"
+    }
+  },
+  {
+    "tipo": "awin",
+    "nome": "Continental BR",
+    "url": "https://www.continentalbrasil.com.br/",
+    "anuncianteId": "19675",
+    "moedaUSD": false
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Poltronas Mobly",
+    "url": "https://www.mobly.com.br/moveis/poltronas-sala",
+    "moedaUSD": false,
+    "ambiente": "Sala",
+    "tipoAmbiente": "Móveis"
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Sofás Mobly",
+    "url": "https://www.mobly.com.br/moveis/sofas",
+    "moedaUSD": false,
+    "ambiente": "Sala",
+    "tipoAmbiente": "Móveis",
+    "cron": {
+      "ativo": true,
+      "frequencia": "semanal",
+      "destino": "ofertas-selecionadas",
+      "limite": 50,
+      "ultimaAtualizacao": "2026-09-30T06:30:08.372Z"
+    }
+  },
+  {
+    "tipo": "lomadee",
+    "nome": "Jantar - Mobly",
+    "url": "https://www.mobly.com.br/moveis/conjunto-mesas-cadeiras-jantar",
+    "moedaUSD": false,
+    "ambiente": "Cozinha",
+    "tipoAmbiente": "Móveis",
+    "cron": {
+      "ativo": true,
+      "frequencia": "semanal",
+      "destino": "ofertas-selecionadas",
+      "limite": 50,
+      "ultimaAtualizacao": "2026-09-29T06:30:21.962Z"
+    }
+  },
+  {
+    "tipo": "awin",
+    "nome": "Acer BR",
+    "url": "https://br-store.acer.com/",
+    "anuncianteId": "18878",
+    "moedaUSD": false,
+    "ambiente": "Escritório",
+    "tipoAmbiente": "Eletrônicos"
+  },
+  {
+    "tipo": "awin",
+    "nome": "Weleda",
+    "url": "https://www.weleda.com.br",
+    "anuncianteId": "rakuten-54237",
+    "moedaUSD": false
+  },
+  {
+    "tipo": "awin",
+    "nome": "Loja Atlas",
+    "url": "https://loja.atlas.ind.br/",
+    "anuncianteId": "actionpay-14185",
+    "moedaUSD": false
+  },
+  {
+    "tipo": "awin",
+    "nome": "Midea Store - Eletrodomesticos",
+    "url": "https://www.mideastore.com.br/",
+    "anuncianteId": "actionpay-14498",
+    "moedaUSD": false
+  },
+  {
+    "tipo": "awin",
+    "nome": "Electrolux - Eletrodomesticos",
+    "url": "https://loja.electrolux.com.br/",
+    "anuncianteId": "actionpay-16409",
+    "moedaUSD": false
+  },
+  {
+    "tipo": "awin",
+    "nome": "Isabela Flores - Loja Online",
+    "url": "https://www.isabelaflores.com/",
+    "anuncianteId": "actionpay-14947",
+    "moedaUSD": false
+  },
+  {
+    "tipo": "awin",
+    "nome": "Lojas Benoit - Multiprodutos",
+    "url": "https://www.benoit.com.br/",
+    "anuncianteId": "actionpay-10175",
+    "moedaUSD": false
+  },
+  {
+    "tipo": "awin",
+    "nome": "Info Store - Informatica",
+    "url": "https://www.infostore.com.br/",
+    "anuncianteId": "actionpay-14002",
+    "moedaUSD": false
+  },
+  {
+    "tipo": "awin",
+    "nome": "ShopClub - Eletrodomésticos",
+    "url": "https://www.shopclub.com.br/",
+    "anuncianteId": "actionpay-16369",
+    "moedaUSD": false
+  },
+  {
+    "tipo": "awin",
+    "nome": "Authentical - Brincos e Acessorios",
+    "url": "https://www.authentical.com.br/",
+    "anuncianteId": "actionpay-13950",
+    "moedaUSD": false
+  },
+  {
+    "tipo": "awin",
+    "nome": "Decathlon BR",
+    "url": "https://www.decathlon.com.br/",
+    "anuncianteId": "actionpay-18668",
+    "moedaUSD": false
+  },
+  {
+    "tipo": "awin",
+    "nome": "Oceane - Maquiagem e Cosmeticos",
+    "url": "https://www.oceane.com.br/",
+    "anuncianteId": "actionpay-18654",
+    "moedaUSD": false
+  },
+  {
+    "tipo": "awin",
+    "nome": "DHGate - Multiprodutos",
+    "url": "https://pt.dhgate.com/",
+    "anuncianteId": "actionpay-14605",
+    "moedaUSD": false
+  },
+  {
+    "tipo": "awin",
+    "nome": "Udemy - Cursos Online",
+    "url": "https://www.udemy.com/",
+    "anuncianteId": "actionpay-17880",
+    "moedaUSD": false
+  },
+  {
+    "tipo": "awin",
+    "nome": "Fever BR - Ingressos",
+    "url": "https://feverup.com/",
+    "anuncianteId": "actionpay-18578",
+    "moedaUSD": false
+  },
+  {
+    "tipo": "awin",
+    "nome": "Trivago Hoteis",
+    "url": "https://www.trivago.com.br/",
+    "anuncianteId": "actionpay-18314",
+    "moedaUSD": false
+  },
+  {
+    "tipo": "awin",
+    "nome": "Ouros Jewels",
+    "url": "https://www.ourosjewels.com/collections/gift",
+    "anuncianteId": "123706",
+    "moedaUSD": true,
+    "vistaSe": true,
+    "tipoVistaSe": "Acessórios"
+  },
+  {
+    "tipo": "awin",
+    "nome": "Ouros Jewels",
+    "url": "https://www.ourosjewels.com/collections/all-jewelry-lab-grown-diamond-loose",
+    "anuncianteId": "123706",
+    "moedaUSD": true,
+    "vistaSe": true,
+    "tipoVistaSe": "Acessórios"
+  }
+]

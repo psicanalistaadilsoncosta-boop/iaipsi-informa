@@ -129,13 +129,49 @@ function BannerNewsletter() {
         <div className="bn-left">
           <div className="bn-icon">📧✨</div>
           <div>
-            <div className="bn-title">Sua lista, no seu email</div>
-            <div className="bn-sub">Escolha produtos e ofertas, receba a lista que você montou e as novidades do seu universo.</div>
+            <div className="bn-title">Monte sua lista e receba no e-mail</div>
+            <div className="bn-sub">Escolha uma vitrine abaixo, toque em <b>+ Lista</b> nos produtos de que gostar e receba os links no seu e-mail.</div>
           </div>
         </div>
         <div className="bn-cats">🏠🍷👔🧴🛒👶 </div>
       </div>
     </>
+  );
+}
+
+function BannerPraVoce() {
+  const c = TEMAS.pravoce?.cores || ['#EEF8FA', '#0E7490', '#164E63', '#F59E0B', '#D5EFF4', '#082F3A'];
+  return (
+    <a href="/pra-voce" className="bp-wrap" style={{ background: `linear-gradient(135deg, ${c[1]}, ${c[2]})` }}>
+      <style>{`
+        .bp-wrap { border-radius: 14px; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between;
+          gap: 24px; width: 100%; box-sizing: border-box; min-height: 80px; text-decoration: none; color: #fff;
+          box-shadow: 0 4px 16px rgba(14,116,144,0.25); transition: transform .2s; }
+        .bp-wrap:hover { transform: translateY(-3px); }
+        .bp-left { display: flex; align-items: center; gap: 14px; }
+        .bp-icon { font-size: 2rem; line-height: 1; }
+        .bp-title { font-weight: 800; font-size: 1.05rem; }
+        .bp-sub { font-size: 0.8rem; opacity: .9; margin-top: 2px; }
+        .bp-dir { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+        .bp-emojis { font-size: 1.3rem; letter-spacing: 4px; }
+        .bp-btn { font-weight: 800; font-size: .8rem; padding: 8px 16px; border-radius: 999px; white-space: nowrap; }
+        @media (max-width: 640px) {
+          .bp-wrap { flex-direction: column; align-items: flex-start; gap: 14px; padding: 18px 20px; }
+          .bp-emojis { display: none; }
+        }
+      `}</style>
+      <div className="bp-left">
+        <div className="bp-icon">🎧</div>
+        <div>
+          <div className="bp-title">Lupa pra você</div>
+          <div className="bp-sub">Trabalhar e estudar, mexer o corpo e ficar conectado: ofertas lupadas de perto.</div>
+        </div>
+      </div>
+      <div className="bp-dir">
+        <span className="bp-emojis" aria-hidden="true">💻👟📱</span>
+        <span className="bp-btn" style={{ background: c[3], color: c[5] }}>Ver ofertas →</span>
+      </div>
+    </a>
   );
 }
 
@@ -351,7 +387,10 @@ function GridPaginasProdutos() {
         <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 500, marginLeft: '4px' }}>ambiente, moda, beleza e mais...</span>
       </div>
 
-      <div className="su-grid">
+           <div className="su-grid">
+        <div className="su-news">
+          <BannerNewsletter />
+        </div>
         {PAGINAS_PRODUTOS.map(p => {
           const T = TEMAS[TEMA_DA_PAGINA[p.href]];
           if (!T) return null;
@@ -370,8 +409,8 @@ function GridPaginasProdutos() {
             </a>
           );
         })}
-        <div className="su-news">
-          <BannerNewsletter />
+                <div className="su-news">
+          <BannerPraVoce />
         </div>
       </div>
     </section>

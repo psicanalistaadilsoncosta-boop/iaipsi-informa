@@ -18,6 +18,7 @@ export type Tema = {
   exemplos?: { mim?: Partial<Exemplos>; juntos?: Partial<Exemplos> }; // textos de exemplo da lista de pedidos
   leadTipo: string;   // identifica a origem da lista no e-mail
   faixas?: Faixa[];   // faixas de preço próprias (sem isso, usa FAIXAS_PRECO)
+  todos?: boolean;    // mostra o chip "Todos" também nas vitrines por tipo
 };
 
 export type Exemplos = { dica: string; para: string; obs: string; sent: string; nec: string; ped: string; nome: string; lista: string };
@@ -52,6 +53,17 @@ export const TEMAS: Record<string, Tema> = {
     cta: '💄 Ver beleza', emoji: '💄', deco: ['🌸', '✨'], filtro: 'tipo', leadTipo: 'beleza',
     faixas: [{ nome: 'Até R$ 50', min: 0, max: 50 }, { nome: 'R$ 50 a 150', min: 50.01, max: 150 }, { nome: 'Acima de R$ 150', min: 150.01, max: Infinity }],
   },
+
+  pravoce: {
+    cores: ['#EEF8FA', '#0E7490', '#164E63', '#F59E0B', '#D5EFF4', '#082F3A'],
+    faixa: '🔍 Notebook, tênis, celular: o que é seu, lupado de perto',
+    eyebrow: 'Lupa pra você',
+    titulo: ['Trabalho, treino e conexão, ', 'com a lupa', ''],
+    sub: 'Para trabalhar e estudar, mexer o corpo e ficar conectado. Escolha a situação e monte sua lista com os links.',
+    cta: '🔍 Ver ofertas', emoji: '🎧', deco: ['💻', '👟'], filtro: 'tipo', leadTipo: 'pravoce', todos: true,
+    faixas: [{ nome: 'Até R$ 300', min: 0, max: 300 }, { nome: 'R$ 300 a 1.500', min: 300.01, max: 1500 }, { nome: 'Acima de R$ 1.500', min: 1500.01, max: Infinity }],
+  },
+
   vistase: {
     cores: ['#FAF7FF', '#7C3AED', '#1F1A2E', '#FBBF24', '#EDE5FF', '#1A1033'],
     faixa: '🛍️ Novidades da semana em moda, calçados e acessórios',
