@@ -1,4 +1,5 @@
 import { kv } from '@/lib/kv';
+import { lerTodos } from '@/lib/pinados';
 import Link from 'next/link';
 
 export const revalidate = 0;
@@ -31,7 +32,7 @@ function categoriaToSlug(cat: string): string {
 
 async function getProdutosDaCategoria(slug: string): Promise<{ produtos: ProdutoPinado[]; nomeCategoria: string | null }> {
   try {
-    const todos = await kv.get<ProdutoPinado[]>('produtos:pinados') || [];
+    const todos = (await lerTodos()) as ProdutoPinado[];
     const produtos = todos.filter(p => p.categoria && categoriaToSlug(p.categoria) === slug);
     const nomeCategoria = produtos.length > 0 ? produtos[0].categoria! : null;
     return { produtos, nomeCategoria };

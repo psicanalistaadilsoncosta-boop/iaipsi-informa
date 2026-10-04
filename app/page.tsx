@@ -4,6 +4,7 @@ import iconv from 'iconv-lite';
 import fs from 'fs/promises';
 import path from 'path';
 import { kv } from '@/lib/kv';
+import { lerTodos, lerDestino } from '@/lib/pinados';
 // Tempo limite garantido: se a API não responder, devolve o valor reserva em vez de travar
 function comTempoLimite<T>(p: Promise<T>, ms: number, reserva: T): Promise<T> {
   return Promise.race([p, new Promise<T>(resolve => setTimeout(() => resolve(reserva), ms))]).catch(() => reserva);
@@ -340,7 +341,7 @@ async function getOfertasMix(): Promise<any[]> {
     // Produtos pinados — tenta KV primeiro, depois JSON
     let produtosPinados: any[] = [];
     try {
-      const kvData = await kv.get<any[]>('produtos:pinados');
+      const kvData = await lerDestino('mix');
       if (kvData && kvData.length > 0) {
         produtosPinados = kvData
           .filter((p: any) => p.destinos?.includes('mix'))
@@ -437,7 +438,7 @@ async function getBannerData(): Promise<{ slidesEditoriais: any[]; produtosBanne
   try {
     const [slidesEditoriais, produtosPinados] = await Promise.all([
       kv.get<any[]>('banner:slides').then(v => v || []),
-      kv.get<any[]>('produtos:pinados').then(v => v || []),
+      lerTodos(),
     ]);
 
     const produtosBanner = produtosPinados
@@ -463,7 +464,7 @@ async function getBannerData(): Promise<{ slidesEditoriais: any[]; produtosBanne
 // As 8 ofertas selecionadas mais recentes, para a faixa "Lupadas da semana"
 async function getLupadas(): Promise<any[]> {
   try {
-    const data = (await kv.get<any[]>('produtos:pinados')) || [];
+    const data = await lerDestino('ofertas-selecionadas');
     return data
       .filter(p => p.destinos?.includes('ofertas-selecionadas') && p.ativo !== false && p.preco > 0)
       .sort((a, b) => new Date(b.pinedAt || 0).getTime() - new Date(a.pinedAt || 0).getTime())

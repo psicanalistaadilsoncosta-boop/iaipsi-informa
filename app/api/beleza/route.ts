@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { kv } from '@/lib/kv';
+import { lerGaveta } from '@/lib/pinados';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +15,7 @@ function detectarTipoBeleza(nome: string): string {
 }
 
 export async function GET() {
-  const produtos: any[] = (await kv.get('produtos:pinados')) || [];
+  const produtos: any[] = await lerGaveta('beleza');
 
   const mapa: Record<string, any[]> = {};
 

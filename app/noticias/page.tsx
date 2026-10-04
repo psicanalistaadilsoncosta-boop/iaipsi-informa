@@ -5,6 +5,7 @@ import iconv from 'iconv-lite';
 import fs from 'fs/promises';
 import path from 'path';
 import { kv } from '@/lib/kv';
+import { lerTodos, lerDestino } from '@/lib/pinados';
 
 // Tempo limite garantido: se a API não responder, devolve o valor reserva em vez de travar
 function comTempoLimite<T>(p: Promise<T>, ms: number, reserva: T): Promise<T> {
@@ -233,7 +234,7 @@ async function getOfertasMix(): Promise<any[]> {
 
     let produtosPinados: any[] = [];
     try {
-      const kvData = await kv.get<any[]>('produtos:pinados');
+      const kvData = await lerDestino('mix');
       if (kvData && kvData.length > 0) {
         produtosPinados = kvData
           .filter((p: any) => p.destinos?.includes('mix'))
@@ -344,7 +345,7 @@ async function getBannerData(): Promise<{ slidesEditoriais: any[]; produtosBanne
   try {
     const [slidesEditoriais, produtosPinados] = await Promise.all([
       kv.get<any[]>('banner:slides').then(v => v || []),
-      kv.get<any[]>('produtos:pinados').then(v => v || []),
+      lerTodos(),
     ]);
     const produtosBanner = produtosPinados
       .filter((p: any) => p.bannerDestaque === true)

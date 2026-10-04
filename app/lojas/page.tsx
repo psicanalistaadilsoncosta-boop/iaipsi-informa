@@ -1,4 +1,5 @@
 import { kv } from '@/lib/kv';
+import { lerTodos } from '@/lib/pinados';
 import Link from 'next/link';
 
 export const revalidate = 0;
@@ -23,7 +24,7 @@ function lojaToSlug(loja: string): string {
 
 async function getLojas(): Promise<{ nome: string; slug: string; total: number; thumb?: string }[]> {
   try {
-    const todos = await kv.get<ProdutoPinado[]>('produtos:pinados') || [];
+    const todos = (await lerTodos()) as ProdutoPinado[];
     const mapa = new Map<string, { total: number; thumb?: string }>();
 
     for (const p of todos) {

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { kv } from '@/lib/kv';
+import { lerTodos } from '@/lib/pinados';
 import BotaoWhatsApp from '../BotaoWhatsApp';
 
 export const dynamic = 'force-dynamic';
@@ -26,7 +27,7 @@ function formatarPreco(valor: any): string | null {
 async function buscarProdutos(termo: string): Promise<any[]> {
   if (termo.length < 2) return [];
   try {
-    const produtos = (await kv.get<any[]>('produtos:pinados')) || [];
+    const produtos = await lerTodos();
     const palavras = normalizar(termo).split(/\s+/).filter(Boolean);
 
     return produtos

@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
-import { kv } from '@/lib/kv';
+import { lerGaveta } from '@/lib/pinados';
 
-const KEY = 'produtos:pinados';
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const data = await kv.get<any[]>(KEY);
-    const pinados = data || [];
+    const pinados = await lerGaveta('ambiente');
 
     // Agrupa por ambiente → tipo → produtos
     const mapa: Record<string, Record<string, any[]>> = {};

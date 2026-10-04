@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { kv } from '@/lib/kv';
 import { isAdmin } from '@/lib/adminAuth';
+import { lerTodos, lerUm, salvar } from '@/lib/pinados';
 
 export async function GET() {
-  const produtos = (await kv.get<any[]>('produtos:pinados')) || [];
+  const produtos = await lerTodos();
   const lojas = (await kv.get<any[]>('lojas:cadastradas')) || [];
 
   // Monta mapa domínio → loja
@@ -42,20 +43,17 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   if (!isAdmin(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
   const { id, ambiente, tipoAmbiente, momento, tipoMomento, destinos } = await req.json();
-  const produtos = (await kv.get<any[]>('produtos:pinados')) || [];
+  const p = await lerUm(String(id));
+  if (!p) return NextResponse.json({ error: 'produto não encontrado' }, { status: 404 });
 
-  const novos = produtos.map(p => {
-    if (p.id !== id) return p;
-    return {
-      ...p,
-      ambiente: ambiente || undefined,
-      tipoAmbiente: tipoAmbiente || undefined,
-      momento: momento || undefined,
-      tipoMomento: tipoMomento || undefined,
-      destinos: destinos || p.destinos,
-    };
-  });
-
-  await kv.set('produtos:pinados', novos);
+  // grava só este produto (JSON não guarda campos "undefined": eles somem, como antes)
+  await salvar(JSON.parse(JSON.stringify({
+    ...p,
+    ambiente: ambiente || undefined,
+    tipoAmbiente: tipoAmbiente || undefined,
+    momento: momento || undefined,
+    tipoMomento: tipoMomento || undefined,
+    destinos: destinos || p.destinos,
+  })));
   return NextResponse.json({ ok: true });
 }

@@ -2,6 +2,7 @@ import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 import { kv } from '@/lib/kv';
 import { isAdmin } from '@/lib/adminAuth';
+import { lerTodos, lerUm, lerDestino, salvar, salvarVarios, remover } from '@/lib/pinados';
 
 export interface ProdutoPinado {
   id: string;
@@ -24,13 +25,8 @@ export interface ProdutoPinado {
   categoria?: string;
 }
 
-const KEY = 'produtos:pinados';
-
 async function read(): Promise<ProdutoPinado[]> {
-  try {
-    const data = await kv.get<ProdutoPinado[]>(KEY);
-    return data || [];
-  } catch { return []; }
+  try { return await lerTodos(); } catch { return []; }
 }
 
 // Acha o nome da loja cadastrada pelo domínio do link original do produto
@@ -59,24 +55,17 @@ export async function POST(req: NextRequest) {
       produto.loja = nomeCadastrado;
       (produto as any).lojaNome = nomeCadastrado;
     }
-    let existing = await read();
-    const idx = existing.findIndex(p => p.id === produto.id);
+    const antigo = await lerUm(produto.id);
 
-    // Se está ativando como oferta do dia, desativa todos os outros
+    // Se está ativando como oferta do dia, desativa os outros (grava só esses)
     if (produto.ativo && produto.destinos?.includes('oferta-do-dia')) {
-      existing = existing.map(p => ({
-        ...p,
-        ativo: p.destinos?.includes('oferta-do-dia') ? false : p.ativo,
-      }));
+      const outros = (await lerDestino('oferta-do-dia')).filter(p => p.id !== produto.id && p.ativo);
+      await salvarVarios(outros.map(p => ({ ...p, ativo: false })));
     }
 
-    if (idx >= 0) {
-      existing[idx] = { ...existing[idx], ...produto, pinedAt: existing[idx].pinedAt };
-    } else {
-      existing = [{ ...produto, pinedAt: new Date().toISOString() }, ...existing].slice(0, 3000);
-    }
-
-    await kv.set(KEY, existing);
+    await salvar(antigo
+      ? { ...antigo, ...produto, pinedAt: antigo.pinedAt }
+      : { ...produto, pinedAt: new Date().toISOString() });
     revalidatePath('/'); return NextResponse.json({ success: true });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
@@ -87,8 +76,7 @@ export async function DELETE(req: NextRequest) {
   if (!isAdmin(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
   try {
     const { id } = await req.json();
-    const existing = await read();
-    await kv.set(KEY, existing.filter(p => p.id !== id));
+    await remover(String(id));
     revalidatePath('/'); return NextResponse.json({ success: true });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });

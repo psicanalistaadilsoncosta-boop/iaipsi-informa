@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import Link from 'next/link';
 import { kv } from '@/lib/kv';
+import { lerDestino } from '@/lib/pinados';
 import BotaoWhatsApp from '../BotaoWhatsApp';
 import CabecalhoTema from '../temas/CabecalhoTema';
 import FiltrosLista, { aplicarFiltros, linkFiltros } from '../temas/FiltrosLista';
@@ -25,8 +26,8 @@ const POR_PAGINA = 30;
 
 async function getTodos(): Promise<ProdutoPinado[]> {
   try {
-    const data = await kv.get<ProdutoPinado[]>('produtos:pinados');
-    return (data || []).filter(p => p.destinos?.includes('parcelado'));
+    const data = (await lerDestino('parcelado')) as ProdutoPinado[];
+    return data.filter(p => p.destinos?.includes('parcelado'));
   } catch {}
   try {
     const filePath = path.join(process.cwd(), 'public', 'produtos-pinados.json');

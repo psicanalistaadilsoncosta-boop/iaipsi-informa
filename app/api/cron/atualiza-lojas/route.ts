@@ -9,6 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { kv } from '@/lib/kv';
+import { lerTodos, lerUm, salvarVarios, remover } from '@/lib/pinados';
 
 interface LojaCron {
   ativo: boolean;
@@ -75,7 +76,6 @@ interface ProdutoPinado {
 }
 
 const LOJAS_KEY = 'lojas:cadastradas';
-const PINADOS_KEY = 'produtos:pinados';
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://comlupa.com.br';
 
 function diasDesdeUltima(ultimaAtualizacao: string | null): number {
@@ -151,7 +151,7 @@ export async function GET(req: NextRequest) {
   }
 
   let lojas = (await kv.get<Loja[]>(LOJAS_KEY)) || [];
-  const pinados = (await kv.get<ProdutoPinado[]>(PINADOS_KEY)) || [];
+  const pinados = (await lerTodos()) as ProdutoPinado[];
 
   const lojasParaAtualizar = lojas.filter(l => l.cron?.ativo && precisaAtualizar(l.cron));
 
@@ -161,6 +161,10 @@ export async function GET(req: NextRequest) {
 
   const resultados: Record<string, { removidos?: number; pinados: number; erro?: string }> = {};
   let pinadosAtualizados = [...pinados];
+  // o que mudar é gravado no fim, produto por produto (não regrava a lista inteira)
+  const paraRemover = new Set<string>();
+  const paraAtualizar = new Map<string, Record<string, any>>();
+  const novosTodos: ProdutoPinado[] = [];
 
   for (const loja of lojasParaAtualizar) {
     try {
@@ -195,6 +199,7 @@ export async function GET(req: NextRequest) {
       // Remove apenas os "a_catalogar" desta loja (catalogados ficam intactos)
       const daMesmaBusca = (p: any) => isDaLoja(p) && !temCategoria(p) && (!p.origemUrl || p.origemUrl === loja.url);
       const removidos = pinadosAtualizados.filter(daMesmaBusca);
+      removidos.forEach(p => paraRemover.add(String(p.id)));
       pinadosAtualizados = pinadosAtualizados.filter(p => !daMesmaBusca(p));
 
       // Catalogados desta loja (para match automático)
@@ -230,8 +235,7 @@ export async function GET(req: NextRequest) {
         if (matchIdx >= 0) {
           // Match encontrado: substitui o catalogado preservando a categoria
           const antigo = catalogadosDaLoja[matchIdx];
-          const atualizado = {
-            ...antigo,
+          const campos = {
             nome: produto.nome,
             imagem: produto.imagem,
             preco: produto.preco,
@@ -246,6 +250,8 @@ export async function GET(req: NextRequest) {
             lojaNome: loja.nome,
             ...(loja.moedaUSD ? { moedaUSD: true } : {}),
           };
+          const atualizado = { ...antigo, ...campos };
+          paraAtualizar.set(String(antigo.id), campos);
           // Substitui no array principal
           const idxPrincipal = pinadosAtualizados.findIndex(p => p.id === antigo.id);
           if (idxPrincipal >= 0) pinadosAtualizados[idxPrincipal] = atualizado as any;
@@ -269,6 +275,7 @@ export async function GET(req: NextRequest) {
       }
 
       pinadosAtualizados = [...pinadosAtualizados, ...novos];
+      novosTodos.push(...novos);
 
       // 4. Atualiza ultimaAtualizacao da loja no KV
         if (falhasLink < limite) lojas = lojas.map(l => {
@@ -288,8 +295,20 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Salva pinados atualizados
-  await kv.set(PINADOS_KEY, pinadosAtualizados);
+  // Grava só o que mudou, relendo cada produto na hora
+  // (assim não desfaz o que foi mudado no admin enquanto o cron rodava)
+  for (const id of paraRemover) {
+    const atual = await lerUm(id);
+    if (atual && !(atual.ambiente || atual.momento || atual.vistaSe || atual.beleza || atual.mercado || atual.praVoce)) {
+      await remover(id);
+    }
+  }
+  const atualizados: any[] = [];
+  for (const [id, campos] of paraAtualizar) {
+    const atual = await lerUm(id);
+    if (atual) atualizados.push({ ...atual, ...campos });
+  }
+  await salvarVarios([...atualizados, ...novosTodos]);
 
   return NextResponse.json({
     ok: true,

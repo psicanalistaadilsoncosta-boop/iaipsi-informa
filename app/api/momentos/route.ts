@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { lerGaveta } from '@/lib/pinados';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const produtos: any[] = await lerGaveta('momento');

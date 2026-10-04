@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { kv } from '@/lib/kv';
+import { lerGaveta } from '@/lib/pinados';
 
-const KEY = 'produtos:pinados';
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const todos = (await kv.get<any[]>(KEY)) || [];
+    const todos = await lerGaveta('mercado');
     const mercado = todos.filter(p => p.mercado);
     const porTipo: Record<string, any[]> = {};
     for (const p of mercado) {

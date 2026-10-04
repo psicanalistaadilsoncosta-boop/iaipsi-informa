@@ -1,4 +1,5 @@
 import { kv } from '@/lib/kv';
+import { lerTodos } from '@/lib/pinados';
 import Link from 'next/link';
 
 interface ProdutoPinado {
@@ -28,7 +29,7 @@ function lojaToSlug(loja: string): string {
 
 async function getProdutosDaLoja(slug: string): Promise<{ produtos: ProdutoPinado[]; nomeLoja: string | null }> {
   try {
-    const todos = await kv.get<ProdutoPinado[]>('produtos:pinados') || [];
+    const todos = (await lerTodos()) as ProdutoPinado[];
     const produtos = todos.filter(p => p.loja && lojaToSlug(p.loja) === slug);
     const nomeLoja = produtos.length > 0 ? produtos[0].loja! : null;
     return { produtos, nomeLoja };

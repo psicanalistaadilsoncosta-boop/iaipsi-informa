@@ -3,13 +3,16 @@
 // NÃO apaga a lista antiga. Salva uma cópia em backups/ antes.
 // Uso:
 //   node --env-file=.env.local scripts/migra-pinados.mjs            -> só mostra (não grava)
-//   node --env-file=.env.local scripts/migra-pinados.mjs --gravar   -> grava as gavetas
+//   node --env-file=.env.local scripts/migra-pinados.mjs --gravar   -> recria as gavetas do zero a partir da lista antiga
+//   node --env-file=.env.local scripts/migra-pinados.mjs --mesclar  -> só ACRESCENTA nas gavetas os produtos da lista antiga
+//                                                                     que ainda não existem nelas (não apaga nem altera nada)
 
 import { mkdirSync, writeFileSync } from 'node:fs';
 
 const URL_KV = process.env.informa_KV_REST_API_URL || process.env.KV_REST_API_URL;
 const TOKEN = process.env.informa_KV_REST_API_TOKEN || process.env.KV_REST_API_TOKEN;
 const GRAVAR = process.argv.includes('--gravar');
+const MESCLAR = process.argv.includes('--mesclar');
 if (!URL_KV || !TOKEN) { console.error('Variáveis do KV não encontradas. Rode com --env-file=.env.local'); process.exit(1); }
 
 async function cmd(lista) {
@@ -46,7 +49,23 @@ for (const p of validos) for (const g of gavetasDo(p)) (gavetas[g] ||= []).push(
 console.log('Gavetas que serão criadas:');
 for (const [g, ids] of Object.entries(gavetas).sort()) console.log(`  ${g.padEnd(28)} ${ids.length}`);
 
-if (!GRAVAR) { console.log('\nNada foi gravado. Para gravar, rode de novo com --gravar'); process.exit(0); }
+if (MESCLAR) {
+  const [existentes] = await cmd([['HKEYS', 'pin:prod']]);
+  const jaTem = new Set((existentes.result || []).map(String));
+  const faltam = validos.filter(p => !jaTem.has(String(p.id)));
+  console.log(`\nMesclar: ${jaTem.size} já estão nas gavetas | ${faltam.length} da lista antiga ainda não estão`);
+  for (let i = 0; i < faltam.length; i += 150) {
+    const parte = faltam.slice(i, i + 150);
+    await cmd([['HSET', 'pin:prod', ...parte.flatMap(p => [String(p.id), JSON.stringify(p)])]]);
+  }
+  const porGaveta = {};
+  for (const p of faltam) for (const g of gavetasDo(p)) (porGaveta[g] ||= []).push(String(p.id));
+  if (Object.keys(porGaveta).length) await cmd(Object.entries(porGaveta).map(([g, ids]) => ['SADD', g, ...ids]));
+  console.log(`✅ ${faltam.length} produtos acrescentados. Nada foi apagado nem alterado.`);
+  process.exit(0);
+}
+
+if (!GRAVAR) { console.log('\nNada foi gravado. Para recriar as gavetas use --gravar; para só acrescentar o que falta use --mesclar'); process.exit(0); }
 
 mkdirSync('backups', { recursive: true });
 const arq = `backups/produtos-pinados-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;

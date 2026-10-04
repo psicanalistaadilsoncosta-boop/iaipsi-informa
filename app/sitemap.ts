@@ -2,6 +2,7 @@ import { MetadataRoute } from 'next';
 import fs from 'fs/promises';
 import path from 'path';
 import { kv } from '@/lib/kv';
+import { lerTodos } from '@/lib/pinados';
 
 // Refaz o sitemap a cada 1 hora, lendo o conteúdo atual do KV
 export const revalidate = 3600;
@@ -89,7 +90,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lerKV('artigos:compalavra'),
     lerKV('artigos:produtos'),
     lerKV('artigos:viagens'),
-    lerKV('produtos:pinados'),
+    lerTodos().catch(() => []),
   ]);
 
   const paginasEditorial: MetadataRoute.Sitemap = editorial

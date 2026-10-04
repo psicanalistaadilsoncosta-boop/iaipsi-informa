@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { kv } from '@/lib/kv';
+import { lerGaveta } from '@/lib/pinados';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const produtos: any[] = (await kv.get('produtos:pinados')) || [];
+  const produtos: any[] = await lerGaveta('vistaSe');
 
   const adulto: Record<string, any[]> = {};
   const filho: Record<string, any[]> = {};

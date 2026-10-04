@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { kv } from '@/lib/kv';
+import { lerUm } from '@/lib/pinados';
 import Redireciona from './Redireciona';
 
 // Link curto de oferta: comlupa.com.br/o/<id do produto pinado>
@@ -10,8 +11,7 @@ export const dynamic = 'force-dynamic';
 
 async function buscarProduto(id: string): Promise<any | null> {
   try {
-    const pinados = (await kv.get<any[]>('produtos:pinados')) || [];
-    return pinados.find((p) => String(p.id) === id) || null;
+    return await lerUm(String(id));
   } catch {
     return null;
   }
