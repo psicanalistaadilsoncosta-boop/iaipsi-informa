@@ -1,6 +1,6 @@
 import { revalidatePath } from 'next/cache';
 import { NextResponse, NextRequest } from 'next/server';
-import { kv } from '@/lib/kv';
+import { lerTodos, lerUm, salvar, salvarVarios } from '@/lib/pinados';
 import { isAdmin } from '@/lib/adminAuth';
 
 export const dynamic = 'force-dynamic';
@@ -12,8 +12,7 @@ function checkAuth(req: NextRequest) {
 // GET — retorna todos os produtos
 export async function GET(req: NextRequest) {
   if (!checkAuth(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
-  const produtos: any[] = (await kv.get('produtos:pinados')) || [];
-  return NextResponse.json(produtos);
+  return NextResponse.json(await lerTodos());
 }
 
 function aplicarCat(p: any, categoria: string, nomeAmbiente?: string, tipoAmbiente?: string, tipoMomento?: string, tipoVistaSe?: string, tipoBeleza?: string, tipoMercado?: string, tipoPraVoce?: string) {
@@ -47,7 +46,7 @@ function aplicarCat(p: any, categoria: string, nomeAmbiente?: string, tipoAmbien
   return novo;
 }
 
-// PATCH — atualiza categoria de um ou vários produtos
+// PATCH — atualiza categoria de um ou vários produtos (grava só os produtos mexidos)
 // body: { id, categoria, ... }  ← individual
 // body: { ids: string[], categoria, ... }  ← lote
 // body: { id, bannerDestaque, precoTipo, textoParcelamento } ← configuração de banner
@@ -55,19 +54,17 @@ export async function PATCH(req: NextRequest) {
   if (!checkAuth(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
   const body = await req.json();
 
-  const produtos: any[] = (await kv.get('produtos:pinados')) || [];
-
   // Modo banner: apenas atualiza campos de banner
   if ('bannerDestaque' in body || 'precoTipo' in body) {
     const id: string = body.id;
     if (!id) return NextResponse.json({ error: 'id obrigatório' }, { status: 400 });
-    const idx = produtos.findIndex((p: any) => p.id === id);
-    if (idx === -1) return NextResponse.json({ error: 'produto não encontrado' }, { status: 404 });
-    if ('bannerDestaque' in body) produtos[idx].bannerDestaque = !!body.bannerDestaque;
-   if ('precoTipo' in body) produtos[idx].precoTipo = body.precoTipo;
-if ('textoParcelamento' in body) produtos[idx].textoParcelamento = body.textoParcelamento;
-if ('valorParcela' in body) produtos[idx].valorParcela = body.valorParcela; // valor da parcela em número
-    await kv.set('produtos:pinados', produtos);
+    const p = await lerUm(id);
+    if (!p) return NextResponse.json({ error: 'produto não encontrado' }, { status: 404 });
+    if ('bannerDestaque' in body) p.bannerDestaque = !!body.bannerDestaque;
+    if ('precoTipo' in body) p.precoTipo = body.precoTipo;
+    if ('textoParcelamento' in body) p.textoParcelamento = body.textoParcelamento;
+    if ('valorParcela' in body) p.valorParcela = body.valorParcela;
+    await salvar(p);
     revalidatePath('/'); return NextResponse.json({ ok: true });
   }
 
@@ -78,13 +75,15 @@ if ('valorParcela' in body) produtos[idx].valorParcela = body.valorParcela; // v
   const ids: string[] = body.ids ?? (body.id ? [body.id] : []);
   if (ids.length === 0) return NextResponse.json({ error: 'id ou ids obrigatório' }, { status: 400 });
 
+  const mudados: any[] = [];
   for (const id of ids) {
-    const idx = produtos.findIndex((p: any) => p.id === id);
-    if (idx !== -1) {
-    produtos[idx] = aplicarCat(produtos[idx], categoria, nomeAmbiente, tipoAmbiente, tipoMomento, tipoVistaSe, tipoBeleza, tipoMercado, tipoPraVoce);
-    }
+    const p = await lerUm(id);
+    if (!p) continue;
+    const novo = aplicarCat(p, categoria, nomeAmbiente, tipoAmbiente, tipoMomento, tipoVistaSe, tipoBeleza, tipoMercado, tipoPraVoce);
+    if (body.limparACatalogar) novo.aCatalogar = false;
+    mudados.push(novo);
   }
+  await salvarVarios(mudados);
 
-  await kv.set('produtos:pinados', produtos);
-  revalidatePath('/'); return NextResponse.json({ ok: true, atualizados: ids.length });
+  revalidatePath('/'); return NextResponse.json({ ok: true, atualizados: mudados.length });
 }

@@ -1,0 +1,133 @@
+import { revalidatePath } from 'next/cache';
+import { NextRequest, NextResponse } from 'next/server';
+import { kv } from '@/lib/kv';
+import { isAdmin } from '@/lib/adminAuth';
+
+export interface ProdutoPinado {
+  id: string;
+  nome: string;
+  imagem: string;
+  link: string;
+  linkOriginal: string;
+  preco: number;
+  precoOriginal: number;
+  desconto: number;
+   parcelas?: string;
+  valorParcela?: string;
+  organizationId: string;
+  destinos: string[];
+  ativo?: boolean;
+  pinedAt: string;
+  ambiente?: string;
+  tipoAmbiente?: string;
+  loja?: string;
+  categoria?: string;
+}
+
+const KEY = 'produtos:pinados';
+
+async function read(): Promise<ProdutoPinado[]> {
+  try {
+    const data = await kv.get<ProdutoPinado[]>(KEY);
+    return data || [];
+  } catch { return []; }
+}
+
+// Acha o nome da loja cadastrada pelo domínio do link original do produto
+async function nomeLojaCadastrada(link: string | undefined): Promise<string | null> {
+  if (!link) return null;
+  try {
+    const lojas = (await kv.get<{ nome: string; url: string }[]>('lojas:cadastradas')) || [];
+    // Para links da Awin, usa a loja de destino que vem no parâmetro "ued"
+    const u = new URL(link);
+    const destino = u.hostname.endsWith('awin1.com') ? u.searchParams.get('ued') : null;
+    const dominio = new URL(destino || link).hostname.replace(/^www\./, '');
+    const achada = lojas.find(l => {
+      try { return new URL(l.url).hostname.replace(/^www\./, '') === dominio; }
+      catch { return false; }
+    });
+    return achada?.nome || null;
+  } catch { return null; }
+}
+
+export async function POST(req: NextRequest) {
+  if (!isAdmin(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
+  try {
+    const produto: ProdutoPinado = await req.json();
+    const nomeCadastrado = await nomeLojaCadastrada(produto.linkOriginal || produto.link);
+    if (nomeCadastrado) {
+      produto.loja = nomeCadastrado;
+      (produto as any).lojaNome = nomeCadastrado;
+    }
+    let existing = await read();
+    const idx = existing.findIndex(p => p.id === produto.id);
+
+    // Se está ativando como oferta do dia, desativa todos os outros
+    if (produto.ativo && produto.destinos?.includes('oferta-do-dia')) {
+      existing = existing.map(p => ({
+        ...p,
+        ativo: p.destinos?.includes('oferta-do-dia') ? false : p.ativo,
+      }));
+    }
+
+    if (idx >= 0) {
+      existing[idx] = { ...existing[idx], ...produto, pinedAt: existing[idx].pinedAt };
+    } else {
+      existing = [{ ...produto, pinedAt: new Date().toISOString() }, ...existing].slice(0, 3000);
+    }
+
+    await kv.set(KEY, existing);
+    revalidatePath('/'); return NextResponse.json({ success: true });
+  } catch (e) {
+    return NextResponse.json({ error: String(e) }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  if (!isAdmin(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
+  try {
+    const { id } = await req.json();
+    const existing = await read();
+    await kv.set(KEY, existing.filter(p => p.id !== id));
+    revalidatePath('/'); return NextResponse.json({ success: true });
+  } catch (e) {
+    return NextResponse.json({ error: String(e) }, { status: 500 });
+  }
+}
+
+// GET — para o painel ler os pinados
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const tipo = searchParams.get('tipo');
+
+  // Retorna o ID do destaque da home
+    if (tipo === 'destaque-home') {
+    try {
+      const data = await kv.get<{ id: string; frase: string }>('oferta:destaque-home');
+      if (typeof data === 'string') return NextResponse.json({ id: data, frase: '' });
+      return NextResponse.json({ id: data?.id || null, frase: data?.frase || '' });
+    } catch {
+      return NextResponse.json({ id: null, frase: '' });
+    }
+  }
+
+  // Retorna todos os pinados
+  try {
+    const data = await read();
+    return NextResponse.json(data);
+  } catch {
+    return NextResponse.json([]);
+  }
+}
+
+// Salva o destaque da home
+export async function PATCH(req: NextRequest) {
+  if (!isAdmin(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
+  try {
+    const { id, frase } = await req.json();
+    await kv.set('oferta:destaque-home', { id, frase: frase || '' });
+    revalidatePath('/'); return NextResponse.json({ success: true });
+  } catch (e) {
+    return NextResponse.json({ error: String(e) }, { status: 500 });
+  }
+}
