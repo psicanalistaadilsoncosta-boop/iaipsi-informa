@@ -138,6 +138,21 @@ function camposVitrine(vitrine: string, nivel1: string, nivel2: string): Record<
   return {}; // nenhuma: fica como hoje
 }
 
+// Pede o link de afiliado. Sem link de afiliado o produto NÃO é pinado (o /ir recusaria e não haveria comissão).
+async function pedirLinkAfiliado(produto: Produto): Promise<{ link: string | null; erro: string }> {
+  try {
+    const res = await fetch('/api/produtos/shorten', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: produto.link, organizationId: produto.organizationId }),
+    });
+    const data = await res.json();
+    return { link: data.shortUrl || null, erro: data.error || 'a rede não gerou o link' };
+  } catch (e) {
+    return { link: null, erro: String((e as Error)?.message || e) };
+  }
+}
+
 function ModalDestinos({ produto, onConfirm, onCancel }: {
   produto: Produto;
   onConfirm: (destinos: string[], parcelas: string, valorParcela: string, categoria: Record<string, any>) => void;
@@ -468,13 +483,11 @@ export default function BuscarProdutosPage() {
     setModalProduto(null);
     setGerando(produto.id);
     try {
-      const shortRes = await fetch('/api/produtos/shorten', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: produto.link, organizationId: produto.organizationId }),
-      });
-      const shortData = await shortRes.json();
-      const linkAfiliado = shortData.shortUrl || produto.link;
+      const { link: linkAfiliado, erro } = await pedirLinkAfiliado(produto);
+      if (!linkAfiliado) {
+        alert(`⚠️ ${produto.loja || 'Loja'}: não consegui gerar o link de afiliado.\n${erro}\n\nProduto NÃO pinado.`);
+        return;
+      }
 
       let parcelasFinal = parcelas;
       let valorParcelaFinal = valorParcela;
@@ -523,15 +536,12 @@ export default function BuscarProdutosPage() {
     setPinandoMassa(true);
     const lista = produtos.filter(p => selecionados.has(p.id) && !isPinado(p.id));
     let ok = 0;
+    let semLink = 0;
+    let ultimoErro = '';
     for (const produto of lista) {
       try {
-        const shortRes = await fetch('/api/produtos/shorten', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: produto.link, organizationId: produto.organizationId }),
-        });
-        const shortData = await shortRes.json();
-        const linkAfiliado = shortData.shortUrl || produto.link;
+        const { link: linkAfiliado, erro } = await pedirLinkAfiliado(produto);
+        if (!linkAfiliado) { semLink++; ultimoErro = erro; continue; }
         await fetch('/api/produtos/save', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -552,7 +562,10 @@ export default function BuscarProdutosPage() {
     setSelecionados(new Set());
     setModoSelecao(false);
     setPinandoMassa(false);
-    if (ok > 0) alert(`✅ ${ok} produto${ok > 1 ? 's' : ''} pinado${ok > 1 ? 's' : ''}!`);
+    if (ok > 0 || semLink > 0) {
+      alert(`✅ ${ok} produto${ok !== 1 ? 's' : ''} pinado${ok !== 1 ? 's' : ''}.` +
+        (semLink ? `\n⚠️ ${semLink} ficaram de fora: sem link de afiliado.\n${ultimoErro}` : ''));
+    }
   }
 
   // Substituir produtos da loja: remove todos os pinados da loja, pina os selecionados
@@ -572,6 +585,19 @@ export default function BuscarProdutosPage() {
         } catch { return false; }
       });
 
+      // Gera os links de afiliado ANTES de apagar os antigos
+      const lista = produtos.filter(p => selecionados.has(p.id));
+      const comLink: { produto: Produto; link: string }[] = [];
+      let ultimoErro = '';
+      for (const produto of lista) {
+        const { link, erro } = await pedirLinkAfiliado(produto);
+        if (link) comLink.push({ produto, link }); else ultimoErro = erro;
+      }
+      if (comLink.length === 0) {
+        alert(`⚠️ Nenhum produto ganhou link de afiliado. Nada foi apagado nem pinado.\n${ultimoErro}`);
+        return;
+      }
+
       // Remove todos os pinados dessa loja
       for (const p of pinadosDaLoja) {
         await fetch('/api/produtos/save', {
@@ -581,17 +607,9 @@ export default function BuscarProdutosPage() {
         });
       }
 
-      // Pina os selecionados
-      const lista = produtos.filter(p => selecionados.has(p.id));
-      for (const produto of lista) {
+      // Pina os selecionados que ganharam link de afiliado
+      for (const { produto, link: linkAfiliado } of comLink) {
         try {
-          const shortRes = await fetch('/api/produtos/shorten', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: produto.link, organizationId: produto.organizationId }),
-          });
-          const shortData = await shortRes.json();
-          const linkAfiliado = shortData.shortUrl || produto.link;
           await fetch('/api/produtos/save', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -611,7 +629,9 @@ export default function BuscarProdutosPage() {
       await loadPinados();
       setSelecionados(new Set());
       setModoSelecao(false);
-      alert(`✅ Substituição concluída! ${pinadosDaLoja.length} removidos, ${lista.length} pinados.`);
+      const fora = lista.length - comLink.length;
+      alert(`✅ Substituição concluída! ${pinadosDaLoja.length} removidos, ${comLink.length} pinados.` +
+        (fora ? `\n⚠️ ${fora} ficaram de fora: sem link de afiliado.\n${ultimoErro}` : ''));
     } catch {
       alert('Erro ao substituir produtos.');
     } finally { setSubstituindo(false); }

@@ -22,7 +22,8 @@ export async function GET() {
   for (const p of produtos) {
     if (!p.beleza) continue;
     const nome = p.nome || p.name || '';
-    const tipo = detectarTipoBeleza(nome);
+    const TIPOS_BELEZA = ['Perfumes', 'Skincare', 'Maquiagem', 'Cabelos', 'Massagem', 'Solar', 'Cuidados'];
+    const tipo = TIPOS_BELEZA.includes(p.tipoBeleza) ? p.tipoBeleza : detectarTipoBeleza(nome);
     if (!mapa[tipo]) mapa[tipo] = [];
     mapa[tipo].push(p);
   }

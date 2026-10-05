@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { kv } from '@/lib/kv';
+import { chamarActionpay, acharLista } from '@/lib/actionpay';
 
 // Remove parâmetros de rastreio de terceiros do endereço do produto (utm_, f=, gclid...)
 function limparUrl(url: string): string {
@@ -15,10 +16,16 @@ function limparUrl(url: string): string {
 
 type ModelosActionpay = Record<string, { prefixo: string | null }>;
 
+// "https://apretailer.com.br/click/HASH/360672/subaccount/..." -> "https://apretailer.com.br/click/HASH/360672/"
+function prefixoDoLink(link: string): string | null {
+  const m = String(link || '').match(/^(https?:\/\/[^/\s]+\/click\/[^/\s]+\/[^/\s]+\/)/i);
+  return m ? m[1] : null;
+}
+
 // Monta o link de afiliado Actionpay. Tenta, nesta ordem:
 // 1. modelo já guardado em actionpay:deeplinks (por número da oferta)
 // 2. deeplink colado na tela de importar categoria (importar:deeplinks, por site da loja)
-// Sem nenhum dos dois: não gera link (a página de pinar avisa e não pina).
+// 3. pede o link à API da Actionpay e guarda em actionpay:deeplinks para a próxima vez
 async function linkActionpay(oferta: string, url: string): Promise<{ link: string | null; erro?: string }> {
   const destino = encodeURIComponent(limparUrl(url));
   const modelos: ModelosActionpay = (await kv.get<ModelosActionpay>('actionpay:deeplinks')) || {};
@@ -36,7 +43,23 @@ async function linkActionpay(oferta: string, url: string): Promise<{ link: strin
     if (m) return { link: m[1].replace('/subaccount/', '/comlupa/') + destino };
   } catch {}
 
-  return { link: null, erro: `Oferta Actionpay ${oferta} sem deeplink: cole o código dela em actionpay:deeplinks no Upstash` };
+  // 3
+  try {
+    const dados = await chamarActionpay('apiWmLinks', { offer: oferta });
+    const links: string[] = acharLista(dados, ['links', 'link']).map((l: any) => String(l?.url ?? '')).filter(Boolean);
+    // prefere o mesmo site (fonte) dos modelos que já funcionam, ex.: /360672/
+    const fonte = Object.values(modelos).map(v => v?.prefixo?.match(/\/([^/]+)\/$/)?.[1]).find(Boolean);
+    const escolhido = (fonte && links.find(l => l.includes(`/${fonte}/`))) || links[0];
+    const novoPrefixo = escolhido ? prefixoDoLink(escolhido) : null;
+    if (!novoPrefixo) {
+      return { link: null, erro: links.length ? `link da Actionpay em formato inesperado: ${escolhido}` : `a Actionpay não devolveu link para a oferta ${oferta} (você está aprovado nela?)` };
+    }
+    modelos[oferta] = { prefixo: novoPrefixo };
+    await kv.set('actionpay:deeplinks', modelos);
+    return { link: `${novoPrefixo}comlupa/url=${destino}` };
+  } catch (e) {
+    return { link: null, erro: `Actionpay: ${String((e as Error)?.message || e)}` };
+  }
 }
 
 const API_KEY = process.env.LOMADEE_API_KEY || '';
