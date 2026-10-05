@@ -24,6 +24,7 @@ interface LojaLomadee {
   tipoVistaSe?: string;
   beleza?: boolean;
   tipoBeleza?: string;
+  nivel?: string; // nível da loja (A, B, C) — só aparece aqui no cadastro, nunca no site
 }
 
 interface LojaAwin {
@@ -41,6 +42,7 @@ interface LojaAwin {
   tipoVistaSe?: string;
   beleza?: boolean;
   tipoBeleza?: string;
+  nivel?: string; // nível da loja (A, B, C) — só aparece aqui no cadastro, nunca no site
 }
 
 type Loja = LojaLomadee | LojaAwin;
@@ -51,6 +53,11 @@ const MOMENTOS = ['Café da manhã', 'Vinho', 'Churrasco', 'Lareira', 'Domingo r
 const TIPOS_MOMENTO = ['Eletro', 'Móveis', 'Acessórios', 'Alimentos'];
 const TIPOS_VISTASE = ['Roupas', 'Calçados', 'Acessórios', 'Infantil', 'Bebê'];
 const TIPOS_BELEZA = ['Perfumes', 'Skincare', 'Maquiagem', 'Cabelos', 'Massagem', 'Solar', 'Cuidados'];
+
+const NIVEIS = ['A', 'B', 'C'];
+const NIVEL_CORES: Record<string, { bg: string; fg: string }> = {
+  A: { bg: '#dcfce7', fg: '#166534' }, B: { bg: '#dbeafe', fg: '#1e40af' }, C: { bg: '#f3f4f6', fg: '#374151' },
+};
 
 const DESTINO_LABELS: Record<string, string> = {
   'ofertas-selecionadas': '⭐ Ofertas Selecionadas',
@@ -267,6 +274,7 @@ function EditarLoja({ loja, salvando, onSalvar, onCancelar }: {
   const [url, setUrl] = useState(loja.url);
   const [id, setId] = useState(loja.tipo === 'awin' ? (loja as LojaAwin).anuncianteId : '');
   const [usd, setUsd] = useState(!!loja.moedaUSD);
+  const [nivel, setNivel] = useState(loja.nivel || '');
   const [cats, setCats] = useState<CatState>(lojaTocat(loja));
 
   const campo: React.CSSProperties = { width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.85rem', boxSizing: 'border-box' };
@@ -277,7 +285,7 @@ function EditarLoja({ loja, salvando, onSalvar, onCancelar }: {
     if (loja.tipo === 'awin' && !id.trim()) { alert('O ID do anunciante é obrigatório.'); return; }
     let u = url.trim();
     if (!u.startsWith('http')) u = 'https://' + u;
-    const nova: any = { ...loja, nome: nome.trim(), url: u, moedaUSD: usd || undefined, ...catToFields(cats) };
+    const nova: any = { ...loja, nome: nome.trim(), url: u, moedaUSD: usd || undefined, nivel: nivel || undefined, ...catToFields(cats) };
     if (loja.tipo === 'awin') nova.anuncianteId = id.trim();
     onSalvar(nova);
   }
@@ -292,6 +300,13 @@ function EditarLoja({ loja, salvando, onSalvar, onCancelar }: {
         <div style={{ flex: 2, minWidth: '200px' }}>
           <label style={rot}>URL DO SITE</label>
           <input value={url} onChange={e => setUrl(e.target.value)} style={campo} />
+        </div>
+        <div style={{ width: '90px' }}>
+          <label style={rot}>NÍVEL</label>
+          <select value={nivel} onChange={e => setNivel(e.target.value)} style={campo}>
+            <option value="">—</option>
+            {NIVEIS.map(n => <option key={n} value={n}>{n}</option>)}
+          </select>
         </div>
         {loja.tipo === 'awin' && (
           <div style={{ flex: 1, minWidth: '160px' }}>
@@ -460,6 +475,7 @@ export default function CadastraLojasPage() {
   const [salvando, setSalvando] = useState(false);
   const [aba, setAba] = useState<'lomadee' | 'awin'>('lomadee');
   const [editando, setEditando] = useState<string | null>(null); // "tipo|url" da loja em edição
+  const [filtroNivel, setFiltroNivel] = useState(''); // '' = todos, '-' = sem nível
 
   // Form Lomadee
   const [nomeL, setNomeL] = useState('');
@@ -538,7 +554,8 @@ export default function CadastraLojasPage() {
     setNomeA(''); setUrlA(''); setAnuncianteId(''); setMoedaUSD(false); setCatsA(emptyCat());
   }
 
-  const lojasFiltradas = lojas.filter(l => l.tipo === aba);
+  const lojasFiltradas = lojas.filter(l => l.tipo === aba &&
+    (!filtroNivel || (filtroNivel === '-' ? !l.nivel : l.nivel === filtroNivel)));
 
   if (auth === null) return (
     <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f9fafb' }}>
@@ -657,6 +674,17 @@ export default function CadastraLojasPage() {
         </div>
       )}
 
+      {/* Filtro por nível */}
+      <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '12px' }}>
+        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#6b7280' }}>Nível:</span>
+        {[['', 'Todos'], ...NIVEIS.map(n => [n, n]), ['-', 'Sem nível']].map(([v, rotulo]) => (
+          <button key={v || 'todos'} onClick={() => setFiltroNivel(v)}
+            style={{ padding: '4px 12px', borderRadius: '14px', border: '1px solid ' + (filtroNivel === v ? '#7c3aed' : '#e5e7eb'), backgroundColor: filtroNivel === v ? '#f5f3ff' : '#fff', color: filtroNivel === v ? '#7c3aed' : '#374151', fontWeight: filtroNivel === v ? 700 : 500, fontSize: '0.78rem', cursor: 'pointer' }}>
+            {rotulo} ({lojas.filter(l => l.tipo === aba && (!v || (v === '-' ? !l.nivel : l.nivel === v))).length})
+          </button>
+        ))}
+      </div>
+
       {/* Lista de lojas */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>⏳ Carregando...</div>
@@ -670,7 +698,14 @@ export default function CadastraLojasPage() {
             <div key={i} style={{ backgroundColor: '#fff', borderRadius: '10px', border: '1px solid #e5e7eb', padding: '14px 16px' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
                 <div style={{ flex: 1, minWidth: '200px' }}>
-                  <div style={{ fontWeight: 700, color: '#111827', fontSize: '0.95rem' }}>{loja.nome}</div>
+                  <div style={{ fontWeight: 700, color: '#111827', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {loja.nome}
+                    {loja.nivel && (
+                      <span title="Nível da loja (só aparece aqui)" style={{ fontSize: '0.7rem', fontWeight: 800, padding: '1px 7px', borderRadius: '10px', backgroundColor: NIVEL_CORES[loja.nivel]?.bg || '#f3f4f6', color: NIVEL_CORES[loja.nivel]?.fg || '#374151' }}>
+                        Nível {loja.nivel}
+                      </span>
+                    )}
+                  </div>
                   <div style={{ fontSize: '0.78rem', color: '#6b7280', marginTop: '2px' }}>{loja.url}</div>
                   <div style={{ fontSize: '0.72rem', color: loja.tipo === 'awin' ? '#f59e0b' : '#be185d', fontWeight: 600, marginTop: '2px' }}>
                     {loja.tipo === 'awin'
