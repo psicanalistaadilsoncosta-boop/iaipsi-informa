@@ -52,6 +52,7 @@ interface LojaLomadee {
   url: string;
   moedaUSD?: boolean;
   cron?: LojaCron;
+  nivel?: string; // nível da loja (A, B, C) — definido em cadastrar lojas
 }
 
 interface LojaAwin {
@@ -61,9 +62,31 @@ interface LojaAwin {
   anuncianteId: string;
   moedaUSD?: boolean;
   cron?: LojaCron;
+  nivel?: string; // nível da loja (A, B, C) — definido em cadastrar lojas
 }
 
 type Loja = LojaLomadee | LojaAwin;
+
+const NIVEIS = ['A', 'B', 'C'];
+
+// Filtro de nível (mesmo do cadastro de lojas): '' = todos, '-' = sem nível
+function FiltroNivel({ lojas, valor, onChange }: { lojas: Loja[]; valor: string; onChange: (v: string) => void }) {
+  const conta = (v: string) => lojas.filter(l => !v || (v === '-' ? !l.nivel : l.nivel === v)).length;
+  return (
+    <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '8px' }}>
+      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6b7280' }}>Nível:</span>
+      {[['', 'Todos'], ...NIVEIS.map(n => [n, n]), ['-', 'Sem nível']].map(([v, rotulo]) => (
+        <button key={v || 'todos'} type="button" onClick={() => onChange(v)}
+          style={{ padding: '3px 11px', borderRadius: '14px', border: '1px solid ' + (valor === v ? '#7c3aed' : '#e5e7eb'), backgroundColor: valor === v ? '#f5f3ff' : '#fff', color: valor === v ? '#7c3aed' : '#374151', fontWeight: valor === v ? 700 : 500, fontSize: '0.75rem', cursor: 'pointer' }}>
+          {rotulo} ({conta(v)})
+        </button>
+      ))}
+    </div>
+  );
+}
+
+const passaNivel = (l: Loja, filtro: string) => !filtro || (filtro === '-' ? !l.nivel : l.nivel === filtro);
+const prefixoNivel = (l: Loja) => (l.nivel ? `[${l.nivel}] ` : '');
 
 function LoginScreen({ onLogin }: { onLogin: () => void }) {
   const [password, setPassword] = useState('');
@@ -290,6 +313,7 @@ export default function BuscarProdutosPage() {
   const [lojasKV, setLojasKV] = useState<Loja[]>([]);
   const [lojaLomadeeSelect, setLojaLomadeeSelect] = useState('');
   const [lojaAwinSelect, setLojaAwinSelect] = useState('');
+  const [filtroNivel, setFiltroNivel] = useState('');
 
   // Seleção em massa
   const [modoSelecao, setModoSelecao] = useState(false);
@@ -919,6 +943,7 @@ export default function BuscarProdutosPage() {
                 {lojasLomadee.length > 0 ? (
                   <div style={{ marginBottom: '10px' }}>
                     <label style={labelStyle}>Selecionar loja cadastrada</label>
+                    <FiltroNivel lojas={lojasLomadee} valor={filtroNivel} onChange={setFiltroNivel} />
                     <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
                       <select
                         value={lojaLomadeeSelect}
@@ -926,8 +951,8 @@ export default function BuscarProdutosPage() {
                         style={selectStyle}
                       >
                         <option value="">— Escolha uma loja —</option>
-                        {lojasLomadee.map(l => (
-                          <option key={l.url} value={l.url}>{l.nome} ({l.url.replace('https://','').replace('www.','').split('/')[0]})</option>
+                        {lojasLomadee.filter(l => passaNivel(l, filtroNivel) || l.url === lojaLomadeeSelect).map(l => (
+                          <option key={l.url} value={l.url}>{prefixoNivel(l)}{l.nome} ({l.url.replace('https://','').replace('www.','').split('/')[0]})</option>
                         ))}
                       </select>
                       <button onClick={() => handleBuscarLoja()} disabled={buscandoLoja || !urlLoja.trim()}
@@ -981,6 +1006,7 @@ export default function BuscarProdutosPage() {
                 <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
                   <div style={{ flex: 2, minWidth: '200px' }}>
                     <label style={labelStyle}>Selecionar loja Awin</label>
+                    {lojasAwin.length > 0 && <FiltroNivel lojas={lojasAwin} valor={filtroNivel} onChange={setFiltroNivel} />}
                     {lojasAwin.length > 0 ? (
                       <select
                         value={lojaAwinSelect}
@@ -988,9 +1014,9 @@ export default function BuscarProdutosPage() {
                         style={selectStyle}
                       >
                         <option value="">— Escolha uma loja —</option>
-                        {lojasAwin.map(l => (
+                        {lojasAwin.filter(l => passaNivel(l, filtroNivel) || l.url === lojaAwinSelect).map(l => (
                           <option key={l.url} value={l.url}>
-                            {l.nome}{l.moedaUSD ? ' 💵' : ''} ({l.anuncianteId})
+                            {prefixoNivel(l)}{l.nome}{l.moedaUSD ? ' 💵' : ''} ({l.anuncianteId})
                           </option>
                         ))}
                       </select>
