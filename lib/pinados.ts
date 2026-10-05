@@ -61,7 +61,7 @@ export async function lerUm(id: string): Promise<any | null> {
   return ler(v);
 }
 
-async function lerIds(ids: string[]): Promise<any[]> {
+export async function lerIds(ids: string[]): Promise<any[]> {
   const out: any[] = [];
   for (let i = 0; i < ids.length; i += 300) {
     const parte = ids.slice(i, i + 300);

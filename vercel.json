@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/atualiza-lojas",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/atualiza-importados",
+      "schedule": "0 7 * * *"
     }
   ]
 }

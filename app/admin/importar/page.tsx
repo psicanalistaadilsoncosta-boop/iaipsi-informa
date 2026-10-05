@@ -23,6 +23,7 @@ function Importar() {
   const [marcados, setMarcados] = useState<Set<string>>(new Set());
   const [ocupado, setOcupado] = useState(false);
   const [msg, setMsg] = useState('');
+  const [recarregarOrigens, setRecarregarOrigens] = useState(0);
 
   useEffect(() => { fetch('/api/admin/importar-categoria/salvar').then(r => r.json()).then(setSalvos).catch(() => {}); }, []);
   // deeplink já usado nesta loja aparece sozinho
@@ -48,9 +49,10 @@ function Importar() {
     try {
       const r = await fetch('/api/admin/importar-categoria/salvar', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ produtos: lista, deeplink: deeplink.trim(), loja: loja.trim(), origem: pag1.trim() }),
+        body: JSON.stringify({ produtos: lista, deeplink: deeplink.trim(), loja: loja.trim(), origem: pag1.trim(), pagina2: pag2.trim(), paginas }),
       });
       const d = await r.json();
+      if (!d.error) setRecarregarOrigens(n => n + 1);
       setMsg(d.error ? `⚠️ ${d.error}` : `✅ ${d.novos} produtos foram para "A catalogar".${d.repetidos ? ` ${d.repetidos} já estavam lá.` : ''}${d.recusados ? ` ${d.recusados} recusados (link inválido).` : ''}`);
     } catch { setMsg('⚠️ Não foi possível salvar agora.'); }
     setOcupado(false);
@@ -126,7 +128,78 @@ function Importar() {
           </section>
         </section>
       )}
+
+      <PaginasImportadas recarregar={recarregarOrigens} />
     </main>
+  );
+}
+
+// ---------- Páginas já importadas: atualização diária liga/desliga ----------
+type Origem = { id: string; loja: string; pag1: string; pag2: string; paginas: number; ativo: boolean; produtos: number; ultima: string | null; erro: string; resumo: string };
+
+function PaginasImportadas({ recarregar }: { recarregar: number }) {
+  const [lista, setLista] = useState<Origem[] | null>(null);
+  const [editPag2, setEditPag2] = useState<Record<string, string>>({});
+  const [aviso, setAviso] = useState('');
+
+  async function carregar() {
+    try { const r = await fetch('/api/admin/importar-categoria/origens'); setLista(await r.json()); }
+    catch { setLista([]); }
+  }
+  useEffect(() => { carregar(); }, [recarregar]);
+
+  async function mudar(id: string, dados: Partial<Origem>) {
+    setAviso('');
+    const r = await fetch('/api/admin/importar-categoria/origens', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, ...dados }),
+    });
+    const d = await r.json();
+    if (d.error) setAviso(`⚠️ ${d.error}`);
+    await carregar();
+  }
+
+  const data = (iso: string | null) => iso ? new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'nunca';
+  const curto = (u: string) => { try { const x = new URL(u); return x.hostname.replace(/^www\./, '') + x.pathname; } catch { return u; } };
+
+  return (
+    <section style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, marginTop: 24 }}>
+      <h2 style={{ fontSize: 17, margin: '0 0 4px', color: '#111827' }}>Páginas importadas</h2>
+      <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 12px' }}>
+        Ligue 🔄 para atualizar todo dia de madrugada: preço, foto e nome mudam sozinhos (a vitrine não muda); produto novo vai para a vitrine dos irmãos
+        (ou "A catalogar" se eles estiverem em vitrines diferentes); produto que sumir da loja sai do ar depois de 2 dias. O que você apagou no admin não volta.
+      </p>
+      {aviso && <p style={{ color: '#9a3412', fontSize: 14 }}>{aviso}</p>}
+      {lista === null && <p style={{ color: '#6b7280' }}>Carregando...</p>}
+      {lista?.length === 0 && <p style={{ color: '#6b7280' }}>Nenhuma página importada ainda.</p>}
+      {lista?.map(o => (
+        <div key={o.id} style={{ borderTop: '1px solid #f3f4f6', padding: '12px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <strong style={{ color: '#111827' }}>{o.loja || '(sem nome)'}</strong>
+            <span style={{ fontSize: 13, color: '#6b7280' }} title={o.pag1}>{curto(o.pag1)}</span>
+            <span style={{ fontSize: 13, color: '#374151' }}>· {o.produtos} produtos</span>
+            <button onClick={() => mudar(o.id, { ativo: !o.ativo })}
+              style={{ marginLeft: 'auto', padding: '6px 14px', borderRadius: 20, border: 0, fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                background: o.ativo ? '#047857' : '#e5e7eb', color: o.ativo ? '#fff' : '#374151' }}>
+              🔄 Atualizar todo dia: {o.ativo ? 'ligado' : 'desligado'}
+            </button>
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginTop: 8 }}>
+            <input style={{ ...campo, flex: 1, minWidth: 220, fontSize: 13 }} placeholder="Link da página 2 (sem ele, lê só a página 1)"
+              value={editPag2[o.id] ?? o.pag2} onChange={e => setEditPag2(m => ({ ...m, [o.id]: e.target.value }))} />
+            <select style={{ ...campo, width: 110, fontSize: 13 }} value={o.paginas} onChange={e => mudar(o.id, { paginas: Number(e.target.value) })}>
+              {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n} pág.</option>)}
+            </select>
+            {(editPag2[o.id] ?? o.pag2) !== o.pag2 && (
+              <button onClick={() => mudar(o.id, { pag2: editPag2[o.id] })}
+                style={{ padding: '8px 14px', borderRadius: 8, border: 0, background: '#5B3E96', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Salvar</button>
+            )}
+          </div>
+          <div style={{ fontSize: 12, marginTop: 6, color: o.erro ? '#9a3412' : '#6b7280' }}>
+            Última atualização: {data(o.ultima)}{o.erro ? ` · ⚠️ ${o.erro}` : o.resumo ? ` · ${o.resumo}` : ''}
+          </div>
+        </div>
+      ))}
+    </section>
   );
 }
 
