@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { kv } from '@/lib/kv';
+import { linkAfiliadoOk } from '@/lib/links-afiliados';
 
 // Remove parâmetros de rastreio de terceiros do endereço do produto (utm_, f=, gclid...)
 function limparUrl(url: string): string {
@@ -52,6 +53,11 @@ const AWIN_ADVERTISERS: Record<string, string> = {
 export async function POST(req: NextRequest) {
   try {
     const { url, organizationId } = await req.json();
+
+    // Link que já é de afiliado (ex.: busca de loja Awin já entrega o awin1.com pronto): usa como está
+    if (linkAfiliadoOk(String(url || ''))) {
+      return NextResponse.json({ shortUrl: url });
+    }
 
     // Se for anunciante Awin, gera deeplink Awin
     const awinMid = AWIN_ADVERTISERS[organizationId];
