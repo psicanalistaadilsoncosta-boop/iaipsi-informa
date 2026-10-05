@@ -25,6 +25,7 @@ interface LojaLomadee {
   beleza?: boolean;
   tipoBeleza?: string;
   nivel?: string; // nível da loja (A, B, C) — só aparece aqui no cadastro, nunca no site
+  semDeeplink?: boolean; // vem da API (actionpay:deeplinks): não aceita link direto para produto
 }
 
 interface LojaAwin {
@@ -43,6 +44,7 @@ interface LojaAwin {
   beleza?: boolean;
   tipoBeleza?: string;
   nivel?: string; // nível da loja (A, B, C) — só aparece aqui no cadastro, nunca no site
+  semDeeplink?: boolean; // vem da API (actionpay:deeplinks): não aceita link direto para produto
 }
 
 type Loja = LojaLomadee | LojaAwin;
@@ -858,6 +860,11 @@ export default function CadastraLojasPage() {
                 <div style={{ flex: 1, minWidth: '200px' }}>
                   <div style={{ fontWeight: 700, color: '#111827', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     {loja.nome}
+                    {loja.semDeeplink && (
+                      <span title="Não aceita link direto para produto: o clique cai na página inicial. Use 🃏 Criar cartão." style={{ fontSize: '0.7rem', fontWeight: 800, padding: '1px 7px', borderRadius: '10px', backgroundColor: '#fee2e2', color: '#991b1b' }}>
+                        🚫 Sem deeplink
+                      </span>
+                    )}
                     {loja.nivel && (
                       <span title="Nível da loja (só aparece aqui)" style={{ fontSize: '0.7rem', fontWeight: 800, padding: '1px 7px', borderRadius: '10px', backgroundColor: NIVEL_CORES[loja.nivel]?.bg || '#f3f4f6', color: NIVEL_CORES[loja.nivel]?.fg || '#374151' }}>
                         Nível {loja.nivel}

@@ -32,12 +32,22 @@ export type Loja = LojaLomadee | LojaAwin;
 
 export async function GET() {
   const lojas = (await kv.get<Loja[]>(KV_KEY)) || [];
-  return NextResponse.json(lojas);
+  // marca as lojas Actionpay que não aceitam deeplink (actionpay:deeplinks -> semDeeplink)
+  // só na resposta: o cadastro em lojas:cadastradas não muda
+  let modelos: Record<string, { semDeeplink?: boolean }> = {};
+  try { modelos = (await kv.get<Record<string, { semDeeplink?: boolean }>>('actionpay:deeplinks')) || {}; } catch {}
+  const comMarca = lojas.map(l => {
+    const id = l.tipo === 'awin' ? String((l as LojaAwin).anuncianteId || '') : '';
+    const oferta = id.startsWith('actionpay-') ? id.slice('actionpay-'.length) : '';
+    return oferta && modelos[oferta]?.semDeeplink ? { ...l, semDeeplink: true } : l;
+  });
+  return NextResponse.json(comMarca);
 }
 
 export async function POST(req: NextRequest) {
   if (!isAdmin(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
-  const { urlAntiga, ...loja } = (await req.json()) as Loja & { urlAntiga?: string };
+  // semDeeplink vem só da leitura (GET); não é gravado no cadastro
+  const { urlAntiga, semDeeplink: _ignorar, ...loja } = (await req.json()) as Loja & { urlAntiga?: string; semDeeplink?: boolean };
   let lojas = (await kv.get<Loja[]>(KV_KEY)) || [];
 
   // Edição: acha a loja pela URL antiga (a URL pode ter mudado)

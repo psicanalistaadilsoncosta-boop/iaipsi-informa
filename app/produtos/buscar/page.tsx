@@ -53,6 +53,7 @@ interface LojaLomadee {
   moedaUSD?: boolean;
   cron?: LojaCron;
   nivel?: string; // nível da loja (A, B, C) — definido em cadastrar lojas
+  semDeeplink?: boolean; // loja que não aceita link direto para produto (use cartão)
 }
 
 interface LojaAwin {
@@ -63,6 +64,7 @@ interface LojaAwin {
   moedaUSD?: boolean;
   cron?: LojaCron;
   nivel?: string; // nível da loja (A, B, C) — definido em cadastrar lojas
+  semDeeplink?: boolean; // loja que não aceita link direto para produto (use cartão)
 }
 
 type Loja = LojaLomadee | LojaAwin;
@@ -970,7 +972,9 @@ export default function BuscarProdutosPage() {
                       >
                         <option value="">— Escolha uma loja —</option>
                         {lojasLomadee.filter(l => passaNivel(l, filtroNivel) || l.url === lojaLomadeeSelect).map(l => (
-                          <option key={l.url} value={l.url}>{prefixoNivel(l)}{l.nome} ({l.url.replace('https://','').replace('www.','').split('/')[0]})</option>
+                          <option key={l.url} value={l.url} disabled={!!l.semDeeplink}>
+                            {l.semDeeplink ? '🚫 ' : ''}{prefixoNivel(l)}{l.nome} ({l.url.replace('https://','').replace('www.','').split('/')[0]}){l.semDeeplink ? ' — sem deeplink, use cartão' : ''}
+                          </option>
                         ))}
                       </select>
                       <button onClick={() => handleBuscarLoja()} disabled={buscandoLoja || !urlLoja.trim()}
@@ -1033,8 +1037,8 @@ export default function BuscarProdutosPage() {
                       >
                         <option value="">— Escolha uma loja —</option>
                         {lojasAwin.filter(l => passaNivel(l, filtroNivel) || l.url === lojaAwinSelect).map(l => (
-                          <option key={l.url} value={l.url}>
-                            {prefixoNivel(l)}{l.nome}{l.moedaUSD ? ' 💵' : ''} ({l.anuncianteId})
+                          <option key={l.url} value={l.url} disabled={!!l.semDeeplink}>
+                            {l.semDeeplink ? '🚫 ' : ''}{prefixoNivel(l)}{l.nome}{l.moedaUSD ? ' 💵' : ''} ({l.anuncianteId}){l.semDeeplink ? ' — sem deeplink, use cartão' : ''}
                           </option>
                         ))}
                       </select>
