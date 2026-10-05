@@ -423,9 +423,13 @@ export default function BuscarProdutosPage() {
         const brandsRes = await fetch('/api/lomadee?tipo=brands-categoria');
         const brandsJson = await brandsRes.json();
         const dominio = new URL(urlLoja).hostname.replace('www.', '');
-        const marca = (brandsJson.data || []).find((m: any) =>
-          m.site && m.site.replace('www.', '').replace('https://', '').includes(dominio)
-        );
+               const marcas: any[] = brandsJson.data || [];
+        // 1º pelo endereço; se não achar (loja mudou de domínio, ex.: Sawary = sawaryjeans.com), pelo nome cadastrado
+        const norm = (s: string) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+        const nomeCadastrado = lojasLomadee.find(l => l.url === urlLoja)?.nome || '';
+        const marca =
+          marcas.find((m: any) => m.site && m.site.replace('www.', '').replace('https://', '').includes(dominio)) ||
+          (nomeCadastrado ? marcas.find((m: any) => norm(m.name) === norm(nomeCadastrado)) : undefined);
         orgId = marca?.id || '';
       } catch {}
 
