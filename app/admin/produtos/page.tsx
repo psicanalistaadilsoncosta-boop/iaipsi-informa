@@ -819,6 +819,30 @@ function AdminProdutos() {
     }
   }
 
+  // Excluir de vez os selecionados em "A catalogar" (saem do site; importados não voltam na atualização diária)
+  async function excluirCatalogar() {
+    if (selCatalogar.size === 0) return;
+    const n = selCatalogar.size;
+    if (!confirm(`Excluir ${n} produto${n !== 1 ? 's' : ''}? Ele${n !== 1 ? 's saem' : ' sai'} do site.`)) return;
+    setMovendoCatalogar(true);
+    setSubCatalogar(null);
+    let falhas = 0;
+    for (const id of selCatalogar) {
+      try {
+        const r = await fetch('/api/produtos/save', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id }),
+        });
+        if (!r.ok) falhas++;
+      } catch { falhas++; }
+    }
+    setSelCatalogar(new Set());
+    await fetchProdutos();
+    setMovendoCatalogar(false);
+    if (falhas) alert(`⚠️ ${falhas} não foram excluídos. Tente de novo.`);
+  }
+
   // ---------- NÃO AUTENTICADO ----------
   if (!authed) {
     return (
@@ -1001,7 +1025,14 @@ function AdminProdutos() {
                       {opt.label} {TIPOS_POR_CATEGORIA[opt.value!].length > 0 ? '▾' : ''}
                     </button>
                   ))}
-                  <button onClick={() => { setSelCatalogar(new Set()); setSubCatalogar(null); }} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#fde68a', cursor: 'pointer', fontSize: 13 }}>
+                  <button
+                    onClick={excluirCatalogar}
+                    disabled={movendoCatalogar}
+                    style={{ marginLeft: 'auto', padding: '5px 14px', borderRadius: 7, border: '1px solid #fca5a5', background: '#fff5f5', color: '#dc2626', fontSize: 13, fontWeight: 700, cursor: movendoCatalogar ? 'not-allowed' : 'pointer', opacity: movendoCatalogar ? 0.6 : 1 }}
+                  >
+                    🗑 Excluir
+                  </button>
+                  <button onClick={() => { setSelCatalogar(new Set()); setSubCatalogar(null); }} style={{ background: 'none', border: 'none', color: '#fde68a', cursor: 'pointer', fontSize: 13 }}>
                     Cancelar
                   </button>
                 </div>

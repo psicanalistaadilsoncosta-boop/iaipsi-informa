@@ -37,15 +37,18 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   if (!isAdmin(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
-  const loja: Loja = await req.json();
-  const lojas = (await kv.get<Loja[]>(KV_KEY)) || [];
+  const { urlAntiga, ...loja } = (await req.json()) as Loja & { urlAntiga?: string };
+  let lojas = (await kv.get<Loja[]>(KV_KEY)) || [];
 
-  // Evita duplicata pela URL
-  const existente = lojas.findIndex(l => l.url === loja.url && l.tipo === loja.tipo);
+  // Edição: acha a loja pela URL antiga (a URL pode ter mudado)
+  const procurarPor = urlAntiga || loja.url;
+  const existente = lojas.findIndex(l => l.url === procurarPor && l.tipo === loja.tipo);
   if (existente >= 0) {
-    lojas[existente] = loja; // atualiza
+    lojas[existente] = loja as Loja; // atualiza
+    // se a URL nova já era de outra loja do mesmo tipo, tira a repetida
+    lojas = lojas.filter((l, i) => i === existente || !(l.url === loja.url && l.tipo === loja.tipo));
   } else {
-    lojas.push(loja);
+    lojas.push(loja as Loja);
   }
 
   await kv.set(KV_KEY, lojas);

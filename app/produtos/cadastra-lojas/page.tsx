@@ -255,6 +255,73 @@ function CatBadges({ loja }: { loja: Loja }) {
 }
 
 // ──────────────────────────────────────────────
+// Editar loja (nome, URL, ID, USD, vitrine) — mantém a automação (cron)
+// ──────────────────────────────────────────────
+function EditarLoja({ loja, salvando, onSalvar, onCancelar }: {
+  loja: Loja;
+  salvando: boolean;
+  onSalvar: (nova: Loja) => void;
+  onCancelar: () => void;
+}) {
+  const [nome, setNome] = useState(loja.nome);
+  const [url, setUrl] = useState(loja.url);
+  const [id, setId] = useState(loja.tipo === 'awin' ? (loja as LojaAwin).anuncianteId : '');
+  const [usd, setUsd] = useState(!!loja.moedaUSD);
+  const [cats, setCats] = useState<CatState>(lojaTocat(loja));
+
+  const campo: React.CSSProperties = { width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.85rem', boxSizing: 'border-box' };
+  const rot: React.CSSProperties = { fontSize: '0.7rem', fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: '3px' };
+
+  function salvar() {
+    if (!nome.trim() || !url.trim()) { alert('Nome e URL são obrigatórios.'); return; }
+    if (loja.tipo === 'awin' && !id.trim()) { alert('O ID do anunciante é obrigatório.'); return; }
+    let u = url.trim();
+    if (!u.startsWith('http')) u = 'https://' + u;
+    const nova: any = { ...loja, nome: nome.trim(), url: u, moedaUSD: usd || undefined, ...catToFields(cats) };
+    if (loja.tipo === 'awin') nova.anuncianteId = id.trim();
+    onSalvar(nova);
+  }
+
+  return (
+    <div style={{ marginTop: '10px', padding: '12px', borderRadius: '8px', backgroundColor: '#f5f3ff', border: '1px solid #ddd6fe' }}>
+      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
+        <div style={{ flex: 1, minWidth: '140px' }}>
+          <label style={rot}>NOME</label>
+          <input value={nome} onChange={e => setNome(e.target.value)} style={campo} />
+        </div>
+        <div style={{ flex: 2, minWidth: '200px' }}>
+          <label style={rot}>URL DO SITE</label>
+          <input value={url} onChange={e => setUrl(e.target.value)} style={campo} />
+        </div>
+        {loja.tipo === 'awin' && (
+          <div style={{ flex: 1, minWidth: '160px' }}>
+            <label style={rot}>ID (awin-, rakuten- ou actionpay-)</label>
+            <input value={id} onChange={e => setId(e.target.value)} style={campo} placeholder="ex: actionpay-13072" />
+          </div>
+        )}
+      </div>
+      <div style={{ marginBottom: '10px' }}>
+        <CategoriaSelector value={cats} onChange={setCats} />
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
+          <input type="checkbox" checked={usd} onChange={e => setUsd(e.target.checked)} /> 💵 Preços em USD
+        </label>
+        <button onClick={onCancelar} disabled={salvando}
+          style={{ marginLeft: 'auto', padding: '7px 16px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, cursor: 'pointer' }}>
+          Cancelar
+        </button>
+        <button onClick={salvar} disabled={salvando}
+          style={{ padding: '7px 16px', borderRadius: '8px', border: 'none', backgroundColor: '#7c3aed', color: '#fff', fontWeight: 700, cursor: 'pointer' }}>
+          {salvando ? '⏳' : '💾 Salvar'}
+        </button>
+      </div>
+      <p style={{ fontSize: '0.72rem', color: '#6b7280', margin: '8px 0 0' }}>A automação (cron) desta loja continua como está.</p>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────
 // Painel Cron
 // ──────────────────────────────────────────────
 function CronPanel({ loja, onSave }: {
@@ -392,6 +459,7 @@ export default function CadastraLojasPage() {
   const [loading, setLoading] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [aba, setAba] = useState<'lomadee' | 'awin'>('lomadee');
+  const [editando, setEditando] = useState<string | null>(null); // "tipo|url" da loja em edição
 
   // Form Lomadee
   const [nomeL, setNomeL] = useState('');
@@ -424,13 +492,13 @@ export default function CadastraLojasPage() {
     finally { setLoading(false); }
   }
 
-  async function salvarLoja(loja: Loja) {
+  async function salvarLoja(loja: Loja, urlAntiga?: string) {
     setSalvando(true);
     try {
       await fetch('/api/produtos/lojas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(loja),
+        body: JSON.stringify(urlAntiga ? { ...loja, urlAntiga } : loja),
       });
       await carregarLojas();
     } catch { alert('Erro ao salvar loja.'); }
@@ -605,16 +673,33 @@ export default function CadastraLojasPage() {
                   <div style={{ fontWeight: 700, color: '#111827', fontSize: '0.95rem' }}>{loja.nome}</div>
                   <div style={{ fontSize: '0.78rem', color: '#6b7280', marginTop: '2px' }}>{loja.url}</div>
                   <div style={{ fontSize: '0.72rem', color: loja.tipo === 'awin' ? '#f59e0b' : '#be185d', fontWeight: 600, marginTop: '2px' }}>
-                    {loja.tipo === 'awin' ? ((loja as LojaAwin).anuncianteId?.startsWith('rakuten-') ? `Rakuten ID: ${(loja as LojaAwin).anuncianteId}` : `Awin ID: ${(loja as LojaAwin).anuncianteId}`) : 'Lomadee'}
+                    {loja.tipo === 'awin'
+                      ? ((loja as LojaAwin).anuncianteId?.startsWith('rakuten-') ? `Rakuten ID: ${(loja as LojaAwin).anuncianteId}`
+                        : (loja as LojaAwin).anuncianteId?.startsWith('actionpay-') ? `Actionpay: ${(loja as LojaAwin).anuncianteId}`
+                        : `Awin ID: ${(loja as LojaAwin).anuncianteId}`)
+                      : 'Lomadee'}
                     {loja.moedaUSD && <span style={{ marginLeft: '6px', color: '#92400e', backgroundColor: '#fef3c7', padding: '1px 5px', borderRadius: '3px' }}>💵 USD</span>}
                   </div>
                   <CatBadges loja={loja} />
                 </div>
+                <button onClick={() => setEditando(editando === `${loja.tipo}|${loja.url}` ? null : `${loja.tipo}|${loja.url}`)}
+                  style={{ padding: '6px 14px', borderRadius: '6px', border: '1px solid #ddd6fe', backgroundColor: '#fff', color: '#7c3aed', fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  ✏️ Editar
+                </button>
                 <button onClick={() => removerLoja(loja.url, loja.tipo)}
                   style={{ padding: '6px 14px', borderRadius: '6px', border: '1px solid #fca5a5', backgroundColor: '#fff', color: '#dc2626', fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                   🗑 Remover
                 </button>
               </div>
+
+              {editando === `${loja.tipo}|${loja.url}` && (
+                <EditarLoja
+                  loja={loja}
+                  salvando={salvando}
+                  onCancelar={() => setEditando(null)}
+                  onSalvar={async nova => { await salvarLoja(nova, loja.url); setEditando(null); }}
+                />
+              )}
 
               {/* Painel de automação cron */}
               <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #f3f4f6' }}>
