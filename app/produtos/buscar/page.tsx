@@ -106,16 +106,51 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
 const AMBIENTES = ['Sala', 'Quarto', 'Escritório', 'Cozinha', 'Banheiro', 'Área externa'];
 const TIPOS_AMBIENTE = ['Iluminação', 'Climatização', 'Móveis', 'Decoração', 'Organização', 'Eletrônicos'];
 
+// Mesmas listas do admin (app/admin/produtos/page.tsx)
+const MOMENTOS = ['Café da manhã', 'Vinho', 'Churrasco', 'Lareira', 'Domingo relaxado', 'Festa em Casa'];
+const TIPOS_MOMENTO = ['Eletro', 'Móveis', 'Acessórios', 'Alimentos', 'Bebidas', 'Vinho'];
+
+const VITRINES = [
+  { id: 'ambiente', label: '🏠 Ambiente' },
+  { id: 'momento',  label: '🍷 Momento' },
+  { id: 'vistaSe',  label: '👕 Vista-se' },
+  { id: 'beleza',   label: '💄 Beleza' },
+  { id: 'mercado',  label: '🛒 Mercado' },
+  { id: 'praVoce',  label: '🎯 Pra você' },
+];
+
+const TIPOS_VITRINE: Record<string, string[]> = {
+  vistaSe: ['Roupas', 'Calçados', 'Acessórios', 'Infantil', 'Bebê', 'Brinquedos'],
+  beleza:  ['Perfumes', 'Skincare', 'Maquiagem', 'Cabelos', 'Massagem', 'Solar', 'Cuidados'],
+  mercado: ['Bebidas', 'Alimentos', 'Café', 'Snacks', 'Hortifruti', 'Limpeza', 'Pet'],
+  praVoce: ['Trabalhar e estudar', 'Mexer o corpo', 'Ficar conectado'],
+};
+
+// Monta os campos que o save grava (mesmos nomes que o admin usa)
+// ex.: { momento: 'Vinho', tipoMomento: 'Vinho' } ou { vistaSe: true, tipoVistaSe: 'Roupas' }
+function camposVitrine(vitrine: string, nivel1: string, nivel2: string): Record<string, any> {
+  if (vitrine === 'ambiente') return { ambiente: nivel1 || 'Sala', tipoAmbiente: nivel2 || 'Organização' };
+  if (vitrine === 'momento')  return { momento: nivel1 || 'Café da manhã', tipoMomento: nivel2 || 'Acessórios' };
+  if (vitrine === 'vistaSe')  return { vistaSe: true, tipoVistaSe: nivel2 || 'Roupas' };
+  if (vitrine === 'beleza')   return { beleza: true, tipoBeleza: nivel2 || 'Cuidados' };
+  if (vitrine === 'mercado')  return { mercado: true, tipoMercado: nivel2 || 'Alimentos' };
+  if (vitrine === 'praVoce')  return { praVoce: true, tipoPraVoce: nivel2 || 'Ficar conectado' };
+  return {}; // nenhuma: fica como hoje
+}
+
 function ModalDestinos({ produto, onConfirm, onCancel }: {
   produto: Produto;
-  onConfirm: (destinos: string[], parcelas: string, valorParcela: string, ambiente: string, tipoAmbiente: string) => void;
+  onConfirm: (destinos: string[], parcelas: string, valorParcela: string, categoria: Record<string, any>) => void;
   onCancel: () => void;
 }) {
   const [destinos, setDestinos] = useState<string[]>(['ofertas-selecionadas']);
   const [parcelas, setParcelas] = useState('');
   const [valorParcela, setValorParcela] = useState('');
-  const [ambiente, setAmbiente] = useState('');
-  const [tipoAmbiente, setTipoAmbiente] = useState('');
+  const [vitrine, setVitrine] = useState('');
+  const [nivel1, setNivel1] = useState('');
+  const [nivel2, setNivel2] = useState('');
+  const listaNivel1 = vitrine === 'ambiente' ? AMBIENTES : vitrine === 'momento' ? MOMENTOS : [];
+  const listaNivel2 = vitrine === 'ambiente' ? TIPOS_AMBIENTE : vitrine === 'momento' ? TIPOS_MOMENTO : (TIPOS_VITRINE[vitrine] || []);
   function toggle(id: string) {
     setDestinos(prev => prev.includes(id) ? prev.filter(d => d !== id) : [...prev, id]);
   }
@@ -157,35 +192,46 @@ function ModalDestinos({ produto, onConfirm, onCancel }: {
             </div>
           </div>
         )}
-              <div style={{ backgroundColor: '#f5f3ff', borderRadius: '8px', padding: '14px', marginBottom: '16px', border: '1px solid #ddd6fe' }}>
+        <div style={{ backgroundColor: '#f5f3ff', borderRadius: '8px', padding: '14px', marginBottom: '16px', border: '1px solid #ddd6fe' }}>
           <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#7c3aed', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            🏠 Monte seu Ambiente (opcional)
+            🗂️ Vitrine (opcional)
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <div style={{ flex: 1 }}>
-              <label style={{ fontSize: '0.72rem', color: '#6b7280', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Ambiente</label>
-              <select value={ambiente} onChange={e => setAmbiente(e.target.value)}
-                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.85rem', boxSizing: 'border-box' }}>
-                <option value="">— nenhum —</option>
-                {AMBIENTES.map(a => <option key={a} value={a}>{a}</option>)}
-              </select>
+          <select value={vitrine} onChange={e => { setVitrine(e.target.value); setNivel1(''); setNivel2(''); }}
+            style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.85rem', boxSizing: 'border-box', marginBottom: vitrine ? '8px' : 0 }}>
+            <option value="">— nenhuma (vai para A catalogar) —</option>
+            {VITRINES.map(v => <option key={v.id} value={v.id}>{v.label}</option>)}
+          </select>
+          {vitrine && (
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {listaNivel1.length > 0 && (
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: '0.72rem', color: '#6b7280', fontWeight: 600, display: 'block', marginBottom: '4px' }}>
+                    {vitrine === 'ambiente' ? 'Cômodo' : 'Momento'}
+                  </label>
+                  <select value={nivel1} onChange={e => setNivel1(e.target.value)}
+                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.85rem', boxSizing: 'border-box' }}>
+                    <option value="">— escolha —</option>
+                    {listaNivel1.map(a => <option key={a} value={a}>{a}</option>)}
+                  </select>
+                </div>
+              )}
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: '0.72rem', color: '#6b7280', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Tipo</label>
+                <select value={nivel2} onChange={e => setNivel2(e.target.value)}
+                  style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.85rem', boxSizing: 'border-box' }}>
+                  <option value="">— escolha —</option>
+                  {listaNivel2.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
             </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ fontSize: '0.72rem', color: '#6b7280', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Tipo</label>
-              <select value={tipoAmbiente} onChange={e => setTipoAmbiente(e.target.value)}
-                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.85rem', boxSizing: 'border-box' }}>
-                <option value="">— nenhum —</option>
-                {TIPOS_AMBIENTE.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
-          </div>
+          )}
         </div>
 
         <div style={{ display: 'flex', gap: '8px' }}>
           <button onClick={onCancel} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, cursor: 'pointer' }}>
             Cancelar
           </button>
-          <button onClick={() => onConfirm(destinos, parcelas, valorParcela, ambiente, tipoAmbiente)} disabled={destinos.length === 0}
+          <button onClick={() => onConfirm(destinos, parcelas, valorParcela, camposVitrine(vitrine, nivel1, nivel2))} disabled={destinos.length === 0}
             style={{ flex: 2, padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: '#2563eb', color: '#fff', fontWeight: 700, cursor: destinos.length === 0 ? 'not-allowed' : 'pointer', opacity: destinos.length === 0 ? 0.6 : 1 }}>
             📌 Confirmar e pinar
           </button>
@@ -418,7 +464,7 @@ export default function BuscarProdutosPage() {
     } finally { setBuscandoLink(false); }
   }
 
-    async function handleConfirmarPinar(produto: Produto, destinos: string[], parcelas: string, valorParcela: string, ambiente = '', tipoAmbiente = '') {
+    async function handleConfirmarPinar(produto: Produto, destinos: string[], parcelas: string, valorParcela: string, categoria: Record<string, any> = {}) {
     setModalProduto(null);
     setGerando(produto.id);
     try {
@@ -462,8 +508,7 @@ export default function BuscarProdutosPage() {
           destinos,
           parcelas: parcelasFinal,
           valorParcela: valorParcelaFinal,
-          ambiente,
-          tipoAmbiente,
+          ...categoria,
         }),
       });
       await loadPinados();
@@ -473,7 +518,7 @@ export default function BuscarProdutosPage() {
   }
 
   // Pinar em massa (sem substituir)
-  async function handlePinarMassa(destinos: string[], parcelas: string, valorParcela: string) {
+  async function handlePinarMassa(destinos: string[], parcelas: string, valorParcela: string, categoria: Record<string, any> = {}) {
     setModalMassa(null);
     setPinandoMassa(true);
     const lista = produtos.filter(p => selecionados.has(p.id) && !isPinado(p.id));
@@ -497,6 +542,7 @@ export default function BuscarProdutosPage() {
             destinos,
             parcelas,
             valorParcela,
+            ...categoria,
           }),
         });
         ok++;
@@ -510,7 +556,7 @@ export default function BuscarProdutosPage() {
   }
 
   // Substituir produtos da loja: remove todos os pinados da loja, pina os selecionados
-  async function handleSubstituirLoja(destinos: string[], parcelas: string, valorParcela: string) {
+  async function handleSubstituirLoja(destinos: string[], parcelas: string, valorParcela: string, categoria: Record<string, any> = {}) {
     setModalMassa(null);
     setSubstituindo(true);
     try {
@@ -556,6 +602,7 @@ export default function BuscarProdutosPage() {
               destinos,
               parcelas,
               valorParcela,
+              ...categoria,
             }),
           });
         } catch {}
@@ -723,11 +770,11 @@ export default function BuscarProdutosPage() {
       {modalMassa && (
         <ModalDestinos
           produto={produtosMassaFake}
-          onConfirm={(destinos, parcelas, valorParcela) => {
+          onConfirm={(destinos, parcelas, valorParcela, categoria) => {
             if (modalMassa === 'substituir') {
-              handleSubstituirLoja(destinos, parcelas, valorParcela);
+              handleSubstituirLoja(destinos, parcelas, valorParcela, categoria);
             } else {
-              handlePinarMassa(destinos, parcelas, valorParcela);
+              handlePinarMassa(destinos, parcelas, valorParcela, categoria);
             }
           }}
           onCancel={() => setModalMassa(null)}
@@ -738,7 +785,7 @@ export default function BuscarProdutosPage() {
       {modalProduto && (
         <ModalDestinos
           produto={modalProduto}
-          onConfirm={(destinos, parcelas, valorParcela, ambiente, tipoAmbiente) => handleConfirmarPinar(modalProduto, destinos, parcelas, valorParcela, ambiente, tipoAmbiente)}
+          onConfirm={(destinos, parcelas, valorParcela, categoria) => handleConfirmarPinar(modalProduto, destinos, parcelas, valorParcela, categoria)}
           onCancel={() => setModalProduto(null)}
         />
       )}
