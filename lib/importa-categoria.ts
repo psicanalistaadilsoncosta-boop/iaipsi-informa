@@ -48,6 +48,61 @@ function lerOferta(of: any): { preco: number; esgotado: boolean; url?: string } 
   return { preco, esgotado, url: o.url };
 }
 
+// ---------- Plano B: lojas Salesforce (Demandware), ex.: L'Occitane ----------
+// Essas lojas não trazem o bloco JSON-LD, mas cada cartão de produto tem data-pid e um
+// data-gtmobject com nome e preço. Usado só quando o JSON-LD não acha nada.
+const MARCAS: Record<string, string> = { acute: '\u0301', grave: '\u0300', circ: '\u0302', tilde: '\u0303', uml: '\u0308', cedil: '\u0327' };
+function decodificar(t: string): string {
+  return String(t || '')
+    .replace(/&([A-Za-z])(acute|grave|circ|tilde|uml|cedil);/g, (_, l, m) => l + MARCAS[m])
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCharCode(parseInt(n, 16)))
+    .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .normalize('NFC');
+}
+
+function extrairCartoesSalesforce(html: string, base: string): { produtos: ProdutoLido[]; total: number } {
+  const produtos: ProdutoLido[] = [];
+  const vistos = new Set<string>();
+  const re = /<div class="(product(?: [^"]*)?)" data-pid="([^"]+)"/g;
+  const marcas = [...html.matchAll(re)];
+  for (let i = 0; i < marcas.length; i++) {
+    const classe = marcas[i][1], pid = marcas[i][2];
+    if (/best-seller|recommend|carousel/i.test(classe) || vistos.has(pid)) continue;
+    const ini = marcas[i].index ?? 0;
+    const fim = i + 1 < marcas.length ? (marcas[i + 1].index ?? html.length) : Math.min(html.length, ini + 30000);
+    const bloco = html.slice(ini, Math.max(fim, ini + 200));
+    let nome = '', preco = 0;
+    const g = bloco.match(/data-gtmobject="([^"]+)"/);
+    if (g) {
+      try {
+        const it = JSON.parse(decodificar(g[1]))?.ecommerce?.items?.[0];
+        nome = String(it?.name || '');
+        preco = Number(it?.price) || 0;
+      } catch { /* cartão diferente: tenta abaixo */ }
+    }
+    if (!preco) { const c = bloco.match(/class="[^"]*\bvalue\b[^"]*"[^>]*content="([\d.]+)"/); if (c) preco = Number(c[1]) || 0; }
+    if (!nome) { const a = bloco.match(/class="[^"]*(?:pdp-link|product-name|link)[^"]*"[^>]*>\s*([^<]{3,})</); if (a) nome = a[1]; }
+    const h = bloco.match(/href="([^"#]+?\.html)/);
+    const im = bloco.match(/<img[^>]+?(?:data-src|src)="([^"]+)"/);
+    if (!nome || !preco || !h) continue;
+    let url = '', imagem = '';
+    try { url = new URL(decodificar(h[1]), base).href; } catch { continue; }
+    try { imagem = im ? new URL(decodificar(im[1]), base).href : ''; } catch {}
+    vistos.add(pid);
+    produtos.push({ nome: decodificar(nome).trim().slice(0, 160), preco, imagem, url, sku: pid, esgotado: false });
+  }
+  return { produtos, total: marcas.length };
+}
+
+// Botão "Ver mais" das lojas Salesforce: devolve o endereço da próxima página (ou null)
+export function proximaPaginaSalesforce(html: string): string | null {
+  const m = html.match(/<button[^>]*class="[^"]*\bmore\b[^"]*"[^>]*data-url="([^"]+start=\d+[^"]*)"/i)
+    || html.match(/data-url="([^"]*Search-UpdateGrid[^"]*start=[1-9]\d*[^"]*)"/i);
+  return m ? decodificar(m[1]) : null;
+}
+
 // Junta todos os objetos "Product" do HTML (soltos, em @graph ou dentro de ItemList)
 export function extrairProdutos(html: string, base: string) {
   const achados: any[] = [];
@@ -62,6 +117,11 @@ export function extrairProdutos(html: string, base: string) {
   };
   for (const m of html.matchAll(/<script[^>]*application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi)) {
     try { visitar(JSON.parse(m[1].trim())); } catch { /* bloco com erro: ignora */ }
+  }
+  // sem JSON-LD de produto: tenta os cartões das lojas Salesforce
+  if (achados.length === 0) {
+    const sf = extrairCartoesSalesforce(html, base);
+    if (sf.produtos.length) return { produtos: sf.produtos, semPreco: 0, esgotados: 0, semLink: 0, totalBlocos: sf.total };
   }
   let semPreco = 0, esgotados = 0, semLink = 0;
   const produtos: ProdutoLido[] = [];
@@ -94,8 +154,9 @@ export async function lerCategoria(pag1: string, pag2: string, paginas: number):
   let lidas = 0;
   const n = Math.min(Math.max(paginas, 1), 5);
 
+  let proximaAuto: string | null = null; // "Ver mais" das lojas Salesforce, quando não há link da página 2
   for (let i = 1; i <= n; i++) {
-    const end = enderecoDaPagina(pag1, pag2, i);
+    const end = (!pag2 && i > 1 && proximaAuto) ? proximaAuto : enderecoDaPagina(pag1, pag2, i);
     if (!end) { if (i === 2) avisos.push('Sem o link da página 2 (ou não reconheci a paginação): li só a primeira página.'); break; }
     let r: Response;
     try {
@@ -114,6 +175,7 @@ export async function lerCategoria(pag1: string, pag2: string, paginas: number):
     }
     const html = await r.text();
     const { produtos, semPreco, esgotados, semLink, totalBlocos } = extrairProdutos(html, end);
+    proximaAuto = proximaPaginaSalesforce(html);
     if (i === 1 && totalBlocos === 0) {
       return { status: 'sem-dados', mensagem: 'A página abriu, mas não traz os dados dos produtos. Use um cartão de categoria.', avisos };
     }

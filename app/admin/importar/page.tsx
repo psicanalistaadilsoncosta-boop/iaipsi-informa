@@ -53,7 +53,7 @@ function Importar() {
       });
       const d = await r.json();
       if (!d.error) setRecarregarOrigens(n => n + 1);
-      setMsg(d.error ? `⚠️ ${d.error}` : `✅ ${d.novos} produtos foram para "A catalogar".${d.repetidos ? ` ${d.repetidos} já estavam lá.` : ''}${d.recusados ? ` ${d.recusados} recusados (link inválido).` : ''}`);
+      setMsg(d.error ? `⚠️ ${d.error}` : `✅ ${d.novos} produtos foram para "A catalogar".${d.repetidos ? ` ${d.repetidos} já estavam lá.` : ''}${d.recusados ? ` ${d.recusados} recusados (link inválido).` : ''}${d.aviso ? ` ⚠️ ${d.aviso}` : ''}`);
     } catch { setMsg('⚠️ Não foi possível salvar agora.'); }
     setOcupado(false);
   }

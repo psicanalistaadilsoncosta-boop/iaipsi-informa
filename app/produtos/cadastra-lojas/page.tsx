@@ -337,6 +337,163 @@ function EditarLoja({ loja, salvando, onSalvar, onCancelar }: {
 }
 
 // ──────────────────────────────────────────────
+// Cartão de loja: aparece na vitrine no lugar de produtos (para lojas sem link direto ao produto)
+// ──────────────────────────────────────────────
+const VITRINES_CARTAO: { id: string; label: string; n1?: string[]; tipos: string[] }[] = [
+  { id: 'beleza', label: '💄 Beleza', tipos: ['Perfumes', 'Skincare', 'Maquiagem', 'Cabelos', 'Massagem', 'Solar', 'Cuidados'] },
+  { id: 'vistaSe', label: '👕 Vista-se', tipos: ['Roupas', 'Calçados', 'Acessórios', 'Infantil', 'Bebê', 'Brinquedos'] },
+  { id: 'ambiente', label: '🏠 Ambiente', n1: AMBIENTES, tipos: TIPOS_AMBIENTE },
+  { id: 'momento', label: '🍷 Momento', n1: ['Café da manhã', 'Vinho', 'Churrasco', 'Lareira', 'Domingo relaxado', 'Festa em Casa'], tipos: ['Eletro', 'Móveis', 'Acessórios', 'Alimentos', 'Bebidas', 'Vinho'] },
+  { id: 'mercado', label: '🛒 Mercado', tipos: ['Bebidas', 'Alimentos', 'Café', 'Snacks', 'Hortifruti', 'Limpeza', 'Pet'] },
+  { id: 'praVoce', label: '🎯 Pra você', tipos: ['Trabalhar e estudar', 'Mexer o corpo', 'Ficar conectado'] },
+];
+const HOSTS_AFILIADOS = ['lmdee.link', 'lomadee.com', 'lomadee.com.br', 'awin1.com', 'apretailer.com.br', 'linksynergy.com', 'viator.com'];
+const ehLinkAfiliado = (u: string) => { try { const h = new URL(u).hostname.toLowerCase(); return HOSTS_AFILIADOS.some(d => h === d || h.endsWith('.' + d)); } catch { return false; } };
+
+function camposDaVitrine(v: string, n1: string, tipo: string): Record<string, any> {
+  if (v === 'ambiente') return { ambiente: n1 || 'Sala', tipoAmbiente: tipo || 'Decoração' };
+  if (v === 'momento') return { momento: n1 || 'Café da manhã', tipoMomento: tipo || 'Acessórios' };
+  if (v === 'vistaSe') return { vistaSe: true, tipoVistaSe: tipo || 'Roupas' };
+  if (v === 'beleza') return { beleza: true, tipoBeleza: tipo || 'Cuidados' };
+  if (v === 'mercado') return { mercado: true, tipoMercado: tipo || 'Alimentos' };
+  if (v === 'praVoce') return { praVoce: true, tipoPraVoce: tipo || 'Ficar conectado' };
+  return {};
+}
+
+// Gera o link de afiliado da página escolhida (ou usa o que você colou do painel da rede)
+async function linkDoCartao(loja: Loja, destino: string, colado: string): Promise<string | null> {
+  if (colado.trim()) return ehLinkAfiliado(colado.trim()) ? colado.trim() : null;
+  let org = loja.tipo === 'awin' ? (loja as LojaAwin).anuncianteId : '';
+  if (loja.tipo === 'lomadee') {
+    try {
+      const marcas: any[] = (await (await fetch('/api/lomadee?tipo=brands-categoria')).json()).data || [];
+      const dominio = new URL(loja.url).hostname.replace(/^www\./, '');
+      const norm = (s: string) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+      const m = marcas.find(x => x.site && String(x.site).replace('www.', '').replace('https://', '').includes(dominio))
+        || marcas.find(x => norm(x.name) === norm(loja.nome));
+      org = m?.id || '';
+    } catch {}
+  }
+  if (!org) return null;
+  try {
+    const r = await fetch('/api/produtos/shorten', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: destino, organizationId: org }) });
+    const d = await r.json();
+    return d.shortUrl || null;
+  } catch { return null; }
+}
+
+function CriarCartao({ loja, onFechar }: { loja: Loja; onFechar: () => void }) {
+  const [titulo, setTitulo] = useState(loja.nome);
+  const [frase, setFrase] = useState('');
+  const [imagem, setImagem] = useState('');
+  const [destino, setDestino] = useState(loja.url);
+  const [colado, setColado] = useState('');
+  const [vitrine, setVitrine] = useState('');
+  const [n1, setN1] = useState('');
+  const [tipo, setTipo] = useState('');
+  const [salvando, setSalvando] = useState(false);
+  const [msg, setMsg] = useState('');
+  const V = VITRINES_CARTAO.find(v => v.id === vitrine);
+
+  const campo: React.CSSProperties = { width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.85rem', boxSizing: 'border-box' };
+  const rot: React.CSSProperties = { fontSize: '0.7rem', fontWeight: 700, color: '#6b7280', display: 'block', margin: '8px 0 3px' };
+
+  async function salvar() {
+    setMsg('');
+    if (!titulo.trim() || !imagem.trim() || !vitrine) { setMsg('⚠️ Preencha título, foto e vitrine.'); return; }
+    let dest = destino.trim();
+    if (!dest.startsWith('http')) dest = 'https://' + dest;
+    setSalvando(true);
+    const link = await linkDoCartao(loja, dest, colado);
+    if (!link) {
+      setSalvando(false);
+      setMsg('⚠️ Não consegui gerar o link de afiliado. Gere um no painel da rede ("Divulgar seu link monetizado") e cole no campo "Link de afiliado".');
+      return;
+    }
+    const cartao = {
+      id: 'cartao-' + Date.now().toString(36),
+      cartaoLoja: true,
+      nome: titulo.trim().slice(0, 120),
+      frase: frase.trim().slice(0, 120),
+      imagem: imagem.trim(),
+      preco: 0, precoOriginal: 0, desconto: 0, estoque: 0, organizationId: '',
+      link, linkOriginal: dest,
+      loja: loja.nome, lojaNome: loja.nome,
+      destinos: [],
+      ...camposDaVitrine(vitrine, n1, tipo),
+    };
+    try {
+      const r = await fetch('/api/produtos/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cartao) });
+      if (!r.ok) throw new Error();
+      setMsg('✅ Cartão criado! Ele já aparece na vitrine escolhida.');
+      setFrase(''); setImagem('');
+    } catch { setMsg('⚠️ Não foi possível salvar agora.'); }
+    setSalvando(false);
+  }
+
+  return (
+    <div style={{ marginTop: '10px', padding: '12px', borderRadius: '8px', backgroundColor: '#fff7ed', border: '1px solid #fed7aa' }}>
+      <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#9a3412', marginBottom: '4px' }}>🃏 Novo cartão da loja</div>
+      <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: '0 0 6px' }}>Aparece na vitrine no meio dos produtos, sem preço, com o botão "Ver na loja".</p>
+      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+        <div style={{ flex: 1, minWidth: '180px' }}>
+          <label style={rot}>TÍTULO</label>
+          <input value={titulo} onChange={e => setTitulo(e.target.value)} style={campo} placeholder="ex: Presentes L'Occitane" />
+        </div>
+        <div style={{ flex: 2, minWidth: '220px' }}>
+          <label style={rot}>FRASE (opcional)</label>
+          <input value={frase} onChange={e => setFrase(e.target.value)} style={campo} placeholder="ex: Kits a partir de R$ 49" />
+        </div>
+      </div>
+      <label style={rot}>FOTO (endereço da imagem: botão direito numa foto da loja → "Copiar endereço da imagem")</label>
+      <input value={imagem} onChange={e => setImagem(e.target.value)} style={campo} placeholder="https://..." />
+      {imagem.trim() && <img src={imagem.trim()} alt="" style={{ marginTop: 6, height: 80, objectFit: 'contain', background: '#fff', borderRadius: 6 }} />}
+      <label style={rot}>PÁGINA DE DESTINO (home ou categoria da loja)</label>
+      <input value={destino} onChange={e => setDestino(e.target.value)} style={campo} />
+      <label style={rot}>LINK DE AFILIADO (opcional: deixe vazio para gerar sozinho; se falhar, cole o do painel da rede)</label>
+      <input value={colado} onChange={e => setColado(e.target.value)} style={campo} placeholder="https://lmdee.link/... ou https://apretailer.com.br/click/..." />
+      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+        <div style={{ minWidth: '150px' }}>
+          <label style={rot}>VITRINE</label>
+          <select value={vitrine} onChange={e => { setVitrine(e.target.value); setN1(''); setTipo(''); }} style={campo}>
+            <option value="">— escolha —</option>
+            {VITRINES_CARTAO.map(v => <option key={v.id} value={v.id}>{v.label}</option>)}
+          </select>
+        </div>
+        {V?.n1 && (
+          <div style={{ minWidth: '150px' }}>
+            <label style={rot}>{vitrine === 'ambiente' ? 'CÔMODO' : 'MOMENTO'}</label>
+            <select value={n1} onChange={e => setN1(e.target.value)} style={campo}>
+              <option value="">— escolha —</option>
+              {V.n1.map(x => <option key={x} value={x}>{x}</option>)}
+            </select>
+          </div>
+        )}
+        {V && (
+          <div style={{ minWidth: '150px' }}>
+            <label style={rot}>TIPO</label>
+            <select value={tipo} onChange={e => setTipo(e.target.value)} style={campo}>
+              <option value="">— escolha —</option>
+              {V.tipos.map(x => <option key={x} value={x}>{x}</option>)}
+            </select>
+          </div>
+        )}
+      </div>
+      <div style={{ display: 'flex', gap: '10px', marginTop: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <button onClick={onFechar} disabled={salvando}
+          style={{ marginLeft: 'auto', padding: '7px 16px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, cursor: 'pointer' }}>Fechar</button>
+        <button onClick={salvar} disabled={salvando}
+          style={{ padding: '7px 16px', borderRadius: '8px', border: 'none', backgroundColor: '#ea580c', color: '#fff', fontWeight: 700, cursor: 'pointer' }}>
+          {salvando ? '⏳' : '🃏 Criar cartão'}
+        </button>
+      </div>
+      {msg && <p style={{ fontSize: '0.82rem', margin: '8px 0 0' }}>{msg}</p>}
+      <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: '6px 0 0' }}>Para tirar um cartão do site: Buscar produtos → lista de pinados → 🗑 Remover (ou no admin de produtos).</p>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────
 // Painel Cron
 // ──────────────────────────────────────────────
 function CronPanel({ loja, onSave }: {
@@ -476,6 +633,7 @@ export default function CadastraLojasPage() {
   const [aba, setAba] = useState<'lomadee' | 'awin'>('lomadee');
   const [editando, setEditando] = useState<string | null>(null); // "tipo|url" da loja em edição
   const [filtroNivel, setFiltroNivel] = useState(''); // '' = todos, '-' = sem nível
+  const [criandoCartao, setCriandoCartao] = useState<string | null>(null); // "tipo|url" da loja
 
   // Form Lomadee
   const [nomeL, setNomeL] = useState('');
@@ -717,6 +875,10 @@ export default function CadastraLojasPage() {
                   </div>
                   <CatBadges loja={loja} />
                 </div>
+                <button onClick={() => setCriandoCartao(criandoCartao === `${loja.tipo}|${loja.url}` ? null : `${loja.tipo}|${loja.url}`)}
+                  style={{ padding: '6px 14px', borderRadius: '6px', border: '1px solid #fed7aa', backgroundColor: '#fff', color: '#ea580c', fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  🃏 Criar cartão
+                </button>
                 <button onClick={() => setEditando(editando === `${loja.tipo}|${loja.url}` ? null : `${loja.tipo}|${loja.url}`)}
                   style={{ padding: '6px 14px', borderRadius: '6px', border: '1px solid #ddd6fe', backgroundColor: '#fff', color: '#7c3aed', fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                   ✏️ Editar
@@ -734,6 +896,10 @@ export default function CadastraLojasPage() {
                   onCancelar={() => setEditando(null)}
                   onSalvar={async nova => { await salvarLoja(nova, loja.url); setEditando(null); }}
                 />
+              )}
+
+              {criandoCartao === `${loja.tipo}|${loja.url}` && (
+                <CriarCartao loja={loja} onFechar={() => setCriandoCartao(null)} />
               )}
 
               {/* Painel de automação cron */}

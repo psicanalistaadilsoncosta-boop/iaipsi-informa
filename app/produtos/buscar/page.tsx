@@ -161,8 +161,13 @@ function camposVitrine(vitrine: string, nivel1: string, nivel2: string): Record<
   return {}; // nenhuma: fica como hoje
 }
 
+// Loja que não aceita link direto para o produto: pergunta antes de pinar
+const AVISO_SEM_DEEPLINK = (loja: string) =>
+  `⚠️ ${loja || 'Esta loja'} não aceita link direto para o produto: quem clicar vai cair na PÁGINA INICIAL da loja.\n\n` +
+  `O melhor é criar um cartão da loja (em Cadastrar lojas → 🃏 Criar cartão).\n\nPinar mesmo assim?`;
+
 // Pede o link de afiliado. Sem link de afiliado o produto NÃO é pinado (o /ir recusaria e não haveria comissão).
-async function pedirLinkAfiliado(produto: Produto): Promise<{ link: string | null; erro: string }> {
+async function pedirLinkAfiliado(produto: Produto): Promise<{ link: string | null; erro: string; semDeeplink?: boolean }> {
   try {
     const res = await fetch('/api/produtos/shorten', {
       method: 'POST',
@@ -170,7 +175,7 @@ async function pedirLinkAfiliado(produto: Produto): Promise<{ link: string | nul
       body: JSON.stringify({ url: produto.link, organizationId: produto.organizationId }),
     });
     const data = await res.json();
-    return { link: data.shortUrl || null, erro: data.error || 'a rede não gerou o link' };
+    return { link: data.shortUrl || null, erro: data.error || 'a rede não gerou o link', semDeeplink: !!data.semDeeplink };
   } catch (e) {
     return { link: null, erro: String((e as Error)?.message || e) };
   }
@@ -423,7 +428,7 @@ export default function BuscarProdutosPage() {
         const brandsRes = await fetch('/api/lomadee?tipo=brands-categoria');
         const brandsJson = await brandsRes.json();
         const dominio = new URL(urlLoja).hostname.replace('www.', '');
-               const marcas: any[] = brandsJson.data || [];
+        const marcas: any[] = brandsJson.data || [];
         // 1º pelo endereço; se não achar (loja mudou de domínio, ex.: Sawary = sawaryjeans.com), pelo nome cadastrado
         const norm = (s: string) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
         const nomeCadastrado = lojasLomadee.find(l => l.url === urlLoja)?.nome || '';
@@ -511,11 +516,12 @@ export default function BuscarProdutosPage() {
     setModalProduto(null);
     setGerando(produto.id);
     try {
-      const { link: linkAfiliado, erro } = await pedirLinkAfiliado(produto);
+      const { link: linkAfiliado, erro, semDeeplink } = await pedirLinkAfiliado(produto);
       if (!linkAfiliado) {
         alert(`⚠️ ${produto.loja || 'Loja'}: não consegui gerar o link de afiliado.\n${erro}\n\nProduto NÃO pinado.`);
         return;
       }
+      if (semDeeplink && !confirm(AVISO_SEM_DEEPLINK(produto.loja || ''))) return;
 
       let parcelasFinal = parcelas;
       let valorParcelaFinal = valorParcela;
@@ -566,10 +572,15 @@ export default function BuscarProdutosPage() {
     let ok = 0;
     let semLink = 0;
     let ultimoErro = '';
+    let jaPerguntou = false;
     for (const produto of lista) {
       try {
-        const { link: linkAfiliado, erro } = await pedirLinkAfiliado(produto);
+        const { link: linkAfiliado, erro, semDeeplink } = await pedirLinkAfiliado(produto);
         if (!linkAfiliado) { semLink++; ultimoErro = erro; continue; }
+        if (semDeeplink && !jaPerguntou) {
+          jaPerguntou = true;
+          if (!confirm(AVISO_SEM_DEEPLINK(produto.loja || ''))) break;
+        }
         await fetch('/api/produtos/save', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -617,10 +628,13 @@ export default function BuscarProdutosPage() {
       const lista = produtos.filter(p => selecionados.has(p.id));
       const comLink: { produto: Produto; link: string }[] = [];
       let ultimoErro = '';
+      let semDeeplinkLoja = false;
       for (const produto of lista) {
-        const { link, erro } = await pedirLinkAfiliado(produto);
+        const { link, erro, semDeeplink } = await pedirLinkAfiliado(produto);
         if (link) comLink.push({ produto, link }); else ultimoErro = erro;
+        if (semDeeplink) semDeeplinkLoja = true;
       }
+      if (semDeeplinkLoja && comLink.length && !confirm(AVISO_SEM_DEEPLINK(comLink[0].produto.loja || ''))) return;
       if (comLink.length === 0) {
         alert(`⚠️ Nenhum produto ganhou link de afiliado. Nada foi apagado nem pinado.\n${ultimoErro}`);
         return;

@@ -14,19 +14,20 @@ function limparUrl(url: string): string {
   } catch { return url; }
 }
 
-type ModelosActionpay = Record<string, { prefixo: string | null }>;
+type ModelosActionpay = Record<string, { prefixo: string | null; semDeeplink?: boolean }>;
 
 // Monta o link de afiliado Actionpay. Tenta, nesta ordem:
 // 1. modelo já guardado em actionpay:deeplinks (por número da oferta)
 // 2. deeplink colado na tela de importar categoria (importar:deeplinks, por site da loja)
 // Sem nenhum dos dois: não gera link (a página de pinar avisa e não pina).
-async function linkActionpay(oferta: string, url: string): Promise<{ link: string | null; erro?: string }> {
+async function linkActionpay(oferta: string, url: string): Promise<{ link: string | null; erro?: string; semDeeplink?: boolean }> {
   const destino = encodeURIComponent(limparUrl(url));
   const modelos: ModelosActionpay = (await kv.get<ModelosActionpay>('actionpay:deeplinks')) || {};
 
   // 1
   const prefixo = modelos[oferta]?.prefixo;
-  if (prefixo) return { link: `${prefixo}comlupa/url=${destino}` };
+  // semDeeplink: a loja não aceita link direto para o produto (o clique cai na página inicial)
+  if (prefixo) return { link: `${prefixo}comlupa/url=${destino}`, semDeeplink: !!modelos[oferta]?.semDeeplink };
 
   // 2
   try {
@@ -59,8 +60,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ shortUrl: url });
     }
 
-    // Se for anunciante Awin, gera deeplink Awin
-    const awinMid = AWIN_ADVERTISERS[organizationId];
+    // Se for anunciante Awin, gera deeplink Awin (pelo apelido, ex. awin-arno, ou pelo número, como no app/api/scrape)
+    const awinMid = AWIN_ADVERTISERS[organizationId] || (/^\d+$/.test(String(organizationId || '')) ? String(organizationId) : '');
     if (awinMid) {
       const awinLink = `https://www.awin1.com/cread.php?awinmid=${awinMid}&awinaffid=${AWIN_AFFID}&ued=${encodeURIComponent(url)}`;
         return NextResponse.json({ shortUrl: awinLink });
@@ -85,7 +86,7 @@ export async function POST(req: NextRequest) {
       if (!r.link) {
         return NextResponse.json({ shortUrl: null, error: r.erro || `Oferta Actionpay ${actionpayOferta} sem deeplink` }, { status: 502 });
       }
-      return NextResponse.json({ shortUrl: r.link });
+      return NextResponse.json({ shortUrl: r.link, semDeeplink: !!r.semDeeplink });
     }
 
     // Caso contrário usa Lomadee

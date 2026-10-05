@@ -438,6 +438,24 @@ export default function VitrineTematica({ temaId, carregar, tiposOrdem, niveis, 
               const img = p.imagem || p.thumbnail || p.imageUrl || '';
               const loja = p.lojaNome || p.loja || p.storeName || p.nomeLoja || '';
               const sel = naLista(p);
+              // cartão de loja (loja sem link direto para produto): sem preço e sem "+ Lista"
+              if (p.cartaoLoja) return (
+                <article key={chave(p)} className="vt-card vt-cartao">
+                  <div className="vt-foto">
+                    {img ? <img src={img} alt={nome} loading="lazy" /> : <span aria-hidden="true">🏬</span>}
+                    <span className="vt-off vt-selo-loja">Loja</span>
+                  </div>
+                  <div className="vt-info">
+                    <div className="vt-loja">{loja}</div>
+                    <SeloLoja loja={p.loja} compacto />
+                    <div className="vt-nome">{nome.length > 70 ? nome.slice(0, 67) + '…' : nome}</div>
+                    {p.frase && <div className="vt-frase">{p.frase}</div>}
+                    <div className="vt-acoes">
+                      <a className="vt-ver" href={linkIr(p)} target="_blank" rel="noopener">Ver na loja ↗</a>
+                    </div>
+                  </div>
+                </article>
+              );
               return (
                 <article key={chave(p)} className={`vt-card${sel ? ' sel' : ''}`}>
                   <div className="vt-foto">
@@ -663,6 +681,9 @@ const CSS = `
 .vt-preco{font-weight:800;font-size:22px;line-height:1.1;color:var(--t-1)}
 .vt-acoes{margin-top:auto;padding-top:10px;display:flex;flex-direction:column;gap:7px}
 .vt-ver{text-align:center;text-decoration:none;background:var(--t-1);color:#fff;border-radius:999px;padding:9px 12px;font-weight:800;font-size:13px}
+.vt-cartao{border:2px dashed var(--t-2)}
+.vt-selo-loja{background:var(--t-2)}
+.vt-frase{font-size:13px;color:#6E6680;line-height:1.35}
 .vt-pedir{border:2px solid var(--t-1);background:#fff;color:var(--t-1);border-radius:999px;padding:7px 12px;font-weight:800;font-size:13px;cursor:pointer}
 .vt-pedir[aria-pressed="true"]{background:var(--t-2);border-color:var(--t-2);color:#fff}
 .vt-flutua{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:100;background:var(--t-2);color:#fff;border-radius:16px;padding:14px 16px;box-shadow:0 6px 24px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:6px;min-width:220px}

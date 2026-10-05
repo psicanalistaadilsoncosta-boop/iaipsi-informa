@@ -85,6 +85,13 @@ export async function POST(req: NextRequest) {
       await salvarOrigens(origens);
     }
   } catch {}
+  // loja marcada como "sem deeplink" (o clique cai na página inicial): avisa
+  let aviso = '';
+  try {
+    const modelos: Record<string, { nome?: string; prefixo?: string; semDeeplink?: boolean }> = (await kv.get('actionpay:deeplinks')) || {};
+    const m = Object.values(modelos).find(v => v?.semDeeplink && v.prefixo && base.startsWith(v.prefixo));
+    if (m) aviso = `${m.nome || 'Esta loja'} não aceita link direto para o produto: quem clicar vai cair na página inicial da loja. O melhor é usar um cartão da loja.`;
+  } catch {}
   revalidatePath('/');
-  return NextResponse.json({ ok: true, novos, repetidos, recusados });
+  return NextResponse.json({ ok: true, novos, repetidos, recusados, aviso });
 }
