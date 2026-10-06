@@ -11,10 +11,9 @@ export function avisarMudanca() {
     revalidatePath('/');
     revalidatePath('/noticias');
     for (const r of VITRINES) revalidatePath(r);
+       // páginas de cada loja/categoria: só renovam 1x por dia (são muitas e o Google visita todas)
     revalidatePath('/lojas');
-    revalidatePath('/lojas/[slug]', 'page');
     revalidatePath('/categorias');
-    revalidatePath('/categorias/[slug]', 'page');
   } catch (e) {
     console.warn('[revalidar] não consegui avisar a mudança:', e);
   }
