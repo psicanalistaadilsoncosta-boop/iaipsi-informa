@@ -5,6 +5,8 @@ import fs from 'fs/promises';
 import path from 'path';
 import { kv } from '@/lib/kv';
 import { lerTodos, lerDestino } from '@/lib/pinados';
+import { unstable_cache } from 'next/cache';
+import { TAG_PRODUTOS } from '@/lib/revalidar';
 // Tempo limite garantido: se a API não responder, devolve o valor reserva em vez de travar
 function comTempoLimite<T>(p: Promise<T>, ms: number, reserva: T): Promise<T> {
   return Promise.race([p, new Promise<T>(resolve => setTimeout(() => resolve(reserva), ms))]).catch(() => reserva);
@@ -434,14 +436,11 @@ const [campData, brandData] = !API_KEY ? [{ data: [] }, { data: [] }] : await Pr
   }
 }
 
-async function getBannerData(): Promise<{ slidesEditoriais: any[]; produtosBanner: any[] }> {
-  try {
-    const [slidesEditoriais, produtosPinados] = await Promise.all([
-      kv.get<any[]>('banner:slides').then(v => v || []),
-      lerTodos(),
-    ]);
-
-    const produtosBanner = produtosPinados
+// Produtos do banner: guardados até algum produto mudar (lib/revalidar.ts) ou 24h.
+// A home renova a cada 15 min por causa das notícias, mas NÃO relê todos os produtos a cada vez.
+const produtosDoBanner = unstable_cache(async () => {
+  const produtosPinados = await lerTodos();
+  return produtosPinados
       .filter((p: any) => p.bannerDestaque === true)
       .map((p: any) => ({
         tipo: 'oferta' as const,
@@ -455,15 +454,22 @@ async function getBannerData(): Promise<{ slidesEditoriais: any[]; produtosBanne
         link: p.link,
         novaAba: true,
       }));
+}, ['home-banner-produtos'], { revalidate: 86400, tags: [TAG_PRODUTOS] });
 
+async function getBannerData(): Promise<{ slidesEditoriais: any[]; produtosBanner: any[] }> {
+  try {
+    const [slidesEditoriais, produtosBanner] = await Promise.all([
+      kv.get<any[]>('banner:slides').then(v => v || []),
+      produtosDoBanner().catch(() => [] as any[]),
+    ]);
     return { slidesEditoriais, produtosBanner };
   } catch {
     return { slidesEditoriais: [], produtosBanner: [] };
   }
 }
 // As 8 ofertas selecionadas mais recentes, para a faixa "Lupadas da semana"
-async function getLupadas(): Promise<any[]> {
-  try {
+// guardadas até algum produto mudar (lib/revalidar.ts) ou 24h — guarda só as 8, não as ~1.300
+const lupadasGuardadas = unstable_cache(async () => {
     const data = await lerDestino('ofertas-selecionadas');
     return data
       .filter(p => p.destinos?.includes('ofertas-selecionadas') && p.ativo !== false && p.preco > 0)
@@ -475,7 +481,10 @@ async function getLupadas(): Promise<any[]> {
         loja: p.lojaNome || p.loja,
         moedaUSD: !!(p.moedaUSD || p.moedaOriginal === 'USD'),
       }));
-  } catch { return []; }
+}, ['home-lupadas'], { revalidate: 86400, tags: [TAG_PRODUTOS] });
+
+async function getLupadas(): Promise<any[]> {
+  try { return await lupadasGuardadas(); } catch { return []; }
 }
 
 export default async function Home() {

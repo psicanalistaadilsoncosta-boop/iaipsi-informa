@@ -6,6 +6,8 @@ import fs from 'fs/promises';
 import path from 'path';
 import { kv } from '@/lib/kv';
 import { lerTodos, lerDestino } from '@/lib/pinados';
+import { unstable_cache } from 'next/cache';
+import { TAG_PRODUTOS } from '@/lib/revalidar';
 
 // Tempo limite garantido: se a API não responder, devolve o valor reserva em vez de travar
 function comTempoLimite<T>(p: Promise<T>, ms: number, reserva: T): Promise<T> {
@@ -227,6 +229,9 @@ async function getAds(): Promise<AdItem[]> {
   }
 }
 
+// Produtos "Entre notícias": guardados até algum produto mudar (lib/revalidar.ts) ou 24h
+const mixGuardado = unstable_cache(async () => lerDestino('mix'), ['noticias-mix'], { revalidate: 86400, tags: [TAG_PRODUTOS] });
+
 async function getOfertasMix(): Promise<any[]> {
   try {
     const API_KEY = process.env.LOMADEE_API_KEY || '';
@@ -234,7 +239,7 @@ async function getOfertasMix(): Promise<any[]> {
 
     let produtosPinados: any[] = [];
     try {
-      const kvData = await lerDestino('mix');
+      const kvData = await mixGuardado();
       if (kvData && kvData.length > 0) {
         produtosPinados = kvData
           .filter((p: any) => p.destinos?.includes('mix'))
@@ -341,13 +346,10 @@ async function getViagensNoticias(): Promise<any[]> {
   }
 }
 
-async function getBannerData(): Promise<{ slidesEditoriais: any[]; produtosBanner: any[] }> {
-  try {
-    const [slidesEditoriais, produtosPinados] = await Promise.all([
-      kv.get<any[]>('banner:slides').then(v => v || []),
-      lerTodos(),
-    ]);
-    const produtosBanner = produtosPinados
+// Produtos do banner: mesma cópia guardada da home (mesma chave), até algum produto mudar ou 24h
+const produtosDoBanner = unstable_cache(async () => {
+  const produtosPinados = await lerTodos();
+  return produtosPinados
       .filter((p: any) => p.bannerDestaque === true)
       .map((p: any) => ({
         tipo: 'oferta' as const,
@@ -361,6 +363,14 @@ async function getBannerData(): Promise<{ slidesEditoriais: any[]; produtosBanne
         link: p.link,
         novaAba: true,
       }));
+}, ['home-banner-produtos'], { revalidate: 86400, tags: [TAG_PRODUTOS] });
+
+async function getBannerData(): Promise<{ slidesEditoriais: any[]; produtosBanner: any[] }> {
+  try {
+    const [slidesEditoriais, produtosBanner] = await Promise.all([
+      kv.get<any[]>('banner:slides').then(v => v || []),
+      produtosDoBanner().catch(() => [] as any[]),
+    ]);
     return { slidesEditoriais, produtosBanner };
   } catch {
     return { slidesEditoriais: [], produtosBanner: [] };
