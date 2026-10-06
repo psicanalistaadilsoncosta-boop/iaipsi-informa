@@ -77,10 +77,17 @@ export default function LupaMeAjuda() {
     setPasso(ORDEM.length - 1);
     setAuto(true);
   }, []);
+  // 1ª tentativa na hora, sem esperar a verificação: se o resultado já está guardado, aparece direto.
+  // Se não estiver (passou de 12h), o servidor pede a verificação e tentamos de novo quando ela terminar.
+  const [esperaTs, setEsperaTs] = useState(false);
   useEffect(() => {
-    if (auto && completo && !carregando && !sugestoes && (!TS_KEY || tsToken)) { setAuto(false); consultar(); }
+    if (auto && completo && !carregando && !sugestoes) { setAuto(false); consultar(true); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auto, completo, tsToken]);
+  }, [auto, completo]);
+  useEffect(() => {
+    if (esperaTs && tsToken && !carregando) { setEsperaTs(false); consultar(); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [esperaTs, tsToken]);
   const codigoR = () => ORDEM.map(k => resp[k]).join('-');
 
   function escolher(k: Chave, v: string) {
@@ -88,9 +95,9 @@ export default function LupaMeAjuda() {
     if (passo < ORDEM.length - 1) setPasso(p => p + 1);
   }
 
-  async function consultar() {
+  async function consultar(semEsperar = false) {
     if (!completo) return;
-    if (TS_KEY && !tsToken) { setErro('Aguarde a verificação de segurança terminar (um instante) e tente de novo.'); return; }
+    if (TS_KEY && !tsToken && !semEsperar) { setErro('Aguarde a verificação de segurança terminar (um instante) e tente de novo.'); return; }
     setCarregando(true); setErro(''); setAviso('');
     try {
       const r = await fetch('/api/lupa-me-ajuda', {
@@ -98,7 +105,9 @@ export default function LupaMeAjuda() {
         body: JSON.stringify({ respostas: resp, turnstile: tsToken, site: hp }),
       });
       const d = await r.json();
-      renovarTs();
+      // link compartilhado sem resultado guardado: espera a verificação e tenta de novo, sem mostrar erro
+      if (semEsperar && r.status === 403 && TS_KEY) { setEsperaTs(true); return; }
+      if (tsToken) renovarTs();
       if (d.erro) { setErro(d.erro); return; }
       setSugestoes(d.sugestoes || []);
       setAviso(d.aviso || '');
@@ -151,8 +160,8 @@ export default function LupaMeAjuda() {
           <div className="lma-rodape">
             {passo > 0 && <button type="button" className="lma-link" onClick={() => setPasso(p => p - 1)}>← Voltar</button>}
             {completo && (
-              <button type="button" className="lma-ok" onClick={consultar} disabled={carregando}>
-                {carregando ? 'A Lupa está pensando…' : '✨ Ver sugestões'}
+              <button type="button" className="lma-ok" onClick={() => consultar()} disabled={carregando || esperaTs}>
+                {carregando || esperaTs ? 'A Lupa está pensando…' : '✨ Ver sugestões'}
               </button>
             )}
           </div>
