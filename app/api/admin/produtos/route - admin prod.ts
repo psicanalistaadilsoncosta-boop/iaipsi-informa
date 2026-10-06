@@ -1,4 +1,4 @@
-import { avisarMudanca } from '@/lib/revalidar';
+import { revalidatePath } from 'next/cache';
 import { NextResponse, NextRequest } from 'next/server';
 import { lerTodos, lerUm, salvar, salvarVarios } from '@/lib/pinados';
 import { isAdmin } from '@/lib/adminAuth';
@@ -65,7 +65,7 @@ export async function PATCH(req: NextRequest) {
     if ('textoParcelamento' in body) p.textoParcelamento = body.textoParcelamento;
     if ('valorParcela' in body) p.valorParcela = body.valorParcela;
     await salvar(p);
-    avisarMudanca(); return NextResponse.json({ ok: true });
+    revalidatePath('/'); return NextResponse.json({ ok: true });
   }
 
   const { categoria, nomeAmbiente, tipoAmbiente, tipoMomento, tipoVistaSe, tipoBeleza, tipoMercado, tipoPraVoce } = body;
@@ -85,5 +85,5 @@ export async function PATCH(req: NextRequest) {
   }
   await salvarVarios(mudados);
 
-  avisarMudanca(); return NextResponse.json({ ok: true, atualizados: mudados.length });
+  revalidatePath('/'); return NextResponse.json({ ok: true, atualizados: mudados.length });
 }

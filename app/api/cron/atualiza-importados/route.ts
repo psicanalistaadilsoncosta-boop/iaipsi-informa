@@ -15,7 +15,7 @@
 // Proteção de acesso: header Authorization: Bearer <CRON_SECRET>
 
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
+import { avisarMudanca } from '@/lib/revalidar';
 import { kv } from '@/lib/kv';
 import { lerCategoria } from '@/lib/importa-categoria';
 import { lerIds, salvarVarios, removerVarios } from '@/lib/pinados';
@@ -146,6 +146,6 @@ export async function GET(req: NextRequest) {
     await salvarOrigens(origens); // salva a cada página, para não perder o que já foi feito
   }
 
-  if (feitas) revalidatePath('/');
+  if (feitas) avisarMudanca();
   return NextResponse.json({ ok: true, paginasLigadas: ligadas.length, feitas, resultados });
 }

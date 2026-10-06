@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { kv } from '@/lib/kv';
 import { isAdmin } from '@/lib/adminAuth';
 import { lerTodos, lerUm, salvar } from '@/lib/pinados';
+import { avisarMudanca } from '@/lib/revalidar';
 
 export async function GET() {
   const produtos = await lerTodos();
@@ -55,5 +56,6 @@ export async function POST(req: NextRequest) {
     tipoMomento: tipoMomento || undefined,
     destinos: destinos || p.destinos,
   })));
+  avisarMudanca();
   return NextResponse.json({ ok: true });
 }

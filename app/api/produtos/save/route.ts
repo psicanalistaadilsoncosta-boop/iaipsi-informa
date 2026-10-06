@@ -1,4 +1,4 @@
-import { revalidatePath } from 'next/cache';
+import { avisarMudanca } from '@/lib/revalidar';
 import { NextRequest, NextResponse } from 'next/server';
 import { kv } from '@/lib/kv';
 import { isAdmin } from '@/lib/adminAuth';
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
     await salvar(antigo
       ? { ...antigo, ...produto, pinedAt: antigo.pinedAt }
       : { ...produto, pinedAt: new Date().toISOString() });
-    revalidatePath('/'); return NextResponse.json({ success: true });
+    avisarMudanca(); return NextResponse.json({ success: true });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }
@@ -77,7 +77,7 @@ export async function DELETE(req: NextRequest) {
   try {
     const { id } = await req.json();
     await remover(String(id));
-    revalidatePath('/'); return NextResponse.json({ success: true });
+    avisarMudanca(); return NextResponse.json({ success: true });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }
@@ -114,7 +114,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const { id, frase } = await req.json();
     await kv.set('oferta:destaque-home', { id, frase: frase || '' });
-    revalidatePath('/'); return NextResponse.json({ success: true });
+    avisarMudanca(); return NextResponse.json({ success: true });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }

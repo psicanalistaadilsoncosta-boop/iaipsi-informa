@@ -2,9 +2,7 @@ import { kv } from '@/lib/kv';
 import { lerTodos } from '@/lib/pinados';
 import Link from 'next/link';
 
-// Guardada até avisar: só lê o banco de novo quando algo muda (lib/revalidar.ts) ou após 24h
-export const revalidate = 86400;
-export const dynamic = 'force-static';
+export const revalidate = 0;
 
 interface ProdutoPinado {
   id: string;

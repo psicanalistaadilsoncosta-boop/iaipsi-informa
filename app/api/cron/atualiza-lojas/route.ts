@@ -8,6 +8,7 @@
 // Proteção: header Authorization: Bearer <CRON_SECRET>
 
 import { NextRequest, NextResponse } from 'next/server';
+import { avisarMudanca } from '@/lib/revalidar';
 import { kv } from '@/lib/kv';
 import { lerTodos, lerUm, salvarVarios, remover } from '@/lib/pinados';
 
@@ -310,6 +311,7 @@ export async function GET(req: NextRequest) {
   }
   await salvarVarios([...atualizados, ...novosTodos]);
 
+  avisarMudanca();
   return NextResponse.json({
     ok: true,
     timestamp: new Date().toISOString(),

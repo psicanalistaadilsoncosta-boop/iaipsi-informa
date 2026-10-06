@@ -3,7 +3,7 @@
 // POST { produtos, deeplink, loja, origem, pagina2, paginas } -> coloca os produtos em "A catalogar"
 //   e registra a página em importar:origens (para a atualização diária, que começa desligada)
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
+import { avisarMudanca } from '@/lib/revalidar';
 import { kv } from '@/lib/kv';
 import { isAdmin } from '@/lib/adminAuth';
 import { linkAfiliadoOk } from '@/lib/links-afiliados';
@@ -92,6 +92,6 @@ export async function POST(req: NextRequest) {
     const m = Object.values(modelos).find(v => v?.semDeeplink && v.prefixo && base.startsWith(v.prefixo));
     if (m) aviso = `${m.nome || 'Esta loja'} não aceita link direto para o produto: quem clicar vai cair na página inicial da loja. O melhor é usar um cartão da loja.`;
   } catch {}
-  revalidatePath('/');
+  avisarMudanca();
   return NextResponse.json({ ok: true, novos, repetidos, recusados, aviso });
 }

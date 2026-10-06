@@ -2,7 +2,9 @@
 import { NextResponse } from 'next/server';
 import { lerGaveta } from '@/lib/pinados';
 
-export const dynamic = 'force-dynamic';
+// Guardada até avisar: só lê o banco de novo quando algo muda (lib/revalidar.ts) ou após 24h
+export const dynamic = 'force-static';
+export const revalidate = 86400;
 
 const TIPOS = ['Trabalhar e estudar', 'Mexer o corpo', 'Ficar conectado'];
 
