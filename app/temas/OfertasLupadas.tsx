@@ -67,7 +67,13 @@ const CSS = `
 .ol-topo h2{font-size:1.2rem;font-weight:800;color:#111827;margin:0}
 .ol-sub{font-size:.75rem;color:#9ca3af;font-weight:500}
 .ol-todas{margin-left:auto;font-size:.8rem;color:var(--t-1);font-weight:700;text-decoration:none}
-.ol-trilho{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(200px,1fr);gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 2px 12px;scrollbar-width:thin}
+.ol-trilho{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(200px,1fr);gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 2px 14px}
+.ol-trilho::-webkit-scrollbar{height:6px}
+.ol-trilho::-webkit-scrollbar-button{display:none}
+.ol-trilho::-webkit-scrollbar-track{background:transparent}
+.ol-trilho::-webkit-scrollbar-thumb{background:var(--t-soft);border-radius:999px}
+.ol-trilho:hover::-webkit-scrollbar-thumb{background:var(--t-1)}
+@supports (-moz-appearance:none){.ol-trilho{scrollbar-width:thin;scrollbar-color:var(--t-soft) transparent}}
 .ol-card{scroll-snap-align:start;background:#fff;border-radius:16px;overflow:hidden;text-decoration:none;color:inherit;display:flex;flex-direction:column;border:2px solid transparent;box-shadow:0 4px 16px rgba(0,0,0,.07);transition:transform .2s,border-color .2s}
 .ol-card:hover{transform:translateY(-4px);border-color:var(--t-1)}
 .ol-foto{position:relative;height:150px;background:#fff;overflow:hidden}

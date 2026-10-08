@@ -33,8 +33,9 @@ export default function LupaMeAjuda() {
     const montar = () => {
       const w = (window as any).turnstile;
       if (!vivo || !w || !tsBox.current || tsId.current) return;
-      tsId.current = w.render(tsBox.current, {
+        tsId.current = w.render(tsBox.current, {
         sitekey: TS_KEY,
+        appearance: 'interaction-only',
         callback: (t: string) => setTsToken(t),
         'expired-callback': () => setTsToken(''),
         'error-callback': () => setTsToken(''),
