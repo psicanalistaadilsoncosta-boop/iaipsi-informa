@@ -55,9 +55,15 @@ export async function POST(req: NextRequest) {
   await salvarVarios(paraSalvar);
   // guarda o deeplink desta loja para a próxima vez
   try {
-    const host = new URL(String(origem)).hostname.replace(/^www\./, '');
+        const u = new URL(String(origem));
+    const host = u.hostname.replace(/^www\./, '') + (/\.xml$/i.test(u.pathname) ? u.pathname : '');
     const mapa: Record<string, string> = (await kv.get(CHAVE_DEEPLINKS)) || {};
     mapa[host] = String(deeplink);
+    // feed: guarda também pelo site da loja (ex.: authentical.com.br), para o link de afiliado achar
+    try {
+      const siteLoja = new URL(String(produtos[0]?.url || '')).hostname.replace(/^www\./, '');
+      if (siteLoja && siteLoja !== host) mapa[siteLoja] = String(deeplink);
+    } catch {}
     await kv.set(CHAVE_DEEPLINKS, mapa);
   } catch {}
   // registra a página importada (a atualização diária começa desligada; liga na tela de importar)

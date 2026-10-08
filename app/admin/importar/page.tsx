@@ -8,7 +8,8 @@ type Produto = { nome: string; preco: number; imagem: string; url: string; marca
 type Res = { status: 'ok' | 'bloqueio' | 'sem-dados' | 'erro'; produtos?: Produto[]; paginasLidas?: number; mensagem?: string; avisos: string[] };
 
 const brl = (v: number) => 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const host = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } };
+// feed XML: a chave é o próprio feed (cada loja tem o seu); página normal: o site da loja
+const host = (u: string) => { try { const x = new URL(u); const h = x.hostname.replace(/^www\./, ''); return /\.xml$/i.test(x.pathname) ? h + x.pathname : h; } catch { return ''; } };
 const campo: React.CSSProperties = { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #d1d5db', fontSize: 14, boxSizing: 'border-box' };
 const rot: React.CSSProperties = { display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', margin: '12px 0 4px' };
 

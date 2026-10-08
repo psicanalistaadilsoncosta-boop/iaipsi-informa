@@ -28,7 +28,7 @@ export const maxDuration = 60;
 const DIAS_PARA_REMOVER = 2;
 const LIMITE_TEMPO_MS = 45_000; // para antes do limite da Vercel; o que faltar fica para amanhã
 
-function host(u: string) { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } }
+function host(u: string) { try { const x = new URL(u); const h = x.hostname.replace(/^www\./, ''); return /\.xml$/i.test(x.pathname) ? h + x.pathname : h; } catch { return ''; } }
 
 async function atualizarOrigem(o: Origem, deeplinks: Record<string, string>) {
   const r = await lerCategoria(o.pag1, o.pag2 || '', o.paginas || 1);

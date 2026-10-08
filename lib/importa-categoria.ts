@@ -147,6 +147,64 @@ export function extrairProdutos(html: string, base: string) {
   }
   return { produtos, semPreco, esgotados, semLink, totalBlocos: achados.length };
 }
+// ---------- Feed XML da rede de afiliados (Google Shopping / RSS ou YML) ----------
+// Quando o link é um feed (ex.: Actionpay .../yml/yml3033.xml?key=...), lê todos os produtos de uma vez.
+export function ehFeed(txt: string): boolean {
+  const ini = txt.slice(0, 3000);
+  return /^\s*(<\?xml|<rss|<yml_catalog|<feed)/i.test(ini) || (/<(item|offer)[\s>]/i.test(ini) && /<(g:)?price>/i.test(txt.slice(0, 20000)));
+}
+
+function textoTag(bloco: string, nomes: string[]): string {
+  for (const n of nomes) {
+    const m = bloco.match(new RegExp(`<${n}(?:\\s[^>]*)?>([\\s\\S]*?)</${n}>`, 'i'));
+    if (m) {
+      const v = m[1].replace(/^\s*<!\[CDATA\[([\s\S]*?)\]\]>\s*$/, '$1').trim();
+      if (v) return decodificar(v);
+    }
+  }
+  return '';
+}
+
+function numeroDoPreco(t: string): number {
+  const m = String(t || '').match(/\d[\d.,]*/);
+  if (!m) return 0;
+  let s = m[0];
+  if (s.includes(',') && s.lastIndexOf(',') > s.lastIndexOf('.')) s = s.replace(/\./g, '').replace(',', '.'); // 1.299,90
+  else s = s.replace(/,/g, '');                                                                              // 1,299.90
+  return Number(s) || 0;
+}
+
+export function lerFeed(xml: string, base: string, avisos: string[]): Resultado {
+  const blocos = [...xml.matchAll(/<(item|entry|offer)(\s[^>]*)?>([\s\S]*?)<\/\1>/gi)];
+  if (!blocos.length) return { status: 'sem-dados', mensagem: 'O feed abriu, mas não tem produtos.', avisos };
+  const todos = new Map<string, ProdutoLido>();
+  let semPreco = 0, esgotados = 0;
+  for (const b of blocos.slice(0, 3000)) {
+    const attrs = b[2] || '', bloco = b[3];
+    const nome = textoTag(bloco, ['title', 'g:title', 'name', 'model']);
+    let url = textoTag(bloco, ['link', 'g:link', 'url']);
+    try { url = url ? new URL(url, base).href : ''; } catch { url = ''; }
+    if (!nome || !url) continue;
+    const promo = numeroDoPreco(textoTag(bloco, ['g:sale_price', 'sale_price']));
+    const cheio = numeroDoPreco(textoTag(bloco, ['g:price', 'price']));
+    const preco = promo && (!cheio || promo < cheio) ? promo : cheio;
+    if (!preco) { semPreco++; continue; }
+    const disp = textoTag(bloco, ['g:availability', 'availability']);
+    const esgotado = /out.of.stock|esgotad|indispon|discontinued/i.test(disp) || /available\s*=\s*["']false/i.test(attrs);
+    if (esgotado) esgotados++;
+    const imagem = textoTag(bloco, ['g:image_link', 'image_link', 'picture', 'image']);
+    const marca = textoTag(bloco, ['g:brand', 'brand', 'vendor']) || undefined;
+    const sku = textoTag(bloco, ['g:id', 'id']) || (attrs.match(/\bid\s*=\s*["']([^"']+)/i)?.[1]) || undefined;
+    if (!todos.has(url)) todos.set(url, { nome: nome.slice(0, 160), preco, imagem, url, marca, sku, esgotado });
+  }
+  const produtos = [...todos.values()];
+  if (!produtos.length) return { status: 'sem-dados', mensagem: 'O feed abriu, mas nenhum produto tinha nome, link e preço.', avisos };
+  avisos.push(`Feed XML: ${produtos.length} produtos lidos de uma vez (não precisa de página 2).`);
+  if (blocos.length > 3000) avisos.push(`O feed tem ${blocos.length} produtos: li os 3.000 primeiros.`);
+  if (esgotados) avisos.push(`${esgotados} esgotados na loja (vêm desmarcados).`);
+  if (semPreco) avisos.push(`${semPreco} sem preço (pulados).`);
+  return { status: 'ok', produtos, paginasLidas: 1, avisos };
+}
 
 export async function lerCategoria(pag1: string, pag2: string, paginas: number): Promise<Resultado> {
   const avisos: string[] = [];
@@ -173,7 +231,9 @@ export async function lerCategoria(pag1: string, pag2: string, paginas: number):
       if (i === 1) return { status: 'erro', mensagem: `A loja respondeu com erro ${r.status}. Confira o link.`, avisos };
       avisos.push(`A página ${i} deu erro ${r.status}.`); break;
     }
-    const html = await r.text();
+       const html = await r.text();
+    // link de feed (XML da rede de afiliados): lê tudo de uma vez, sem páginas
+    if (i === 1 && ehFeed(html)) return lerFeed(html, end, avisos);
     const { produtos, semPreco, esgotados, semLink, totalBlocos } = extrairProdutos(html, end);
     proximaAuto = proximaPaginaSalesforce(html);
     if (i === 1 && totalBlocos === 0) {
