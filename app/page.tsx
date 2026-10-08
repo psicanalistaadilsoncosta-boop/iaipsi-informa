@@ -4,7 +4,7 @@ import iconv from 'iconv-lite';
 import fs from 'fs/promises';
 import path from 'path';
 import { kv } from '@/lib/kv';
-import { lerTodos, lerDestino } from '@/lib/pinados';
+import { lerTodos, lerDestino, lerGaveta } from '@/lib/pinados';
 import { unstable_cache } from 'next/cache';
 import { TAG_PRODUTOS } from '@/lib/revalidar';
 // Tempo limite garantido: se a API não responder, devolve o valor reserva em vez de travar
@@ -467,26 +467,99 @@ async function getBannerData(): Promise<{ slidesEditoriais: any[]; produtosBanne
     return { slidesEditoriais: [], produtosBanner: [] };
   }
 }
-// As 8 ofertas selecionadas mais recentes, para a faixa "Lupadas da semana"
-// guardadas até algum produto mudar (lib/revalidar.ts) ou 24h — guarda só as 8, não as ~1.300
-const lupadasGuardadas = unstable_cache(async () => {
-    const data = await lerDestino('ofertas-selecionadas');
-    return data
-      .filter(p => p.destinos?.includes('ofertas-selecionadas') && p.ativo !== false && p.preco > 0)
-      .sort((a, b) => new Date(b.pinedAt || 0).getTime() - new Date(a.pinedAt || 0).getTime())
-      .slice(0, 8)
-      .map(p => ({
-        id: p.id, nome: p.nome, imagem: p.imagem, link: p.link,
-        preco: p.preco, precoOriginal: p.precoOriginal,
-        loja: p.lojaNome || p.loja,
-        moedaUSD: !!(p.moedaUSD || p.moedaOriginal === 'USD'),
-      }));
-}, ['home-lupadas'], { revalidate: 86400, tags: [TAG_PRODUTOS] });
+// "Lupadas da semana": até 2 escolhidas por você (ofertas-selecionadas, mais recentes)
+// + sorteio de Beleza e Vista-se (adulto) completando 8. Máx. 2 por loja.
+// O sorteio usa o número da semana: fica igual a semana toda e troca na segunda-feira.
+const LUPADAS_TOTAL = 8;
+const LUPADAS_MANUAIS = 2;
+const INFANTIL = ['Infantil', 'Bebê', 'Brinquedos'];
 
-async function getLupadas(): Promise<any[]> {
-  try { return await lupadasGuardadas(); } catch { return []; }
+function numeroDaSemana(): number {
+  // dias desde 01/01/1970 no horário de Brasília; +3 faz a semana virar na segunda
+  const dias = Math.floor((Date.now() - 3 * 3600000) / 86400000);
+  return Math.floor((dias + 3) / 7);
 }
 
+function embaralharComSemente<T>(lista: T[], semente: number): T[] {
+  const a = [...lista];
+  let s = semente >>> 0;
+  const aleatorio = () => {
+    s = (s + 0x6D2B79F5) >>> 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(aleatorio() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function paraLupada(p: any) {
+  return {
+    id: p.id, nome: p.nome, imagem: p.imagem, link: p.link,
+    preco: p.preco, precoOriginal: p.precoOriginal,
+    loja: p.lojaNome || p.loja,
+    moedaUSD: !!(p.moedaUSD || p.moedaOriginal === 'USD'),
+  };
+}
+
+const valeComoLupada = (p: any) =>
+  p && p.ativo !== false && p.preco > 0 && p.link && p.imagem && !p.cartaoLoja;
+
+async function montarLupadas(semana: number): Promise<any[]> {
+  const [selecionadas, beleza, vistaSe] = await Promise.all([
+    lerDestino('ofertas-selecionadas').catch(() => [] as any[]),
+    lerGaveta('beleza').catch(() => [] as any[]),
+    lerGaveta('vistaSe').catch(() => [] as any[]),
+  ]);
+
+  // 1) até 2 escolhidas por você, as mais recentes
+  const manuais = selecionadas
+    .filter((p: any) => p.destinos?.includes('ofertas-selecionadas') && valeComoLupada(p))
+    .sort((a: any, b: any) => new Date(b.pinedAt || 0).getTime() - new Date(a.pinedAt || 0).getTime())
+    .slice(0, LUPADAS_MANUAIS);
+
+  // 2) sorteio de Beleza + Vista-se adulto
+  const usados = new Set(manuais.map((p: any) => p.id));
+  const candidatos = [
+    ...beleza.filter((p: any) => p.beleza),
+    ...vistaSe.filter((p: any) => p.vistaSe && !INFANTIL.includes(p.tipoVistaSe)),
+  ].filter(valeComoLupada);
+
+  const porLoja: Record<string, number> = {};
+  for (const p of manuais) {
+    const loja = (p.lojaNome || p.loja || '').toLowerCase();
+    porLoja[loja] = (porLoja[loja] || 0) + 1;
+  }
+
+  const sorteadas: any[] = [];
+  for (const p of embaralharComSemente(candidatos, semana)) {
+    if (manuais.length + sorteadas.length >= LUPADAS_TOTAL) break;
+    if (usados.has(p.id)) continue;
+    const loja = (p.lojaNome || p.loja || '').toLowerCase();
+    if ((porLoja[loja] || 0) >= 2) continue;
+    usados.add(p.id);
+    porLoja[loja] = (porLoja[loja] || 0) + 1;
+    sorteadas.push(p);
+  }
+
+  return [...manuais, ...sorteadas].map(paraLupada);
+}
+
+// Guardadas até algum produto mudar (lib/revalidar.ts) ou 24h; a chave muda a cada semana
+async function getLupadas(): Promise<any[]> {
+  const semana = numeroDaSemana();
+  try {
+    return await unstable_cache(
+      () => montarLupadas(semana),
+      ['home-lupadas', String(semana)],
+      { revalidate: 86400, tags: [TAG_PRODUTOS] }
+    )();
+  } catch { return []; }
+}
 export default async function Home() {
   const [posts, ads, editorial, sabores, ofertasMix, artigosProduto, viagemDestaque, viagensNoticias, comPalavraDestaque, bannerData, lupadas] = await Promise.all([
     getNews(), getAds(), getEditorial(), getSabores(), Promise.resolve([] as any[]), getArtigosProduto(), getViagemDestaque(), getViagensNoticias(), getComPalavraDestaque(), getBannerData(), getLupadas()
