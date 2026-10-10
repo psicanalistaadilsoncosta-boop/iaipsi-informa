@@ -148,7 +148,7 @@ const TIPOS_VITRINE: Record<string, string[]> = {
   vistaSe: ['Roupas', 'Calçados', 'Acessórios', 'Infantil', 'Bebê', 'Brinquedos'],
   beleza:  ['Perfumes', 'Skincare', 'Maquiagem', 'Cabelos', 'Massagem', 'Solar', 'Cuidados'],
   mercado: ['Bebidas', 'Alimentos', 'Café', 'Snacks', 'Hortifruti', 'Limpeza', 'Pet'],
-  praVoce: ['Trabalhar e estudar', 'Mexer o corpo', 'Ficar conectado'],
+  praVoce: ['Trabalhar e estudar', 'Livros e leitura', 'Mexer o corpo', 'Ficar conectado'],
 };
 
 // Monta os campos que o save grava (mesmos nomes que o admin usa)

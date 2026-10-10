@@ -347,7 +347,7 @@ const VITRINES_CARTAO: { id: string; label: string; n1?: string[]; tipos: string
   { id: 'ambiente', label: '🏠 Ambiente', n1: AMBIENTES, tipos: TIPOS_AMBIENTE },
   { id: 'momento', label: '🍷 Momento', n1: ['Café da manhã', 'Vinho', 'Churrasco', 'Lareira', 'Domingo relaxado', 'Festa em Casa'], tipos: ['Eletro', 'Móveis', 'Acessórios', 'Alimentos', 'Bebidas', 'Vinho'] },
   { id: 'mercado', label: '🛒 Mercado', tipos: ['Bebidas', 'Alimentos', 'Café', 'Snacks', 'Hortifruti', 'Limpeza', 'Pet'] },
-  { id: 'praVoce', label: '🎯 Pra você', tipos: ['Trabalhar e estudar', 'Mexer o corpo', 'Ficar conectado'] },
+  { id: 'praVoce', label: '🎯 Pra você', tipos: ['Trabalhar e estudar', 'Livros e leitura', 'Mexer o corpo', 'Ficar conectado'] },
 ];
 const HOSTS_AFILIADOS = ['lmdee.link', 'lomadee.com', 'lomadee.com.br', 'awin1.com', 'apretailer.com.br', 'linksynergy.com', 'viator.com'];
 const ehLinkAfiliado = (u: string) => { try { const h = new URL(u).hostname.toLowerCase(); return HOSTS_AFILIADOS.some(d => h === d || h.endsWith('.' + d)); } catch { return false; } };

@@ -3,7 +3,7 @@
 
 import VitrineTematica from '../temas/VitrineTematica';
 
-const TIPOS = ['Trabalhar e estudar', 'Mexer o corpo', 'Ficar conectado'];
+const TIPOS = ['Trabalhar e estudar', 'Livros e leitura', 'Mexer o corpo', 'Ficar conectado'];
 
 async function carregar() {
   return fetch('/api/pra-voce').then(r => r.json()).catch(() => ({}));

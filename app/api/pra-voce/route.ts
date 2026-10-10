@@ -6,7 +6,7 @@ import { lerGaveta } from '@/lib/pinados';
 export const dynamic = 'force-static';
 export const revalidate = 86400;
 
-const TIPOS = ['Trabalhar e estudar', 'Mexer o corpo', 'Ficar conectado'];
+const TIPOS = ['Trabalhar e estudar', 'Livros e leitura', 'Mexer o corpo', 'Ficar conectado'];
 
 export async function GET() {
   const produtos: any[] = await lerGaveta('praVoce');

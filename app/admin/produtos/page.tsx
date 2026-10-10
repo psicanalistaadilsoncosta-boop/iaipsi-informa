@@ -67,7 +67,7 @@ const TIPOS_POR_CATEGORIA: Record<string, string[]> = {
   momento:  MOMENTOS,
   beleza:   ['Perfumes', 'Skincare', 'Maquiagem', 'Cabelos', 'Massagem', 'Solar', 'Cuidados'],
   mercado:  TIPOS_MERCADO,
-  praVoce:  ['Trabalhar e estudar', 'Mexer o corpo', 'Ficar conectado'],
+  praVoce:  ['Trabalhar e estudar', 'Livros e leitura', 'Mexer o corpo', 'Ficar conectado'],
 };
 
 const MOVER_OPTIONS: { value: Categoria; label: string }[] = [

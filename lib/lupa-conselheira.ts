@@ -22,7 +22,7 @@ const VALORIZA: Record<string, Fonte[]> = {
   praticidade: [
     { cat: 'ambiente', tipos: ['Organização', 'Iluminação', 'Eletrônicos'], campoTipo: 'tipoAmbiente' },
     { cat: 'momento', tipos: ['Eletro', 'Acessórios'], campoTipo: 'tipoMomento' },
-    { cat: 'praVoce', tipos: ['Trabalhar e estudar'], campoTipo: 'tipoPraVoce' },
+    { cat: 'praVoce', tipos: ['Trabalhar e estudar', 'Livros e leitura'], campoTipo: 'tipoPraVoce' },
   ],
   tecnologia: [
     { cat: 'praVoce', tipos: ['Ficar conectado', 'Trabalhar e estudar'], campoTipo: 'tipoPraVoce' },
