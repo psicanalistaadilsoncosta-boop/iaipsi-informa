@@ -3,7 +3,8 @@
 // PATCH { id, ativo?, pag2?, paginas? } -> liga/desliga a atualização diária, ajusta página 2 e nº de páginas
 import { NextRequest, NextResponse } from 'next/server';
 import { isAdmin } from '@/lib/adminAuth';
-import { lerTodos } from '@/lib/pinados';
+import { lerTodos, removerVarios } from '@/lib/pinados';
+import { avisarMudanca } from '@/lib/revalidar';
 import { lerOrigens, salvarOrigens, idOrigem, Origem } from '@/lib/importa-origens';
 
 export const dynamic = 'force-dynamic';
@@ -34,7 +35,8 @@ export async function GET(req: NextRequest) {
   }
   await salvarOrigens(origens);
 
-  const lista = Object.values(origens)
+   const lista = Object.values(origens)
+    .filter(o => !(o as any).removida)
     .map(o => ({ id: o.id, loja: o.loja, pag1: o.pag1, pag2: o.pag2, paginas: o.paginas, ativo: o.ativo, produtos: o.ids.length, ultima: o.ultima || null, erro: o.erro || '', resumo: o.resumo || '' }))
     .sort((a, b) => (a.loja + a.pag1).localeCompare(b.loja + b.pag1));
   return NextResponse.json(lista);
@@ -55,4 +57,26 @@ export async function PATCH(req: NextRequest) {
   if (paginas != null) o.paginas = Math.min(Math.max(Number(paginas) || 1, 1), 5);
   await salvarOrigens(origens);
   return NextResponse.json({ ok: true });
+}
+
+// DELETE { id, apagarProdutos? } -> tira a página da lista; com apagarProdutos, apaga do site os produtos dela
+// (fica guardada como "removida" para não reaparecer sozinha; importar de novo a traz de volta)
+export async function DELETE(req: NextRequest) {
+  if (!isAdmin(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
+  const { id, apagarProdutos } = await req.json();
+  const origens = await lerOrigens();
+  const o: any = origens[String(id)];
+  if (!o) return NextResponse.json({ error: 'página não encontrada' }, { status: 404 });
+  let apagados = 0;
+  if (apagarProdutos && o.ids?.length) {
+    await removerVarios(o.ids.map(String));
+    apagados = o.ids.length;
+    o.ignorados = [...new Set([...(o.ignorados || []), ...o.ids])];
+    o.ids = [];
+  }
+  o.ativo = false;
+  o.removida = true;
+  await salvarOrigens(origens);
+  if (apagados) avisarMudanca();
+  return NextResponse.json({ ok: true, apagados });
 }

@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import AdminGate from '../../AdminGate';
 
-type Produto = { nome: string; preco: number; imagem: string; url: string; marca?: string; esgotado?: boolean };
+type Produto = { nome: string; preco: number; imagem: string; url: string; marca?: string; esgotado?: boolean; jaNoSite?: boolean };
 type Res = { status: 'ok' | 'bloqueio' | 'sem-dados' | 'erro'; produtos?: Produto[]; paginasLidas?: number; mensagem?: string; avisos: string[] };
 
 const brl = (v: number) => 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -30,16 +30,17 @@ function Importar() {
   // deeplink já usado nesta loja aparece sozinho
   useEffect(() => { const h = host(pag1); if (h && salvos[h] && !deeplink) setDeeplink(salvos[h]); }, [pag1, salvos]); // eslint-disable-line
 
-  async function buscar() {
+   async function buscar(o?: { pag1: string; pag2: string; paginas: number }) {
     setOcupado(true); setRes(null); setMsg('');
     try {
       const r = await fetch('/api/admin/importar-categoria', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pagina1: pag1.trim(), pagina2: pag2.trim(), paginas }),
+        body: JSON.stringify({ pagina1: (o?.pag1 ?? pag1).trim(), pagina2: (o?.pag2 ?? pag2).trim(), paginas: o?.paginas ?? paginas }),
       });
       const d: Res = await r.json();
       setRes(d);
-      setMarcados(new Set((d.produtos || []).filter(p => !p.esgotado).map(p => p.url)));
+      // já no site e esgotados vêm desmarcados
+      setMarcados(new Set((d.produtos || []).filter(p => !p.esgotado && !p.jaNoSite).map(p => p.url)));
     } catch { setRes({ status: 'erro', mensagem: 'Não foi possível buscar agora.', avisos: [] }); }
     setOcupado(false);
   }
@@ -58,6 +59,14 @@ function Importar() {
     } catch { setMsg('⚠️ Não foi possível salvar agora.'); }
     setOcupado(false);
   }
+
+  // "Buscar de novo" numa página importada: preenche o formulário e já busca
+  function buscarDeNovo(o: { loja: string; pag1: string; pag2: string; paginas: number }) {
+    setLoja(o.loja || ''); setPag1(o.pag1); setPag2(o.pag2 || ''); setPaginas(o.paginas || 1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    buscar({ pag1: o.pag1, pag2: o.pag2 || '', paginas: o.paginas || 1 });
+  }
+
 
   const alternar = (u: string) => setMarcados(s => { const n = new Set(s); n.has(u) ? n.delete(u) : n.add(u); return n; });
   const prods = res?.produtos || [];
@@ -79,7 +88,7 @@ function Importar() {
           {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n}</option>)}
         </select>
         <div style={{ marginTop: 14 }}>
-          <button onClick={buscar} disabled={ocupado || !pag1.trim()}
+          <button onClick={() => buscar()} disabled={ocupado || !pag1.trim()}
             style={{ padding: '10px 22px', borderRadius: 8, border: 0, background: '#5B3E96', color: '#fff', fontWeight: 700, cursor: 'pointer', opacity: ocupado || !pag1.trim() ? 0.5 : 1 }}>
             {ocupado && !prods.length ? 'Lendo a loja...' : 'Buscar produtos'}
           </button>
@@ -112,6 +121,7 @@ function Importar() {
                   <div style={{ fontSize: 12, color: '#111827', margin: '6px 0 2px', lineHeight: 1.3, height: 32, overflow: 'hidden' }}>{p.nome}</div>
                   <div style={{ fontSize: 14, fontWeight: 800, color: '#dc2626' }}>{brl(p.preco)}</div>
                   {p.esgotado && <div style={{ fontSize: 11, fontWeight: 700, color: '#9a3412' }}>esgotado na loja</div>}
+                  {p.jaNoSite && <div style={{ fontSize: 11, fontWeight: 700, color: '#047857' }}>✓ já no site</div>}
                 </button>
               );
             })}
@@ -130,7 +140,7 @@ function Importar() {
         </section>
       )}
 
-      <PaginasImportadas recarregar={recarregarOrigens} />
+      <PaginasImportadas recarregar={recarregarOrigens} aoBuscar={buscarDeNovo} />
     </main>
   );
 }
@@ -138,7 +148,7 @@ function Importar() {
 // ---------- Páginas já importadas: atualização diária liga/desliga ----------
 type Origem = { id: string; loja: string; pag1: string; pag2: string; paginas: number; ativo: boolean; produtos: number; ultima: string | null; erro: string; resumo: string };
 
-function PaginasImportadas({ recarregar }: { recarregar: number }) {
+function PaginasImportadas({ recarregar, aoBuscar }: { recarregar: number; aoBuscar: (o: Origem) => void }) {
   const [lista, setLista] = useState<Origem[] | null>(null);
   const [editPag2, setEditPag2] = useState<Record<string, string>>({});
   const [aviso, setAviso] = useState('');
@@ -156,6 +166,21 @@ function PaginasImportadas({ recarregar }: { recarregar: number }) {
     });
     const d = await r.json();
     if (d.error) setAviso(`⚠️ ${d.error}`);
+    await carregar();
+  }
+
+  async function remover(o: Origem, apagarProdutos: boolean) {
+    const txt = apagarProdutos
+      ? `Remover esta página E apagar do site os ${o.produtos} produtos dela? Não dá para desfazer.`
+      : 'Tirar esta página da lista? A atualização diária para, mas os produtos continuam no site.';
+    if (!window.confirm(txt)) return;
+    setAviso('');
+    const r = await fetch('/api/admin/importar-categoria/origens', {
+      method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: o.id, apagarProdutos }),
+    });
+    const d = await r.json();
+    if (d.error) setAviso(`⚠️ ${d.error}`);
+    else if (d.apagados) setAviso(`✅ Página removida e ${d.apagados} produtos apagados do site.`);
     await carregar();
   }
 
@@ -181,7 +206,11 @@ function PaginasImportadas({ recarregar }: { recarregar: number }) {
             <button onClick={() => mudar(o.id, { ativo: !o.ativo })}
               style={{ marginLeft: 'auto', padding: '6px 14px', borderRadius: 20, border: 0, fontWeight: 700, fontSize: 13, cursor: 'pointer',
                 background: o.ativo ? '#047857' : '#e5e7eb', color: o.ativo ? '#fff' : '#374151' }}>
-              🔄 Atualizar todo dia: {o.ativo ? 'ligado' : 'desligado'}
+                           🔄 Atualizar todo dia: {o.ativo ? 'ligado' : 'desligado'}
+            </button>
+            <button onClick={() => aoBuscar(o)}
+              style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid #c4b5fd', background: '#f5f3ff', color: '#5B3E96', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+              🔍 Buscar de novo
             </button>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginTop: 8 }}>
@@ -196,7 +225,15 @@ function PaginasImportadas({ recarregar }: { recarregar: number }) {
             )}
           </div>
           <div style={{ fontSize: 12, marginTop: 6, color: o.erro ? '#9a3412' : '#6b7280' }}>
-            Última atualização: {data(o.ultima)}{o.erro ? ` · ⚠️ ${o.erro}` : o.resumo ? ` · ${o.resumo}` : ''}
+                      Última atualização: {data(o.ultima)}{o.erro ? ` · ⚠️ ${o.erro}` : o.resumo ? ` · ${o.resumo}` : ''}
+          </div>
+          <div style={{ display: 'flex', gap: 14, marginTop: 6 }}>
+            <button onClick={() => remover(o, false)} style={{ background: 'none', border: 0, padding: 0, color: '#6b7280', fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}>
+              Tirar da lista
+            </button>
+            <button onClick={() => remover(o, true)} style={{ background: 'none', border: 0, padding: 0, color: '#b91c1c', fontSize: 12, fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}>
+              🗑 Remover e apagar os {o.produtos} produtos
+            </button>
           </div>
         </div>
       ))}
