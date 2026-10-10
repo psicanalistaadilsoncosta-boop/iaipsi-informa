@@ -120,7 +120,7 @@ function Importar() {
           <section style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, marginTop: 16 }}>
             <label style={{ ...rot, marginTop: 0 }} htmlFor="imp-dl">Deeplink de exemplo desta loja (da rede de afiliados)</label>
             <input id="imp-dl" style={campo} value={deeplink} onChange={e => setDeeplink(e.target.value)} placeholder="https://apretailer.com.br/click/.../360672/subaccount/url=https%3A%2F%2Fwww.wine.com.br%2F..." />
-            <p style={{ fontSize: 12, color: '#6b7280', margin: '6px 0 0' }}>Gere um deeplink de qualquer página da loja no painel da rede e cole aqui. Ele fica guardado para as próximas importações desta loja.</p>
+            <p style={{ fontSize: 12, color: '#6b7280', margin: '6px 0 0' }}>Gere um deeplink de qualquer página da loja no painel da rede e cole aqui. Loja da Lomadee: escreva lomadee: seguido do ID da loja (está em Marcas Lomadee); o site cria um link curto para cada produto. Fica guardado para as próximas importações desta loja.</p>
             <button onClick={mandar} disabled={ocupado || !marcados.size || !deeplink.trim() || !loja.trim()}
               style={{ marginTop: 12, padding: '10px 22px', borderRadius: 8, border: 0, background: '#047857', color: '#fff', fontWeight: 700, cursor: 'pointer', opacity: ocupado || !marcados.size || !deeplink.trim() || !loja.trim() ? 0.5 : 1 }}>
               Mandar {marcados.size} para "A catalogar"

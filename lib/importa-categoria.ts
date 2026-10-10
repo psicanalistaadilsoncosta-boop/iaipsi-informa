@@ -12,6 +12,7 @@ const espera = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 // Monta o endereço da página N a partir do link da página 2 (troca o "2" de paginação pelo N).
 export function enderecoDaPagina(pag1: string, pag2: string, n: number): string | null {
+  if (ehVtex(pag1)) return paginaVtex(pag1, n); // loja VTEX: 50 por página, sem precisar do link da página 2
     if (n === 1) return pag1;
   if (!pag2) return null;
   if (n === 2) return pag2;
@@ -206,6 +207,53 @@ export function lerFeed(xml: string, base: string, avisos: string[]): Resultado 
   return { status: 'ok', produtos, paginasLidas: 1, avisos };
 }
 
+// ---------- Lojas VTEX (ex.: Livrarias Curitiba): API pública de catálogo ----------
+// Link no formato https://loja.com.br/api/catalog_system/pub/products/search/caminho/da/categoria?map=c,c,c
+// A API devolve até 50 produtos por pedido; a página N vira _from/_to.
+export const ehVtex = (u: string) => /\/api\/catalog_system\/pub\/products\/search/i.test(u);
+
+export function paginaVtex(pag1: string, n: number): string {
+  // tira _from/_to que já existam e põe os da página n (sem mexer no resto do link)
+  let s = pag1.trim().replace(/[?&]_(from|to)=\d+/gi, '');
+  if (!s.includes('?') && s.includes('&')) s = s.replace('&', '?');
+  return `${s}${s.includes('?') ? '&' : '?'}_from=${(n - 1) * 50}&_to=${n * 50 - 1}`;
+}
+
+export function extrairVtex(txt: string, base: string) {
+  let lista: any[];
+  try { lista = JSON.parse(txt); } catch {
+    return { produtos: [] as ProdutoLido[], semPreco: 0, esgotados: 0, semLink: 0, totalBlocos: 0, erro: 'A loja não devolveu a lista de produtos (o link da API está certo?).' };
+  }
+  if (!Array.isArray(lista)) return { produtos: [] as ProdutoLido[], semPreco: 0, esgotados: 0, semLink: 0, totalBlocos: 0, erro: 'Resposta inesperada da loja.' };
+  let semPreco = 0, esgotados = 0, semLink = 0;
+  const produtos: ProdutoLido[] = [];
+  const origem = (() => { try { return new URL(base).origin; } catch { return ''; } })();
+  for (const p of lista) {
+    const item = p?.items?.[0];
+    const vendedores: any[] = item?.sellers || [];
+    const of = (vendedores.find(s => s?.sellerDefault) || vendedores[0])?.commertialOffer || {};
+    let url = String(p?.link || '');
+    if (!url && p?.linkText && origem) url = `${origem}/${p.linkText}/p`;
+    try { url = url ? new URL(url, base).href : ''; } catch { url = ''; }
+    if (!url) { semLink++; continue; }
+    const preco = Number(of.Price) || 0;
+    if (!preco) { semPreco++; continue; }
+    const esgotado = of.IsAvailable === false || !(Number(of.AvailableQuantity) > 0);
+    if (esgotado) esgotados++;
+    produtos.push({
+      nome: String(p?.productName || '').trim().slice(0, 160),
+      preco,
+      imagem: String(item?.images?.[0]?.imageUrl || ''),
+      url,
+      marca: p?.brand || undefined,
+      sku: p?.productId ? String(p.productId) : undefined,
+      esgotado,
+    });
+  }
+  return { produtos, semPreco, esgotados, semLink, totalBlocos: lista.length, erro: '' };
+}
+
+
 export async function lerCategoria(pag1: string, pag2: string, paginas: number): Promise<Resultado> {
   const avisos: string[] = [];
   const todos = new Map<string, ProdutoLido>();
@@ -234,7 +282,13 @@ export async function lerCategoria(pag1: string, pag2: string, paginas: number):
        const html = await r.text();
     // link de feed (XML da rede de afiliados): lê tudo de uma vez, sem páginas
     if (i === 1 && ehFeed(html)) return lerFeed(html, end, avisos);
-    const { produtos, semPreco, esgotados, semLink, totalBlocos } = extrairProdutos(html, end);
+    const vtex = ehVtex(end) ? extrairVtex(html, end) : null;
+    if (vtex?.erro) {
+      if (i === 1) return { status: 'erro', mensagem: vtex.erro, avisos };
+      avisos.push(`Página ${i}: ${vtex.erro}`); break;
+    }
+    if (vtex && i > 1 && vtex.totalBlocos === 0) { avisos.push(`A categoria acabou na página ${i - 1}.`); break; }
+    const { produtos, semPreco, esgotados, semLink, totalBlocos } = vtex || extrairProdutos(html, end);
     proximaAuto = proximaPaginaSalesforce(html);
     if (i === 1 && totalBlocos === 0) {
       return { status: 'sem-dados', mensagem: 'A página abriu, mas não traz os dados dos produtos. Use um cartão de categoria.', avisos };

@@ -21,6 +21,7 @@ import { lerCategoria } from '@/lib/importa-categoria';
 import { lerIds, salvarVarios, removerVarios } from '@/lib/pinados';
 import { linkAfiliadoOk } from '@/lib/links-afiliados';
 import { lerOrigens, salvarOrigens, idImportado, baseDoDeeplink, vitrineDosIrmaos, Origem } from '@/lib/importa-origens';
+import { orgLomadee, encurtarLomadee } from '@/lib/lomadee';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -72,7 +73,9 @@ async function atualizarOrigem(o: Origem, deeplinks: Record<string, string>) {
   }
 
   // 2. produtos novos
-  const base = baseDoDeeplink(deeplinks[host(o.pag1)] || '');
+  const modelo = deeplinks[host(o.pag1)] || '';
+  const org = orgLomadee(modelo);
+  const base = org ? '' : (baseDoDeeplink(modelo) || '');
   const vitrine = vitrineDosIrmaos(existentes);
   let novos = 0, semDeeplink = 0, anotados = 0;
   for (const [url, lido] of lidos) {
@@ -81,9 +84,9 @@ async function atualizarOrigem(o: Origem, deeplinks: Record<string, string>) {
     if (ignorados.has(idNovo)) continue;
     // primeira leitura: o que já estava na loja e você não importou fica de fora
     if (primeiraVez) { ignorados.add(idNovo); anotados++; continue; }
-    if (!base) { semDeeplink++; continue; }
-    const link = base + encodeURIComponent(url);
-    if (!linkAfiliadoOk(link)) continue;
+       if (!base && !org) { semDeeplink++; continue; }
+    const link = org ? ((await encurtarLomadee(org, url).catch(() => null)) || '') : base + encodeURIComponent(url);
+    if (!link || !linkAfiliadoOk(link)) continue;
     paraSalvar.push({
       id: idNovo,
       nome: String(lido.nome || '').slice(0, 160),

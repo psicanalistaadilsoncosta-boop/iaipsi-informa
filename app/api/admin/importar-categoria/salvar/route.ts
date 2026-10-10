@@ -9,8 +9,10 @@ import { isAdmin } from '@/lib/adminAuth';
 import { linkAfiliadoOk } from '@/lib/links-afiliados';
 import { lerTodos, salvarVarios } from '@/lib/pinados';
 import { lerOrigens, salvarOrigens, idOrigem, idImportado, baseDoDeeplink } from '@/lib/importa-origens';
+import { orgLomadee, encurtarVarios } from '@/lib/lomadee';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 300; // Lomadee: um pedido de link por produto
 const CHAVE_DEEPLINKS = 'importar:deeplinks';
 
 export async function GET(req: NextRequest) {
@@ -21,8 +23,9 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   if (!isAdmin(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
   const { produtos, deeplink, loja, origem, pagina2, paginas } = await req.json();
-  const base = baseDoDeeplink(deeplink);
-  if (!base) return NextResponse.json({ error: 'Deeplink de exemplo inválido: ele precisa terminar com url=, ued= ou murl= seguido do endereço.' }, { status: 400 });
+  const org = orgLomadee(deeplink);
+  const base = org ? '' : (baseDoDeeplink(deeplink) || '');
+  if (!org && !base) return NextResponse.json({ error: 'Deeplink de exemplo inválido: ele precisa terminar com url=, ued= ou murl= seguido do endereço. Loja da Lomadee: escreva lomadee: e o ID da loja.' }, { status: 400 });
   if (!Array.isArray(produtos) || !produtos.length) return NextResponse.json({ error: 'Nenhum produto selecionado.' }, { status: 400 });
 
   const pinados: any[] = await lerTodos();
@@ -30,10 +33,16 @@ export async function POST(req: NextRequest) {
   const paraSalvar: any[] = [];
   let novos = 0, repetidos = 0, recusados = 0;
 
+   // Lomadee: um link curto por produto, pedido à própria Lomadee (só para os que ainda não estão no site)
+  const linksLomadee = org
+    ? await encurtarVarios(org, produtos.slice(0, 200).map((p: any) => String(p.url || '')).filter((u: string) => u && !jaTem.has(u)))
+    : new Map<string, string>();
+
   for (const p of produtos.slice(0, 200)) {
     const urlLoja = String(p.url || '');
-    const link = base + encodeURIComponent(urlLoja);
-    if (!linkAfiliadoOk(link)) { recusados++; continue; }
+    if (org && jaTem.has(urlLoja)) { repetidos++; continue; }
+    const link = org ? (linksLomadee.get(urlLoja) || '') : base + encodeURIComponent(urlLoja);
+    if (!link || !linkAfiliadoOk(link)) { recusados++; continue; }
     if (jaTem.has(urlLoja) || jaTem.has(link)) { repetidos++; continue; }
     jaTem.add(urlLoja);
       paraSalvar.push({
@@ -58,11 +67,11 @@ export async function POST(req: NextRequest) {
         const u = new URL(String(origem));
     const host = u.hostname.replace(/^www\./, '') + (/\.xml$/i.test(u.pathname) ? u.pathname : '');
     const mapa: Record<string, string> = (await kv.get(CHAVE_DEEPLINKS)) || {};
-    mapa[host] = String(deeplink);
+    mapa[host] = org ? `lomadee:${org}` : String(deeplink);
     // feed: guarda também pelo site da loja (ex.: authentical.com.br), para o link de afiliado achar
     try {
       const siteLoja = new URL(String(produtos[0]?.url || '')).hostname.replace(/^www\./, '');
-      if (siteLoja && siteLoja !== host) mapa[siteLoja] = String(deeplink);
+      if (siteLoja && siteLoja !== host) mapa[siteLoja] = org ? `lomadee:${org}` : String(deeplink);
     } catch {}
     await kv.set(CHAVE_DEEPLINKS, mapa);
   } catch {}
