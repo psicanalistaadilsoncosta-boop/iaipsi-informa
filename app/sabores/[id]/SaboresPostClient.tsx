@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import PlayerAudio from '@/app/compalavra/PlayerAudio';
 
 
 interface SaboresItem {
@@ -13,6 +14,8 @@ interface SaboresItem {
   imageUrl: string | null;
   publishedAt: string;
   recipe?: any;
+  audioUrl?: string;
+  audioSegundos?: number;
 }
 
 function renderContent(text: string) {
@@ -74,6 +77,7 @@ export default function SaboresPostClient({ item }: { item: SaboresItem | null }
           por Adilson Costa · {new Date(item.publishedAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
         </small>
       </div>
+      {item.audioUrl && <PlayerAudio src={item.audioUrl} segundos={item.audioSegundos} tema="ambar" rotulo="Ouça este prato e a receita" />}
 
       <article style={{ marginBottom: '40px' }}>
         {renderContent(item.content)}

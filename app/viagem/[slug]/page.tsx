@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import GaleriaFotos from './GaleriaFotos';
 import ArredoresDestino from './ArredoresDestino';
 import AvaliacoesPasseio from './AvaliacoesPasseio';
+import PlayerAudio from '@/app/compalavra/PlayerAudio';
 
 interface ArtigoViagem {
   id: string;
@@ -22,8 +23,10 @@ interface ArtigoViagem {
   product_code?: string;
   rating?: number;
   reviewCount?: number;
-  publicado: boolean;
+   publicado: boolean;
   createdAt: string;
+  audioUrl?: string;
+  audioSegundos?: number;
 }
 
 async function getArtigo(slug: string): Promise<ArtigoViagem | null> {
@@ -193,6 +196,7 @@ export default async function ArtigoViagemPage({ params }: { params: Promise<{ s
           <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#111827', margin: 0 }}>Análise Editorial</h2>
           <span style={{ fontSize: '0.72rem', color: '#9ca3af', marginLeft: '4px' }}>por Adilson Costa</span>
         </div>
+        {artigo.audioUrl && <PlayerAudio src={artigo.audioUrl} segundos={artigo.audioSegundos} rotulo="Ouça esta análise" />}
         <div>{renderConteudo(artigo.conteudo)}</div>
         <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fbbf24', borderRadius: '8px', padding: '10px 14px', marginTop: '16px', fontSize: '0.78rem', color: '#92400e', lineHeight: 1.5 }}>
           🤖 Artigo elaborado com auxílio de inteligência artificial e revisado por Adilson Costa. Os dados do passeio são de referência; confira disponibilidade, preço e itinerário diretamente na Viator.

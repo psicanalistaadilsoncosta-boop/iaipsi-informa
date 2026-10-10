@@ -11,7 +11,8 @@ export interface ArtigoComPalavra {
   resumo: string;
   imagem?: string;
   publicado: boolean;
-  destaque: boolean;
+    destaque: boolean;
+  categoria?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -64,6 +65,7 @@ export async function POST(req: NextRequest) {
         imagem: body.imagem || '',
         publicado: body.publicado ?? false,
         destaque: body.destaque ?? false,
+        categoria: body.categoria || 'reflexao',
         createdAt: agora,
         updatedAt: agora,
       };

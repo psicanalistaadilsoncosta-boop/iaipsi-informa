@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 import { kv } from '@/lib/kv';
 import { isAdmin } from '@/lib/adminAuth';
-import { gerarAudio, textoParaFala, hashAudio } from '@/lib/audio-artigo';
+import { gerarAudioDeTexto, textoParaFala, hashAudio } from '@/lib/audio-artigo';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120; // artigos longos levam alguns pedidos ao Google
@@ -18,7 +18,8 @@ export async function GET(req: NextRequest) {
   const situacao: Record<string, string> = {};
   for (const a of artigos) {
     if (!a.audioUrl) situacao[a.id] = 'falta';
-    else situacao[a.id] = a.audioHash === hashAudio(textoParaFala(a.titulo, a.resumo, a.conteudo)) ? 'ok' : 'desatualizado';
+    else if (a.audioTipo === 'gravacao') situacao[a.id] = 'ok'; // a sua gravação: o Gerenciar não mexe
+    else situacao[a.id] = a.audioHash === hashAudio(textoParaFala(a.titulo, a.resumo, a.conteudo, a.categoria)) ? 'ok' : 'desatualizado';
   }
   return NextResponse.json(situacao);
 }
@@ -31,12 +32,13 @@ export async function POST(req: NextRequest) {
     const artigo = artigos.find(a => a.id === id);
     if (!artigo) return NextResponse.json({ error: 'Artigo não encontrado.' }, { status: 404 });
     if (!String(artigo.conteudo || '').trim()) return NextResponse.json({ error: 'Artigo sem conteúdo.' }, { status: 400 });
+    if (artigo.audioTipo === 'gravacao') return NextResponse.json({ error: 'Este artigo tem a sua gravação. Para trocar, use /admin/audios.' }, { status: 409 });
 
-    const audio = await gerarAudio('compalavra', artigo.slug, artigo.titulo, artigo.resumo, artigo.conteudo, artigo.audioUrl);
+    const audio = await gerarAudioDeTexto('compalavra', artigo.slug, textoParaFala(artigo.titulo, artigo.resumo, artigo.conteudo, artigo.categoria), artigo.audioUrl);
 
     // relê a lista na hora de gravar, para não desfazer uma edição feita enquanto o áudio era gerado
     const agora: any[] = (await kv.get<any[]>(CHAVE)) || [];
-    const lista = agora.map(a => (a.id === id ? { ...a, ...audio } : a));
+    const lista = agora.map(a => (a.id === id ? { ...a, ...audio, audioTipo: 'ia' } : a));
     await kv.set(CHAVE, lista);
     try { revalidatePath(`/compalavra/${artigo.slug}`); revalidatePath('/compalavra'); } catch {}
     return NextResponse.json({ ok: true, ...audio });

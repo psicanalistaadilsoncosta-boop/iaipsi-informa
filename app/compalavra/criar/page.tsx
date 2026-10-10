@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { CATEGORIAS_CP } from '@/lib/compalavra-categorias';
 
 function LoginScreen({ onLogin }: { onLogin: () => void }) {
   const [password, setPassword] = useState('');
@@ -54,6 +55,7 @@ export default function CriarComPalavraPage() {
   const [salvando, setSalvando] = useState(false);
   const [revisao, setRevisao] = useState('');
   const [msg, setMsg] = useState('');
+  const [categoria, setCategoria] = useState('reflexao');
 
 useEffect(() => {
     fetch('/api/editorial/auth/check').then(r => r.json()).then(d => setAuth(d.ok)).catch(() => setAuth(false));
@@ -76,9 +78,9 @@ useEffect(() => {
   async function salvar() {
     if (!titulo.trim() || !conteudo.trim()) { setMsg('Título e conteúdo são obrigatórios.'); return; }
     setSalvando(true); setMsg('');
-    const res = await fetch('/api/compalavra/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ titulo, resumo, conteudo, imagem, publicado, destaque }) });
+    const res = await fetch('/api/compalavra/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ titulo, resumo, conteudo, imagem, publicado, destaque, categoria }) });
     const data = await res.json();
-    if (data.id) { setMsg('✅ Artigo salvo!'); setTitulo(''); setResumo(''); setConteudo(''); setImagem(''); setPublicado(false); setDestaque(false); setRevisao(''); }
+    if (data.id) { setMsg('✅ Artigo salvo!'); setTitulo(''); setResumo(''); setConteudo(''); setImagem(''); setPublicado(false); setDestaque(false); setRevisao(''); setCategoria('reflexao'); }
     else setMsg('Erro: ' + (data.error || ''));
     setSalvando(false);
   }
@@ -89,6 +91,14 @@ useEffect(() => {
     <main style={{ maxWidth: '820px', margin: '0 auto', padding: '24px 16px' }}>
       <h1 style={{ fontSize: '1.8rem', fontWeight: 900, color: '#111827', marginBottom: '24px' }}>✍️ Novo artigo — ComAPalavra</h1>
       <div style={{ display: 'grid', gap: '20px' }}>
+        <div><label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '6px', fontSize: '0.875rem' }}>Categoria</label>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {CATEGORIAS_CP.map(c => (
+              <button key={c.id} type="button" onClick={() => setCategoria(c.id)}
+                style={{ padding: '8px 16px', borderRadius: '999px', border: '2px solid ' + (categoria === c.id ? '#0f766e' : '#e5e7eb'), backgroundColor: categoria === c.id ? '#f0fdfa' : '#fff', color: categoria === c.id ? '#0f766e' : '#374151', fontWeight: 700, cursor: 'pointer' }}>
+                {c.emoji} {c.nome}</button>
+            ))}
+          </div></div>
         <div><label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '6px', fontSize: '0.875rem' }}>Título</label>
           <input style={inp} value={titulo} onChange={e => setTitulo(e.target.value)} placeholder="Título do artigo" /></div>
         <div><label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '6px', fontSize: '0.875rem' }}>Resumo</label>

@@ -3,12 +3,13 @@ import { kv } from '@/lib/kv';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import PlayerAudio from '../PlayerAudio';
+import { categoriaCP } from '@/lib/compalavra-categorias';
 
 interface ArtigoComPalavra {
   id: string; slug: string; titulo: string; conteudo: string;
    resumo: string; imagem?: string; publicado: boolean; destaque: boolean;
   createdAt: string; updatedAt: string;
-  audioUrl?: string; audioSegundos?: number;
+  audioUrl?: string; audioSegundos?: number; audioTipo?: string; categoria?: string;
 }
 
 async function getArtigo(slug: string): Promise<ArtigoComPalavra | null> {
@@ -62,6 +63,7 @@ export default async function ArtigoComPalavraPage({ params }: { params: Promise
   const { slug } = await params;
   const artigo = await getArtigo(slug);
   if (!artigo) notFound();
+  const cat = categoriaCP(artigo.categoria);
 
   return (
     <main style={{ maxWidth: '720px', margin: '0 auto', padding: '24px 16px' }}>
@@ -91,7 +93,7 @@ export default async function ArtigoComPalavraPage({ params }: { params: Promise
       </nav>
 
       <div style={{ borderBottom: '2px solid #0f766e', marginBottom: '32px', paddingBottom: '20px' }}>
-        <div style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '2px', color: '#0f766e', textTransform: 'uppercase', marginBottom: '10px' }}>✍️ ComAPalavra · Adilson Costa</div>
+        <div style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '2px', color: '#0f766e', textTransform: 'uppercase', marginBottom: '10px' }}>{cat.emoji} ComAPalavra · {cat.nome} · Adilson Costa</div>
         <h1 style={{ fontSize: '2rem', fontWeight: 900, color: '#111827', margin: '0 0 14px', lineHeight: 1.2 }}>{artigo.titulo}</h1>
         {artigo.resumo && <p style={{ color: '#374151', fontSize: '1.1rem', margin: '0 0 16px', lineHeight: 1.6, fontStyle: 'italic' }}>{artigo.resumo}</p>}
         <div style={{ fontSize: '0.8rem', color: '#9ca3af' }}>
@@ -99,7 +101,7 @@ export default async function ArtigoComPalavraPage({ params }: { params: Promise
         </div>
       </div>
 
-      {artigo.audioUrl && <PlayerAudio src={artigo.audioUrl} segundos={artigo.audioSegundos} />}
+      {artigo.audioUrl && <PlayerAudio src={artigo.audioUrl} segundos={artigo.audioSegundos} rotulo={artigo.audioTipo === 'gravacao' ? 'Ouça na voz do autor' : 'Ouça este artigo'} />}
 
       {artigo.imagem && (
         <div style={{ marginBottom: '32px', borderRadius: '12px', overflow: 'hidden' }}>

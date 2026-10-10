@@ -1,10 +1,12 @@
 import { kv } from '@/lib/kv';
 import Link from 'next/link';
+import { CATEGORIAS_CP, categoriaCP } from '@/lib/compalavra-categorias';
 
 interface ArtigoComPalavra {
   id: string; slug: string; titulo: string; conteudo: string;
   resumo: string; imagem?: string; publicado: boolean; destaque: boolean;
   createdAt: string; updatedAt: string;
+  categoria?: string; audioUrl?: string;
 }
 
 async function getArtigos(): Promise<ArtigoComPalavra[]> {
@@ -16,11 +18,14 @@ async function getArtigos(): Promise<ArtigoComPalavra[]> {
   } catch { return []; }
 }
 
-export default async function ComAPalavraPage() {
-  const artigos = await getArtigos();
+export default async function ComAPalavraPage({ searchParams }: { searchParams: Promise<{ categoria?: string }> }) {
+  const { categoria } = await searchParams;
+  const filtro = CATEGORIAS_CP.some(c => c.id === categoria) ? categoria : '';
+  const todos = await getArtigos();
+  const artigos = filtro ? todos.filter(a => categoriaCP(a.categoria).id === filtro) : todos;
   const destaque = artigos.find(a => a.destaque);
   const demais = artigos.filter(a => !a.destaque);
-
+  const abas = [{ id: '', nome: 'Todos', emoji: '' }, ...CATEGORIAS_CP];
   return (
     <main style={{ maxWidth: '860px', margin: '0 auto', padding: '24px 16px' }}>
       <div style={{ textAlign: 'center', marginBottom: '40px', borderBottom: '3px solid #0f766e', paddingBottom: '24px' }}>
@@ -32,7 +37,19 @@ export default async function ComAPalavraPage() {
           por <strong style={{ color: '#111827' }}>Adilson Costa</strong> · Psicanálise e vida
         </p>
       </div>
-
+      <nav aria-label="Categorias" style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '32px' }}>
+        {abas.map(c => {
+          const ativa = filtro === c.id;
+          return (
+            <Link key={c.id || 'todos'} href={c.id ? `/compalavra?categoria=${c.id}` : '/compalavra'}
+              aria-current={ativa ? 'page' : undefined}
+              style={{ padding: '8px 18px', borderRadius: '999px', textDecoration: 'none', fontWeight: 700, fontSize: '0.875rem',
+                border: '2px solid ' + (ativa ? '#0f766e' : '#e5e7eb'), backgroundColor: ativa ? '#0f766e' : '#fff', color: ativa ? '#fff' : '#374151' }}>
+              {c.emoji ? c.emoji + ' ' : ''}{c.nome}
+            </Link>
+          );
+        })}
+      </nav>
       {destaque && (
         <Link href={`/compalavra/${destaque.slug}`} style={{ textDecoration: 'none', display: 'block', marginBottom: '40px' }}>
           <div style={{ borderRadius: '16px', overflow: 'hidden', border: '2px solid #0f766e', boxShadow: '0 4px 20px rgba(15,118,110,0.15)' }}>
@@ -52,7 +69,7 @@ export default async function ComAPalavraPage() {
       )}
 
       {demais.length === 0 && !destaque && (
-        <p style={{ textAlign: 'center', color: '#9ca3af', padding: '60px 0' }}>Nenhum artigo publicado ainda.</p>
+        <p style={{ textAlign: 'center', color: '#9ca3af', padding: '60px 0' }}>{filtro ? 'Nenhum artigo nesta categoria ainda.' : 'Nenhum artigo publicado ainda.'}</p>
       )}
 
       <div style={{ display: 'grid', gap: '20px' }}>
@@ -61,6 +78,12 @@ export default async function ComAPalavraPage() {
             <div style={{ display: 'flex', gap: '20px', padding: '20px', borderRadius: '12px', border: '1px solid #e5e7eb', backgroundColor: '#fff', alignItems: 'flex-start' }}>
               {artigo.imagem && <img src={artigo.imagem} alt={artigo.titulo} style={{ width: '110px', height: '80px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0 }} />}
               <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', gap: '6px', marginBottom: '6px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: categoriaCP(artigo.categoria).id === 'literatura' ? '#5b21b6' : '#0f766e' }}>
+                    {categoriaCP(artigo.categoria).emoji} {categoriaCP(artigo.categoria).nome}
+                  </span>
+                  {artigo.audioUrl && <span style={{ fontSize: '0.65rem', fontWeight: 700, color: '#6b7280' }}>· 🎧 ouça</span>}
+                </div>
                 <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111827', margin: '0 0 6px', lineHeight: 1.3 }}>{artigo.titulo}</h2>
                 {artigo.resumo && <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: '0 0 10px', lineHeight: 1.5 }}>{artigo.resumo}</p>}
                 <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>

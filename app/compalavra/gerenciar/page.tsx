@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { CATEGORIAS_CP } from '@/lib/compalavra-categorias';
 
 function LoginScreen({ onLogin }: { onLogin: () => void }) {
   const [password, setPassword] = useState('');
@@ -47,7 +48,7 @@ interface ArtigoComPalavra {
   id: string; slug: string; titulo: string; conteudo: string;
   resumo: string; imagem?: string; publicado: boolean; destaque: boolean;
   createdAt: string; updatedAt: string;
-  audioUrl?: string; audioHash?: string; audioSegundos?: number;
+  audioUrl?: string; audioHash?: string; audioSegundos?: number; categoria?: string;
 }
 
 export default function GerenciarComPalavraPage() {
@@ -150,6 +151,17 @@ export default function GerenciarComPalavraPage() {
         <h1 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 900, color: '#111827' }}>Editar artigo</h1>
       </div>
       <div style={{ display: 'grid', gap: '16px' }}>
+        <div><label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '4px', fontSize: '0.8rem' }}>Categoria</label>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {CATEGORIAS_CP.map(c => {
+              const ativa = (editando.categoria || 'reflexao') === c.id;
+              return (
+                <button key={c.id} type="button" onClick={() => setEditando({ ...editando, categoria: c.id })}
+                  style={{ padding: '6px 14px', borderRadius: '999px', border: '2px solid ' + (ativa ? '#0f766e' : '#e5e7eb'), backgroundColor: ativa ? '#f0fdfa' : '#fff', color: ativa ? '#0f766e' : '#374151', fontWeight: 700, cursor: 'pointer', fontSize: '0.85rem' }}>
+                  {c.emoji} {c.nome}</button>
+              );
+            })}
+          </div></div>
         <div><label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '4px', fontSize: '0.8rem' }}>Título</label>
           <input style={inp} value={editando.titulo} onChange={e => setEditando({ ...editando, titulo: e.target.value })} /></div>
         <div><label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '4px', fontSize: '0.8rem' }}>Resumo</label>
@@ -210,6 +222,7 @@ export default function GerenciarComPalavraPage() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
                   <span style={{ fontWeight: 700, color: '#111827', fontSize: '0.95rem' }}>{artigo.titulo || '(sem título)'}</span>
+                  {artigo.categoria === 'literatura' && <span style={{ backgroundColor: '#ede9fe', color: '#5b21b6', fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px' }}>📚 LITERATURA</span>}
                   {artigo.destaque && <span style={{ backgroundColor: '#fef3c7', color: '#92400e', fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px' }}>DESTAQUE</span>}
                   {artigo.publicado
                     ? <span style={{ backgroundColor: '#dcfce7', color: '#166534', fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px' }}>PUBLICADO</span>
