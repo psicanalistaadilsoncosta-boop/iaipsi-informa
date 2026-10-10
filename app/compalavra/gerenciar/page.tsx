@@ -47,6 +47,7 @@ interface ArtigoComPalavra {
   id: string; slug: string; titulo: string; conteudo: string;
   resumo: string; imagem?: string; publicado: boolean; destaque: boolean;
   createdAt: string; updatedAt: string;
+  audioUrl?: string; audioHash?: string; audioSegundos?: number;
 }
 
 export default function GerenciarComPalavraPage() {
@@ -58,9 +59,12 @@ export default function GerenciarComPalavraPage() {
   const [msg, setMsg] = useState('');
   const [revisando, setRevisando] = useState(false);
   const [revisao, setRevisao] = useState('');
+  const [audios, setAudios] = useState<Record<string, string>>({});
+  const [gerandoAudio, setGerandoAudio] = useState('');
+  const [progresso, setProgresso] = useState('');
 
   useEffect(() => {
-    fetch('/api/editorial/auth/check').then(r => r.json()).then(d => {
+  fetch('/api/editorial/auth/check').then(r => r.json()).then(d => {
       setAuth(d.ok);
       if (d.ok) carregar();
     }).catch(() => setAuth(false));
@@ -74,8 +78,39 @@ export default function GerenciarComPalavraPage() {
     const res = await fetch('/api/compalavra/save');
     const data = await res.json();
     setArtigos(Array.isArray(data) ? data.sort((a: ArtigoComPalavra, b: ArtigoComPalavra) =>
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) : []);
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) : []);
     setCarregando(false);
+    carregarAudios();
+  }
+
+  async function carregarAudios() {
+    try { const r = await fetch('/api/compalavra/audio'); if (r.ok) setAudios(await r.json()); } catch {}
+  }
+
+  async function gerarAudio(id: string): Promise<boolean> {
+    setGerandoAudio(id); setMsg('');
+    try {
+      const r = await fetch('/api/compalavra/audio', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+      const d = await r.json();
+      if (!d.ok) { setMsg('Erro no áudio: ' + (d.error || r.status)); return false; }
+      setAudios(a => ({ ...a, [id]: 'ok' }));
+      setArtigos(l => l.map(x => x.id === id ? { ...x, audioUrl: d.audioUrl, audioHash: d.audioHash, audioSegundos: d.audioSegundos } : x));
+      return true;
+    } catch { setMsg('Erro de conexão ao gerar o áudio.'); return false; }
+    finally { setGerandoAudio(''); }
+  }
+
+  async function gerarFaltam() {
+    const fila = artigos.filter(a => a.publicado && audios[a.id] !== 'ok');
+    if (!fila.length) { setMsg('✅ Todos os artigos publicados já têm áudio.'); return; }
+    let feitos = 0;
+    for (const a of fila) {
+      setProgresso(`⏳ Gerando áudio ${feitos + 1} de ${fila.length}: ${a.titulo}`);
+      if (!(await gerarAudio(a.id))) { setProgresso(''); return; }
+      feitos++;
+    }
+    setProgresso('');
+    setMsg(`✅ ${feitos} áudio(s) gerado(s).`);
   }
 
   async function salvar() {
@@ -158,8 +193,12 @@ export default function GerenciarComPalavraPage() {
     <main style={{ maxWidth: '860px', margin: '0 auto', padding: '24px 16px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px', flexWrap: 'wrap', gap: '12px' }}>
         <h1 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 900, color: '#111827' }}>✍️ ComAPalavra — Gerenciar</h1>
-        <a href="/compalavra/criar" style={{ backgroundColor: '#0f766e', color: '#fff', textDecoration: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 700, fontSize: '0.875rem' }}>+ Novo artigo</a>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <button onClick={gerarFaltam} disabled={!!gerandoAudio || !!progresso} style={{ backgroundColor: '#f0fdfa', color: '#0f766e', border: '1px solid #a7f3d0', padding: '10px 16px', borderRadius: '8px', fontWeight: 700, fontSize: '0.875rem', cursor: gerandoAudio || progresso ? 'wait' : 'pointer' }}>🎧 Gerar áudios que faltam</button>
+          <a href="/compalavra/criar" style={{ backgroundColor: '#0f766e', color: '#fff', textDecoration: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 700, fontSize: '0.875rem' }}>+ Novo artigo</a>
+        </div>
       </div>
+      {progresso && <div style={{ marginBottom: '16px', padding: '10px 14px', borderRadius: '8px', backgroundColor: '#f0fdfa', color: '#065f46', fontWeight: 600 }}>{progresso}</div>}
       {msg && <div style={{ marginBottom: '16px', padding: '10px 14px', borderRadius: '8px', backgroundColor: msg.startsWith('✅') ? '#dcfce7' : '#fee2e2', color: msg.startsWith('✅') ? '#166534' : '#991b1b', fontWeight: 600 }}>{msg}</div>}
       {artigos.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 0', color: '#9ca3af' }}>Nenhum artigo. <a href="/compalavra/criar" style={{ color: '#0f766e', fontWeight: 700 }}>Criar →</a></div>
@@ -174,13 +213,17 @@ export default function GerenciarComPalavraPage() {
                   {artigo.destaque && <span style={{ backgroundColor: '#fef3c7', color: '#92400e', fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px' }}>DESTAQUE</span>}
                   {artigo.publicado
                     ? <span style={{ backgroundColor: '#dcfce7', color: '#166534', fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px' }}>PUBLICADO</span>
-                    : <span style={{ backgroundColor: '#f3f4f6', color: '#6b7280', fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px' }}>RASCUNHO</span>}
+                                       : <span style={{ backgroundColor: '#f3f4f6', color: '#6b7280', fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px' }}>RASCUNHO</span>}
+                  {audios[artigo.id] === 'ok' && <span style={{ backgroundColor: '#e0f2fe', color: '#075985', fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px' }}>🎧 COM ÁUDIO</span>}
+                  {audios[artigo.id] === 'desatualizado' && <span style={{ backgroundColor: '#fef3c7', color: '#92400e', fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px' }}>🎧 ÁUDIO DESATUALIZADO</span>}
                 </div>
                 <div style={{ fontSize: '0.72rem', color: '#9ca3af' }}>
                   {new Date(artigo.createdAt).toLocaleDateString('pt-BR')} · /compalavra/{artigo.slug}
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                <button onClick={() => gerarAudio(artigo.id)} disabled={!!gerandoAudio} title={audios[artigo.id] === 'ok' ? 'Refazer o áudio' : 'Gerar o áudio'} style={{ backgroundColor: '#f0fdfa', color: '#0f766e', border: '1px solid #a7f3d0', borderRadius: '6px', padding: '7px 12px', fontWeight: 700, cursor: gerandoAudio ? 'wait' : 'pointer', fontSize: '0.8rem' }}>
+                  {gerandoAudio === artigo.id ? '⏳' : audios[artigo.id] === 'ok' ? '🎧 Refazer' : '🎧 Gerar'}</button>
                 <button onClick={() => { setEditando(artigo); setRevisao(''); setMsg(''); }} style={{ backgroundColor: '#f3f4f6', color: '#374151', border: 'none', borderRadius: '6px', padding: '7px 14px', fontWeight: 600, cursor: 'pointer', fontSize: '0.8rem' }}>Editar</button>
                 <a href={`/compalavra/${artigo.slug}`} target="_blank" rel="noopener" style={{ backgroundColor: '#f0fdfa', color: '#0f766e', textDecoration: 'none', borderRadius: '6px', padding: '7px 12px', fontWeight: 600, fontSize: '0.8rem', border: '1px solid #a7f3d0' }}>Ver</a>
                 <button onClick={() => excluir(artigo.id)} style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '6px', padding: '7px 12px', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>✕</button>

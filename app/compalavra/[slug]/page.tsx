@@ -2,11 +2,13 @@ import type { Metadata } from 'next';
 import { kv } from '@/lib/kv';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import PlayerAudio from '../PlayerAudio';
 
 interface ArtigoComPalavra {
   id: string; slug: string; titulo: string; conteudo: string;
-  resumo: string; imagem?: string; publicado: boolean; destaque: boolean;
+   resumo: string; imagem?: string; publicado: boolean; destaque: boolean;
   createdAt: string; updatedAt: string;
+  audioUrl?: string; audioSegundos?: number;
 }
 
 async function getArtigo(slug: string): Promise<ArtigoComPalavra | null> {
@@ -96,6 +98,8 @@ export default async function ArtigoComPalavraPage({ params }: { params: Promise
           Publicado em {new Date(artigo.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
         </div>
       </div>
+
+      {artigo.audioUrl && <PlayerAudio src={artigo.audioUrl} segundos={artigo.audioSegundos} />}
 
       {artigo.imagem && (
         <div style={{ marginBottom: '32px', borderRadius: '12px', overflow: 'hidden' }}>
