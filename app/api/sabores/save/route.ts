@@ -27,6 +27,11 @@ async function read(): Promise<SaboresItem[]> {
   }
 }
 
+// lista as receitas publicadas (a mesma que aparece no site)
+export async function GET() {
+  return NextResponse.json(await read());
+}
+
 export async function POST(req: NextRequest) {
   if (!isAdmin(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 });
   try {
@@ -46,7 +51,7 @@ export async function POST(req: NextRequest) {
       publishedAt: new Date().toISOString(),
     };
 
-    const updated = [newItem, ...existing].slice(0, 20);
+    const updated = [newItem, ...existing].slice(0, 2000);
     await kv.set(KEY, updated);
 
     revalidatePath('/'); return NextResponse.json({ success: true, item: newItem });

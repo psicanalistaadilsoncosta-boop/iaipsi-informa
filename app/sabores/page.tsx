@@ -87,7 +87,7 @@ export default function SaboresPage() {
 
   async function loadPublished() {
     try {
-      const res = await fetch('/sabores.json');
+      const res = await fetch('/api/sabores/save', { cache: 'no-store' });
       setPublished(await res.json());
     } catch { setPublished([]); }
   }
