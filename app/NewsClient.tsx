@@ -104,11 +104,11 @@ function BannerPraVoce() {
         <div className="bp-icon">🎧</div>
         <div>
           <div className="bp-title">Lupa pra você</div>
-          <div className="bp-sub">Trabalhar e estudar, mexer o corpo e ficar conectado: ofertas lupadas de perto.</div>
+          <div className="bp-sub">Trabalhar e estudar, ler e refletir, mexer o corpo e ficar conectado: ofertas lupadas de perto.</div>
         </div>
       </div>
       <div className="bp-dir">
-        <span className="bp-emojis" aria-hidden="true">💻👟📱</span>
+        <span className="bp-emojis" aria-hidden="true">💻📚👟📱</span>
         <span className="bp-btn" style={{ background: c[3], color: c[5] }}>Ver ofertas →</span>
       </div>
     </a>
