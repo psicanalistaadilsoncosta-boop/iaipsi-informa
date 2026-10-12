@@ -89,7 +89,7 @@ export default async function LojaPage({ params }: { params: Promise<{ slug: str
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
             {produtos.map(produto => (
-              <a key={produto.id} href={produto.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', display: 'block' }}>
+              <a key={produto.id} href={`/ir?url=${encodeURIComponent((produto as any).link || '')}&nome=${encodeURIComponent((produto as any).nome || '')}&imagem=${encodeURIComponent((produto as any).imagem || '')}&loja=${encodeURIComponent((produto as any).lojaNome || (produto as any).loja || '')}`} target="_blank" rel="nofollow sponsored noopener" style={{ textDecoration: 'none', display: 'block' }}>
                 <div style={{ backgroundColor: '#fff', borderRadius: '14px', overflow: 'hidden', border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', transition: 'box-shadow 0.2s', display: 'flex', flexDirection: 'column', height: '100%' }}>
                   {/* Imagem */}
                   <div style={{ height: '200px', overflow: 'hidden', backgroundColor: '#f3f4f6', position: 'relative' }}>

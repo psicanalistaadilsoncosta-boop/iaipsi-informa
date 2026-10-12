@@ -213,12 +213,12 @@ export default function BannerDestaque({
           <div className="banner-moldura" />
 
           {/* Link */}
-          {s.link && (
+                   {s.link && (
             <a
-              href={s.link}
+              href={`/ir?url=${encodeURIComponent(s.link)}&nome=${encodeURIComponent(s.nome || "")}&imagem=${encodeURIComponent(s.imagem || "")}&loja=${encodeURIComponent(s.loja || "")}&de=${encodeURIComponent("/")}`}
               className="banner-link"
               target={s.novaAba ? "_blank" : undefined}
-              rel={s.novaAba ? "noopener noreferrer" : undefined}
+              rel="nofollow sponsored noopener"
               aria-label={s.nome}
             />
           )}
