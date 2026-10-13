@@ -12,6 +12,7 @@ const brl = (v: number) => 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDi
 const host = (u: string) => { try { const x = new URL(u); const h = x.hostname.replace(/^www\./, ''); return /\.xml$/i.test(x.pathname) ? h + x.pathname : h; } catch { return ''; } };
 const campo: React.CSSProperties = { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #d1d5db', fontSize: 14, boxSizing: 'border-box' };
 const rot: React.CSSProperties = { display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', margin: '12px 0 4px' };
+const LOTE = 200; // o salvar aceita até 200 produtos por vez
 
 function Importar() {
   const [loja, setLoja] = useState('');
@@ -25,17 +26,19 @@ function Importar() {
   const [ocupado, setOcupado] = useState(false);
   const [msg, setMsg] = useState('');
   const [recarregarOrigens, setRecarregarOrigens] = useState(0);
+  const [colado, setColado] = useState('');
+  const [avisoColetor, setAvisoColetor] = useState('');
 
   useEffect(() => { fetch('/api/admin/importar-categoria/salvar').then(r => r.json()).then(setSalvos).catch(() => {}); }, []);
   // deeplink já usado nesta loja aparece sozinho
   useEffect(() => { const h = host(pag1); if (h && salvos[h] && !deeplink) setDeeplink(salvos[h]); }, [pag1, salvos]); // eslint-disable-line
 
-   async function buscar(o?: { pag1: string; pag2: string; paginas: number }) {
+   async function buscar(o?: { pag1: string; pag2: string; paginas: number; colado?: any }) {
     setOcupado(true); setRes(null); setMsg('');
     try {
       const r = await fetch('/api/admin/importar-categoria', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pagina1: (o?.pag1 ?? pag1).trim(), pagina2: (o?.pag2 ?? pag2).trim(), paginas: o?.paginas ?? paginas }),
+        body: JSON.stringify({ pagina1: (o?.pag1 ?? pag1).trim(), pagina2: (o?.pag2 ?? pag2).trim(), paginas: o?.paginas ?? paginas, colado: o?.colado }),
       });
       const d: Res = await r.json();
       setRes(d);
@@ -46,7 +49,7 @@ function Importar() {
   }
 
   async function mandar() {
-    const lista = (res?.produtos || []).filter(p => marcados.has(p.url));
+    const lista = (res?.produtos || []).filter(p => marcados.has(p.url)).slice(0, LOTE);
     setOcupado(true); setMsg('');
     try {
       const r = await fetch('/api/admin/importar-categoria/salvar', {
@@ -54,10 +57,40 @@ function Importar() {
         body: JSON.stringify({ produtos: lista, deeplink: deeplink.trim(), loja: loja.trim(), origem: pag1.trim(), pagina2: pag2.trim(), paginas }),
       });
       const d = await r.json();
-      if (!d.error) setRecarregarOrigens(n => n + 1);
-      setMsg(d.error ? `⚠️ ${d.error}` : `✅ ${d.novos} produtos foram para "A catalogar".${d.repetidos ? ` ${d.repetidos} já estavam lá.` : ''}${d.recusados ? ` ${d.recusados} recusados (link inválido).` : ''}${d.aviso ? ` ⚠️ ${d.aviso}` : ''}`);
+            if (!d.error) setRecarregarOrigens(n => n + 1);
+      // tudo aceito: os enviados viram "já no site" e saem da seleção (o próximo clique manda o próximo lote)
+      // houve recusados: a seleção fica como está; no próximo clique os que já entraram são pulados e os recusados tentam de novo
+      if (!d.error && !d.recusados) {
+        const enviados = new Set(lista.map(p => p.url));
+        setRes(x => x ? { ...x, produtos: (x.produtos || []).map(p => enviados.has(p.url) ? { ...p, jaNoSite: true } : p) } : x);
+        setMarcados(s => { const n = new Set(s); enviados.forEach(u => n.delete(u)); return n; });
+      }
+      const faltam = d.error || d.recusados ? 0 : marcados.size - lista.length;
+      setMsg(d.error ? `⚠️ ${d.error}` : `✅ ${d.novos} produtos foram para "A catalogar".${d.repetidos ? ` ${d.repetidos} já estavam lá.` : ''}${d.recusados ? ` ${d.recusados} sem link da rede: clique em Mandar de novo para tentar outra vez.` : ''}${d.aviso ? ` ⚠️ ${d.aviso}` : ''}${faltam > 0 ? ` Faltam ${faltam} marcados: clique em Mandar de novo.` : ''}`);
     } catch { setMsg('⚠️ Não foi possível salvar agora.'); }
     setOcupado(false);
+  }
+
+  // Lista do coletor (loja que bloqueia o servidor): lê o texto colado e mostra igual a uma busca
+  function usarColado() {
+    let d: any = null;
+    try { d = JSON.parse(colado.trim()); } catch {}
+    if (d?.coletor !== 'comlupa' || !Array.isArray(d.produtos)) {
+      setRes({ status: 'erro', mensagem: 'Isso não é a lista do coletor. Na loja, clique em "📋 Copiar lista" na caixa roxa e cole aqui.', avisos: [] });
+      return;
+    }
+    const origem = String(d.origem || '');
+    if (!loja.trim() && d.loja) setLoja(String(d.loja));
+    setPag1(origem); setPag2(''); setPaginas(1);
+    buscar({ pag1: origem, pag2: '', paginas: 1, colado: d });
+  }
+
+  async function copiarColetor() {
+    try {
+      const txt = await (await fetch('/coletor.js', { cache: 'no-store' })).text();
+      await navigator.clipboard.writeText(txt);
+      setAvisoColetor('✅ Coletor copiado.');
+    } catch { setAvisoColetor('⚠️ Não consegui copiar. Abra comlupa.com.br/coletor.js e copie à mão.'); }
   }
 
   // "Buscar de novo" numa página importada: preenche o formulário e já busca
@@ -95,9 +128,35 @@ function Importar() {
         </div>
       </section>
 
+      <details style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '12px 16px', marginTop: 12 }}>
+        <summary style={{ cursor: 'pointer', fontWeight: 700, color: '#5B3E96', fontSize: 14 }}>🧲 A loja bloqueia (403)? Use o coletor no seu navegador</summary>
+        <ol style={{ fontSize: 13, color: '#374151', margin: '10px 0', paddingLeft: 20, lineHeight: 1.7 }}>
+          <li>Clique em <b>Copiar coletor</b>.</li>
+          <li>Abra a categoria na loja (ex.: cristaiscadoro.com/vasos), aperte F12, aba <b>Console</b>, cole e aperte Enter.</li>
+          <li>Na caixa roxa que aparece na loja, clique em <b>📋 Copiar lista</b> e cole aqui embaixo.</li>
+        </ol>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <button onClick={copiarColetor}
+            style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #c4b5fd', background: '#f5f3ff', color: '#5B3E96', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+            📋 Copiar coletor
+          </button>
+          {avisoColetor && <span style={{ fontSize: 13, color: avisoColetor.startsWith('✅') ? '#047857' : '#9a3412' }}>{avisoColetor}</span>}
+        </div>
+        <label style={rot} htmlFor="imp-colado">Lista copiada da loja</label>
+        <textarea id="imp-colado" rows={3} value={colado} onChange={e => setColado(e.target.value)} placeholder='{"coletor":"comlupa", ...}'
+          style={{ ...campo, fontFamily: 'monospace', fontSize: 12, resize: 'vertical' }} />
+        <button onClick={usarColado} disabled={ocupado || !colado.trim()}
+          style={{ marginTop: 10, padding: '10px 22px', borderRadius: 8, border: 0, background: '#5B3E96', color: '#fff', fontWeight: 700, cursor: 'pointer', opacity: ocupado || !colado.trim() ? 0.5 : 1 }}>
+          Usar lista colada
+        </button>
+        <p style={{ fontSize: 12, color: '#6b7280', margin: '8px 0 0' }}>
+          A atualização diária não alcança essas lojas. Para trazer produtos novos, rode o coletor de novo e cole aqui: os que já estão no site vêm desmarcados.
+        </p>
+      </details>
+
       {res && res.status !== 'ok' && (
         <p style={{ background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 10, padding: 12, color: '#9a3412', marginTop: 14 }}>
-          {res.status === 'bloqueio' ? '⛔ ' : '⚠️ '}{res.mensagem}
+          {res.status === 'bloqueio' ? '⛔ ' : '⚠️ '}{res.mensagem}{res.status === 'bloqueio' && ' Use o coletor (logo acima).'}
         </p>
       )}
       {res?.avisos?.length ? <ul style={{ color: '#6b7280', fontSize: 13, marginTop: 10 }}>{res.avisos.map(a => <li key={a}>{a}</li>)}</ul> : null}
@@ -133,7 +192,7 @@ function Importar() {
             <p style={{ fontSize: 12, color: '#6b7280', margin: '6px 0 0' }}>Gere um deeplink de qualquer página da loja no painel da rede e cole aqui. Loja da Lomadee: escreva lomadee: seguido do ID da loja (está em Marcas Lomadee); o site cria um link curto para cada produto. Fica guardado para as próximas importações desta loja.</p>
             <button onClick={mandar} disabled={ocupado || !marcados.size || !deeplink.trim() || !loja.trim()}
               style={{ marginTop: 12, padding: '10px 22px', borderRadius: 8, border: 0, background: '#047857', color: '#fff', fontWeight: 700, cursor: 'pointer', opacity: ocupado || !marcados.size || !deeplink.trim() || !loja.trim() ? 0.5 : 1 }}>
-              Mandar {marcados.size} para "A catalogar"
+              Mandar {Math.min(marcados.size, LOTE)} para "A catalogar"{marcados.size > LOTE ? ` (de ${marcados.size})` : ''}
             </button>
             {msg && <p style={{ marginTop: 10, fontSize: 14 }}>{msg}</p>}
           </section>

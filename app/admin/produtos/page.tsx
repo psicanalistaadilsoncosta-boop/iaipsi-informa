@@ -1109,6 +1109,27 @@ function AdminProdutos() {
               </div>
             )}
 
+            {/* Selecionar todos os que estão na tela (respeita o filtro de loja) */}
+            {produtosACatalogar.length > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 10 }}>
+                <button
+                  onClick={() => setSelCatalogar(new Set(produtosACatalogar.map(p => p.id)))}
+                  disabled={movendoCatalogar}
+                  style={{ padding: '6px 14px', borderRadius: 7, border: '1.5px solid #d97706', background: '#fffbeb', color: '#b45309', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+                >
+                  ☑ Selecionar todos ({produtosACatalogar.length}){filtroCatalogarLoja ? ` de ${filtroCatalogarLoja}` : ''}
+                </button>
+                {selCatalogar.size > 0 && (
+                  <button onClick={() => { setSelCatalogar(new Set()); setSubCatalogar(null); }}
+                    style={{ background: 'none', border: 'none', color: '#6b7280', fontSize: 13, cursor: 'pointer', textDecoration: 'underline' }}>
+                    Limpar seleção
+                  </button>
+                )}
+              </div>
+            )}
+
+
+
             {/* Grid de cards a catalogar */}
             {produtosACatalogar.length === 0 ? (
               <div style={{ textAlign: 'center', padding: 60, color: '#9ca3af', fontSize: 14, background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb' }}>

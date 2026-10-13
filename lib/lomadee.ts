@@ -24,14 +24,29 @@ export async function encurtarLomadee(organizationId: string, url: string): Prom
   return d?.[0]?.shortUrls?.[0] || null;
 }
 
-// Vários de uma vez, alguns por vez (para não sobrecarregar a Lomadee). Devolve url da loja -> link curto.
-export async function encurtarVarios(organizationId: string, urls: string[], simultaneos = 4): Promise<Map<string, string>> {
+const espera = (ms: number) => new Promise(r => setTimeout(r, ms));
+
+// Vários de uma vez, sem atropelar a Lomadee: ela nega quando recebe muitos pedidos seguidos.
+// - pausa entre pedidos, que aumenta sozinha quando ela nega e volta a diminuir quando aceita
+// - cada link tem até 3 tentativas
+// - para em ~4 min (a rota de salvar tem 5): o que faltar volta como "recusado" e vai no próximo clique
+// Devolve url da loja -> link curto.
+export async function encurtarVarios(organizationId: string, urls: string[], simultaneos = 2, limiteMs = 240_000): Promise<Map<string, string>> {
   const saida = new Map<string, string>();
   const fila = [...new Set(urls.filter(Boolean))];
+  const fim = Date.now() + limiteMs;
+  let pausa = 300;
   async function trabalhador() {
-    while (fila.length) {
+    while (fila.length && Date.now() < fim) {
       const u = fila.shift()!;
-      try { const l = await encurtarLomadee(organizationId, u); if (l) saida.set(u, l); } catch { /* fica sem link: o produto é recusado */ }
+      for (let tentativa = 0; tentativa < 3 && Date.now() < fim; tentativa++) {
+        let l: string | null = null;
+        try { l = await encurtarLomadee(organizationId, u); } catch { /* conta como falha */ }
+        if (l) { saida.set(u, l); pausa = Math.max(300, Math.round(pausa * 0.8)); break; }
+        pausa = Math.min(pausa * 2, 8000); // negou: vai mais devagar
+        await espera(pausa);
+      }
+      await espera(pausa);
     }
   }
   await Promise.all(Array.from({ length: Math.min(simultaneos, fila.length) }, trabalhador));
