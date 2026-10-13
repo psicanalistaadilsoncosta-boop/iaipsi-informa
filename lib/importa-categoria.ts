@@ -104,6 +104,46 @@ export function proximaPaginaSalesforce(html: string): string | null {
   return m ? decodificar(m[1]) : null;
 }
 
+// ---------- Plano C: lojas Linx Commerce (ex.: Grupo A) ----------
+// Cada produto é um <article class="wd-product-line ..." data-name="..." data-product-id="...">,
+// com o preço num bloco de dados ("RetailPrice") e a foto em data-src.
+function extrairCartoesLinx(html: string, base: string): { produtos: ProdutoLido[]; total: number } {
+  const produtos: ProdutoLido[] = [];
+  const marcas = [...html.matchAll(/<article\b[^>]*class="wd-product-line[^"]*"[^>]*>/g)];
+  const vistos = new Set<string>();
+  for (let i = 0; i < marcas.length; i++) {
+    const tag = marcas[i][0];
+    const ini = marcas[i].index ?? 0;
+    const fim = i + 1 < marcas.length ? (marcas[i + 1].index ?? html.length) : Math.min(html.length, ini + 60000);
+    const bloco = html.slice(ini, fim);
+    const pid = tag.match(/data-product-id="(\d+)"/)?.[1] || '';
+    const nome = decodificar(tag.match(/data-name="([^"]*)"/)?.[1] || '').trim();
+    const h = bloco.match(/href=['"]([^'"]+-p\d+)['"]/);
+    if (!pid || !nome || !h || vistos.has(pid)) continue;
+    let preco = Number(bloco.match(/"RetailPrice":\s*([\d.]+)/)?.[1]) || Number(bloco.match(/"PromotionPrice":\s*([\d.]+)/)?.[1]) || 0;
+    if (!preco) { const p = bloco.match(/sale-price[^>]*>\s*<span[^>]*>\s*R\$\s*([\d.,]+)/); if (p) preco = numeroDoPreco(p[1]); }
+    if (!preco) continue;
+    let url = '', imagem = '';
+    try { url = new URL(decodificar(h[1]), base).href; } catch { continue; }
+    const im = bloco.match(/data-src="([^"]+)"/) || bloco.match(/<img[^>]+src="([^"]+\.(?:webp|jpe?g|png)[^"]*)"/i);
+    try { imagem = im ? new URL(decodificar(im[1]), base).href : ''; } catch {}
+    const esgotado = /"IsInventoryAvailable":\s*false/.test(bloco) || /\bsem-estoque\b|\besgotado\b/i.test(tag);
+    vistos.add(pid);
+    produtos.push({ nome: nome.slice(0, 160), preco, imagem, url, marca: decodificar(tag.match(/data-brand="([^"]*)"/)?.[1] || '') || undefined, sku: pid, esgotado });
+  }
+  return { produtos, total: marcas.length };
+}
+
+// Linx: link "Próximo" da paginação (…?pg=2)
+export function proximaPaginaLinx(html: string, base: string): string | null {
+  const m = html.match(/<a[^>]+href="([^"]+)"[^>]*class="page-next"/i) || html.match(/<a[^>]*class="page-next"[^>]+href="([^"]+)"/i);
+  if (!m) return null;
+  try { return new URL(decodificar(m[1]).replace(/&$/, ''), base).href; } catch { return null; }
+}
+
+
+
+
 // Junta todos os objetos "Product" do HTML (soltos, em @graph ou dentro de ItemList)
 export function extrairProdutos(html: string, base: string) {
   const achados: any[] = [];
@@ -123,6 +163,9 @@ export function extrairProdutos(html: string, base: string) {
   if (achados.length === 0) {
     const sf = extrairCartoesSalesforce(html, base);
     if (sf.produtos.length) return { produtos: sf.produtos, semPreco: 0, esgotados: 0, semLink: 0, totalBlocos: sf.total };
+    // nem Salesforce: tenta os cartões das lojas Linx Commerce
+    const lx = extrairCartoesLinx(html, base);
+    if (lx.produtos.length) return { produtos: lx.produtos, semPreco: 0, esgotados: lx.produtos.filter(p => p.esgotado).length, semLink: 0, totalBlocos: lx.total };
   }
   let semPreco = 0, esgotados = 0, semLink = 0;
   const produtos: ProdutoLido[] = [];
@@ -262,7 +305,7 @@ export async function lerCategoria(pag1: string, pag2: string, paginas: number):
 
   let proximaAuto: string | null = null; // "Ver mais" das lojas Salesforce, quando não há link da página 2
   for (let i = 1; i <= n; i++) {
-    const end = (!pag2 && i > 1 && proximaAuto) ? proximaAuto : enderecoDaPagina(pag1, pag2, i);
+    const end: string | null = (!pag2 && i > 1 && proximaAuto) ? proximaAuto : enderecoDaPagina(pag1, pag2, i);
     if (!end) { if (i === 2) avisos.push('Sem o link da página 2 (ou não reconheci a paginação): li só a primeira página.'); break; }
     let r: Response;
     try {
@@ -289,7 +332,7 @@ export async function lerCategoria(pag1: string, pag2: string, paginas: number):
     }
     if (vtex && i > 1 && vtex.totalBlocos === 0) { avisos.push(`A categoria acabou na página ${i - 1}.`); break; }
     const { produtos, semPreco, esgotados, semLink, totalBlocos } = vtex || extrairProdutos(html, end);
-    proximaAuto = proximaPaginaSalesforce(html);
+    proximaAuto = proximaPaginaSalesforce(html) || proximaPaginaLinx(html, end);
     if (i === 1 && totalBlocos === 0) {
       return { status: 'sem-dados', mensagem: 'A página abriu, mas não traz os dados dos produtos. Use um cartão de categoria.', avisos };
     }
