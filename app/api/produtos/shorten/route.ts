@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { kv } from '@/lib/kv';
 import { linkAfiliadoOk } from '@/lib/links-afiliados';
+import { consertarLink } from '@/lib/consertar-link';
 
 // Remove parâmetros de rastreio de terceiros do endereço do produto (utm_, f=, gclid...)
 function limparUrl(url: string): string {
@@ -53,7 +54,9 @@ const AWIN_ADVERTISERS: Record<string, string> = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { url, organizationId } = await req.json();
+    const { url: urlRecebida, organizationId } = await req.json();
+    // endereço que abre errado (ex.: secure.fossil.com.br/.../p) já sai certo antes de virar link de afiliado
+    const url = consertarLink(String(urlRecebida || ''));
 
     // Link que já é de afiliado (ex.: busca de loja Awin já entrega o awin1.com pronto): usa como está
     if (linkAfiliadoOk(String(url || ''))) {

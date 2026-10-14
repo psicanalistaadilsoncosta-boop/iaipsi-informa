@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { linkAfiliadoOk } from '@/lib/links-afiliados';
+import { consertarLink } from '@/lib/consertar-link';
 
 const MENSAGENS = [
   '🔄 Verificando condições atuais...',
@@ -14,7 +15,7 @@ const MENSAGENS = [
 function IrContent() {
   const searchParams = useSearchParams();
   const bruto = searchParams.get('url') || '';
-  const url = linkAfiliadoOk(bruto) ? bruto : '/';
+  const url = linkAfiliadoOk(bruto) ? consertarLink(bruto) : '/';
   if (bruto && url === '/') console.warn('[ir] link recusado:', bruto);
   const nome = searchParams.get('nome') || 'oferta';
   const imagem = searchParams.get('imagem') || '';
