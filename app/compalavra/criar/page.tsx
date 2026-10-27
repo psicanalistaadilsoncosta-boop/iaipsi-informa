@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { CATEGORIAS_CP } from '@/lib/compalavra-categorias';
+import { idYouTube } from '@/lib/youtube';
 
 function LoginScreen({ onLogin }: { onLogin: () => void }) {
   const [password, setPassword] = useState('');
@@ -56,6 +57,8 @@ export default function CriarComPalavraPage() {
   const [revisao, setRevisao] = useState('');
   const [msg, setMsg] = useState('');
   const [categoria, setCategoria] = useState('reflexao');
+  const [videoLupa, setVideoLupa] = useState('');
+  const [videoNarrado, setVideoNarrado] = useState('');
 
 useEffect(() => {
     fetch('/api/editorial/auth/check').then(r => r.json()).then(d => setAuth(d.ok)).catch(() => setAuth(false));
@@ -78,9 +81,9 @@ useEffect(() => {
   async function salvar() {
     if (!titulo.trim() || !conteudo.trim()) { setMsg('Título e conteúdo são obrigatórios.'); return; }
     setSalvando(true); setMsg('');
-    const res = await fetch('/api/compalavra/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ titulo, resumo, conteudo, imagem, publicado, destaque, categoria }) });
+    const res = await fetch('/api/compalavra/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ titulo, resumo, conteudo, imagem, publicado, destaque, categoria, videoLupa, videoNarrado }) });
     const data = await res.json();
-    if (data.id) { setMsg('✅ Artigo salvo!'); setTitulo(''); setResumo(''); setConteudo(''); setImagem(''); setPublicado(false); setDestaque(false); setRevisao(''); setCategoria('reflexao'); }
+    if (data.id) { setMsg('✅ Artigo salvo!'); setTitulo(''); setResumo(''); setConteudo(''); setImagem(''); setPublicado(false); setDestaque(false); setRevisao(''); setCategoria('reflexao'); setVideoLupa(''); setVideoNarrado(''); }
     else setMsg('Erro: ' + (data.error || ''));
     setSalvando(false);
   }
@@ -105,7 +108,15 @@ useEffect(() => {
           <textarea style={{ ...inp, minHeight: '80px', resize: 'vertical' }} value={resumo} onChange={e => setResumo(e.target.value)} /></div>
         <div><label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '6px', fontSize: '0.875rem' }}>URL da imagem</label>
           <input style={inp} value={imagem} onChange={e => setImagem(e.target.value)} placeholder="https://..." />
-          {imagem && <img src={imagem} alt="" style={{ marginTop: '8px', height: '80px', borderRadius: '8px', objectFit: 'cover' }} />}</div>
+                    {imagem && <img src={imagem} alt="" style={{ marginTop: '8px', height: '80px', borderRadius: '8px', objectFit: 'cover' }} />}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '12px' }}>
+          <div><label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '6px', fontSize: '0.875rem' }}>🔍 Vídeo com a Lupa (YouTube) — opcional</label>
+            <input style={inp} value={videoLupa} onChange={e => setVideoLupa(e.target.value)} placeholder="https://www.youtube.com/watch?v=..." />
+            {videoLupa && !idYouTube(videoLupa) && <span style={{ fontSize: '0.75rem', color: '#dc2626', fontWeight: 600 }}>Link do YouTube não reconhecido</span>}</div>
+          <div><label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '6px', fontSize: '0.875rem' }}>🎙 Vídeo narrado (YouTube) — opcional</label>
+            <input style={inp} value={videoNarrado} onChange={e => setVideoNarrado(e.target.value)} placeholder="https://www.youtube.com/watch?v=..." />
+            {videoNarrado && !idYouTube(videoNarrado) && <span style={{ fontSize: '0.75rem', color: '#dc2626', fontWeight: 600 }}>Link do YouTube não reconhecido</span>}</div>
+        </div>
         <div>
           <label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '6px', fontSize: '0.875rem' }}>Conteúdo</label>
           <textarea style={{ ...inp, minHeight: '340px', resize: 'vertical', lineHeight: 1.7 }} value={conteudo} onChange={e => setConteudo(e.target.value)} placeholder="Escreva aqui..." />

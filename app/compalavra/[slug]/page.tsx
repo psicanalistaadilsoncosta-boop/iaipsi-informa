@@ -4,12 +4,18 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import PlayerAudio from '../PlayerAudio';
 import { categoriaCP } from '@/lib/compalavra-categorias';
+import VideoYouTube from '../VideoYouTube';
+import { idYouTube } from '@/lib/youtube';
+
+// endereço do canal no YouTube (ex.: https://www.youtube.com/@seucanal); vazio = não mostra o botão de inscrição
+const CANAL_YOUTUBE = 'https://www.youtube.com/@adilsoncostacomapalavra';
 
 interface ArtigoComPalavra {
   id: string; slug: string; titulo: string; conteudo: string;
    resumo: string; imagem?: string; publicado: boolean; destaque: boolean;
   createdAt: string; updatedAt: string;
   audioUrl?: string; audioSegundos?: number; audioTipo?: string; categoria?: string;
+  videoLupa?: string; videoNarrado?: string;
 }
 
 async function getArtigo(slug: string): Promise<ArtigoComPalavra | null> {
@@ -64,6 +70,8 @@ export default async function ArtigoComPalavraPage({ params }: { params: Promise
   const artigo = await getArtigo(slug);
   if (!artigo) notFound();
   const cat = categoriaCP(artigo.categoria);
+  const idLupa = idYouTube(artigo.videoLupa);
+  const idNarrado = idYouTube(artigo.videoNarrado);
 
   return (
     <main style={{ maxWidth: '720px', margin: '0 auto', padding: '24px 16px' }}>
@@ -110,6 +118,22 @@ export default async function ArtigoComPalavraPage({ params }: { params: Promise
       )}
 
       <article>{renderConteudo(artigo.conteudo)}</article>
+
+      {(idLupa || idNarrado) && (
+        <section style={{ marginTop: '40px', padding: '20px', backgroundColor: '#f0fdfa', borderRadius: '12px', border: '1px solid #a7f3d0' }}>
+          <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#065f46', margin: '0 0 16px' }}>🎬 Assista também no canal</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
+            {idLupa && <VideoYouTube id={idLupa} titulo={artigo.titulo} rotulo="🔍 Conversa com a Lupa" />}
+            {idNarrado && <VideoYouTube id={idNarrado} titulo={artigo.titulo} rotulo="🎙 Versão narrada" />}
+          </div>
+          {CANAL_YOUTUBE && (
+            <a href={CANAL_YOUTUBE} target="_blank" rel="noopener" style={{ display: 'inline-block', marginTop: '16px', color: '#0f766e', fontWeight: 700, textDecoration: 'none', fontSize: '0.9rem' }}>
+              ▶ Inscreva-se no canal Com a Palavra →
+            </a>
+          )}
+        </section>
+      )}
+
 
       <div style={{ marginTop: '48px', padding: '24px', backgroundColor: '#f0fdfa', borderRadius: '12px', border: '1px solid #a7f3d0', textAlign: 'center' }}>
         <div style={{ fontWeight: 800, color: '#065f46', fontSize: '1rem', marginBottom: '4px' }}>Adilson Costa</div>

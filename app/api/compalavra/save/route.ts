@@ -11,8 +11,10 @@ export interface ArtigoComPalavra {
   resumo: string;
   imagem?: string;
   publicado: boolean;
-    destaque: boolean;
+  destaque: boolean;
   categoria?: string;
+  videoLupa?: string;
+  videoNarrado?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -66,6 +68,8 @@ export async function POST(req: NextRequest) {
         publicado: body.publicado ?? false,
         destaque: body.destaque ?? false,
         categoria: body.categoria || 'reflexao',
+        videoLupa: String(body.videoLupa || '').trim(),
+        videoNarrado: String(body.videoNarrado || '').trim(),
         createdAt: agora,
         updatedAt: agora,
       };

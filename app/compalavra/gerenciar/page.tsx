@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { CATEGORIAS_CP } from '@/lib/compalavra-categorias';
+import { idYouTube } from '@/lib/youtube';
 
 function LoginScreen({ onLogin }: { onLogin: () => void }) {
   const [password, setPassword] = useState('');
@@ -49,6 +50,7 @@ interface ArtigoComPalavra {
   resumo: string; imagem?: string; publicado: boolean; destaque: boolean;
   createdAt: string; updatedAt: string;
   audioUrl?: string; audioHash?: string; audioSegundos?: number; categoria?: string;
+  videoLupa?: string; videoNarrado?: string;
 }
 
 export default function GerenciarComPalavraPage() {
@@ -167,7 +169,15 @@ export default function GerenciarComPalavraPage() {
         <div><label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '4px', fontSize: '0.8rem' }}>Resumo</label>
           <textarea style={{ ...inp, minHeight: '70px', resize: 'vertical' }} value={editando.resumo} onChange={e => setEditando({ ...editando, resumo: e.target.value })} /></div>
         <div><label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '4px', fontSize: '0.8rem' }}>URL da imagem</label>
-          <input style={inp} value={editando.imagem || ''} onChange={e => setEditando({ ...editando, imagem: e.target.value })} /></div>
+                    <input style={inp} value={editando.imagem || ''} onChange={e => setEditando({ ...editando, imagem: e.target.value })} /></div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
+          <div><label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '4px', fontSize: '0.8rem' }}>🔍 Vídeo com a Lupa (YouTube) — opcional</label>
+            <input style={inp} value={editando.videoLupa || ''} onChange={e => setEditando({ ...editando, videoLupa: e.target.value })} placeholder="https://www.youtube.com/watch?v=..." />
+            {editando.videoLupa && !idYouTube(editando.videoLupa) && <span style={{ fontSize: '0.75rem', color: '#dc2626', fontWeight: 600 }}>Link do YouTube não reconhecido</span>}</div>
+          <div><label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '4px', fontSize: '0.8rem' }}>🎙 Vídeo narrado (YouTube) — opcional</label>
+            <input style={inp} value={editando.videoNarrado || ''} onChange={e => setEditando({ ...editando, videoNarrado: e.target.value })} placeholder="https://www.youtube.com/watch?v=..." />
+            {editando.videoNarrado && !idYouTube(editando.videoNarrado) && <span style={{ fontSize: '0.75rem', color: '#dc2626', fontWeight: 600 }}>Link do YouTube não reconhecido</span>}</div>
+        </div>
         <div>
           <label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '4px', fontSize: '0.8rem' }}>Conteúdo</label>
           <textarea style={{ ...inp, minHeight: '300px', resize: 'vertical' }} value={editando.conteudo} onChange={e => setEditando({ ...editando, conteudo: e.target.value })} />
