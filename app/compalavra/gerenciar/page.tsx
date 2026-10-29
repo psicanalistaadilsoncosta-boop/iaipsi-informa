@@ -166,6 +166,13 @@ export default function GerenciarComPalavraPage() {
           </div></div>
         <div><label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '4px', fontSize: '0.8rem' }}>Título</label>
           <input style={inp} value={editando.titulo} onChange={e => setEditando({ ...editando, titulo: e.target.value })} /></div>
+        <div><label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '4px', fontSize: '0.8rem' }}>Slug (endereço do artigo)</label>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <input style={inp} value={editando.slug} onChange={e => setEditando({ ...editando, slug: e.target.value })} />
+            <button type="button" onClick={() => setEditando({ ...editando, slug: editando.titulo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').slice(0, 80) })}
+              style={{ flexShrink: 0, backgroundColor: '#f0fdfa', color: '#0f766e', border: '1px solid #a7f3d0', borderRadius: '8px', padding: '0 12px', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>Gerar do título</button>
+          </div>
+          <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>comlupa.com.br/compalavra/{editando.slug}</span></div>
         <div><label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '4px', fontSize: '0.8rem' }}>Resumo</label>
           <textarea style={{ ...inp, minHeight: '70px', resize: 'vertical' }} value={editando.resumo} onChange={e => setEditando({ ...editando, resumo: e.target.value })} /></div>
         <div><label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '4px', fontSize: '0.8rem' }}>URL da imagem</label>

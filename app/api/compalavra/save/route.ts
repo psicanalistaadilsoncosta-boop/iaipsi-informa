@@ -50,7 +50,11 @@ export async function POST(req: NextRequest) {
       if (idx === -1) return NextResponse.json({ error: 'Não encontrado' }, { status: 404 });
       let lista = artigos;
       if (body.destaque) lista = artigos.map(a => ({ ...a, destaque: false }));
-      lista[idx] = { ...lista[idx], ...body, updatedAt: agora };
+      const slugPedido = gerarSlug(String(body.slug || lista[idx].slug));
+      if (!slugPedido) return NextResponse.json({ error: 'Slug vazio' }, { status: 400 });
+      if (lista.some(a => a.id !== body.id && a.slug === slugPedido))
+        return NextResponse.json({ error: 'Já existe outro artigo com esse slug' }, { status: 409 });
+      lista[idx] = { ...lista[idx], ...body, slug: slugPedido, updatedAt: agora };
       await kv.set('artigos:compalavra', lista);
       revalidatePath('/'); return NextResponse.json(lista[idx]);
     } else {
