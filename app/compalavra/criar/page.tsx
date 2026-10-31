@@ -59,6 +59,7 @@ export default function CriarComPalavraPage() {
   const [categoria, setCategoria] = useState('reflexao');
   const [videoLupa, setVideoLupa] = useState('');
   const [videoNarrado, setVideoNarrado] = useState('');
+  const [publicarEm, setPublicarEm] = useState('');
 
 useEffect(() => {
     fetch('/api/editorial/auth/check').then(r => r.json()).then(d => setAuth(d.ok)).catch(() => setAuth(false));
@@ -81,9 +82,9 @@ useEffect(() => {
   async function salvar() {
     if (!titulo.trim() || !conteudo.trim()) { setMsg('Título e conteúdo são obrigatórios.'); return; }
     setSalvando(true); setMsg('');
-    const res = await fetch('/api/compalavra/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ titulo, resumo, conteudo, imagem, publicado, destaque, categoria, videoLupa, videoNarrado }) });
+    const res = await fetch('/api/compalavra/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ titulo, resumo, conteudo, imagem, publicado, destaque, categoria, videoLupa, videoNarrado, publicarEm: publicarEm ? new Date(publicarEm).toISOString() : '' }) });
     const data = await res.json();
-    if (data.id) { setMsg('✅ Artigo salvo!'); setTitulo(''); setResumo(''); setConteudo(''); setImagem(''); setPublicado(false); setDestaque(false); setRevisao(''); setCategoria('reflexao'); setVideoLupa(''); setVideoNarrado(''); }
+    if (data.id) { setMsg('✅ Artigo salvo!'); setTitulo(''); setResumo(''); setConteudo(''); setImagem(''); setPublicado(false); setDestaque(false); setRevisao(''); setCategoria('reflexao'); setVideoLupa(''); setVideoNarrado(''); setPublicarEm(''); }
     else setMsg('Erro: ' + (data.error || ''));
     setSalvando(false);
   }
@@ -141,6 +142,9 @@ useEffect(() => {
           <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 600, color: '#374151' }}>
             <input type="checkbox" checked={destaque} onChange={e => setDestaque(e.target.checked)} /> Destaque</label>
         </div>
+        <div><label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '6px', fontSize: '0.875rem' }}>🗓 Publicar em (opcional)</label>
+          <input type="datetime-local" style={{ ...inp, maxWidth: '260px' }} value={publicarEm} onChange={e => setPublicarEm(e.target.value)} />
+          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '4px' }}>Marque "Publicado" e escolha a data: o artigo entra no ar sozinho nesse horário.</div></div>
         {msg && <div style={{ padding: '12px 16px', borderRadius: '8px', backgroundColor: msg.startsWith('✅') ? '#dcfce7' : '#fee2e2', color: msg.startsWith('✅') ? '#166534' : '#991b1b', fontWeight: 600 }}>{msg}</div>}
         <div style={{ display: 'flex', gap: '12px' }}>
           <button onClick={salvar} disabled={salvando} style={{ backgroundColor: '#111827', color: '#fff', border: 'none', borderRadius: '10px', padding: '14px 32px', fontWeight: 800, fontSize: '1rem', cursor: salvando ? 'wait' : 'pointer' }}>

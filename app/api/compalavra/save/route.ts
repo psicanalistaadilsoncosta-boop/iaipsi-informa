@@ -15,6 +15,7 @@ export interface ArtigoComPalavra {
   categoria?: string;
   videoLupa?: string;
   videoNarrado?: string;
+  publicarEm?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -27,6 +28,13 @@ function gerarSlug(titulo: string): string {
     .trim()
     .replace(/\s+/g, '-')
     .slice(0, 80);
+}
+
+// aceita data válida e guarda em ISO; qualquer outra coisa vira '' (sem agendamento)
+function dataOuVazio(v: any): string {
+  if (!v) return '';
+  const t = new Date(String(v)).getTime();
+  return isNaN(t) ? '' : new Date(t).toISOString();
 }
 
 export async function GET() {
@@ -54,9 +62,12 @@ export async function POST(req: NextRequest) {
       if (!slugPedido) return NextResponse.json({ error: 'Slug vazio' }, { status: 400 });
       if (lista.some(a => a.id !== body.id && a.slug === slugPedido))
         return NextResponse.json({ error: 'Já existe outro artigo com esse slug' }, { status: 409 });
-      lista[idx] = { ...lista[idx], ...body, slug: slugPedido, updatedAt: agora };
+      const slugAntigo = lista[idx].slug;
+      lista[idx] = { ...lista[idx], ...body, slug: slugPedido, publicarEm: dataOuVazio(body.publicarEm ?? lista[idx].publicarEm), updatedAt: agora };
       await kv.set('artigos:compalavra', lista);
-      revalidatePath('/'); return NextResponse.json(lista[idx]);
+      revalidatePath('/'); revalidatePath('/compalavra'); revalidatePath(`/compalavra/${slugPedido}`);
+      if (slugAntigo !== slugPedido) revalidatePath(`/compalavra/${slugAntigo}`);
+      return NextResponse.json(lista[idx]);
     } else {
       const slug = gerarSlug(body.titulo || 'artigo');
       const slugFinal = artigos.some(a => a.slug === slug) ? `${slug}-${Date.now()}` : slug;
@@ -74,11 +85,12 @@ export async function POST(req: NextRequest) {
         categoria: body.categoria || 'reflexao',
         videoLupa: String(body.videoLupa || '').trim(),
         videoNarrado: String(body.videoNarrado || '').trim(),
+        publicarEm: dataOuVazio(body.publicarEm),
         createdAt: agora,
         updatedAt: agora,
       };
       await kv.set('artigos:compalavra', [...lista, novo]);
-      revalidatePath('/'); return NextResponse.json(novo);
+      revalidatePath('/'); revalidatePath('/compalavra'); return NextResponse.json(novo);
     }
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });

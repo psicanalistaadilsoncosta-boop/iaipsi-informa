@@ -1,5 +1,6 @@
 // app/api/audios/route.ts — áudio de Com a Palavra, Sabores e Roteiros de viagem (só admin)
 // GET  -> lista de cada seção (só publicados) com a situação do áudio e o tipo ('ia' ou 'gravacao')
+//         Com a Palavra: os agendados (data no futuro) vêm em 'agendados'
 // POST { fonte, id }                         -> gera (ou refaz) o áudio com a voz do Google
 // POST { fonte, id, forcar: true }           -> idem, mesmo que o item tenha a sua gravação
 // POST { fonte, id, gravacaoUrl, segundos }  -> usa a gravação que você enviou (já está no Blob)
@@ -10,6 +11,7 @@ import { kv } from '@/lib/kv';
 import { isAdmin } from '@/lib/adminAuth';
 import { gerarAudioDeTexto, hashAudio } from '@/lib/audio-artigo';
 import { FONTES } from '@/lib/audio-fontes';
+import { noAr } from '@/lib/compalavra-no-ar';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120; // textos longos levam alguns pedidos ao Google
@@ -27,8 +29,14 @@ export async function GET(req: NextRequest) {
       situacao: !a.audioUrl ? 'falta' : a.audioHash === hashAudio(f.texto(a)) ? 'ok' : 'desatualizado',
       tipo: a.audioUrl ? (a.audioTipo === 'gravacao' ? 'gravacao' : 'ia') : '',
       caracteres: f.texto(a).length,
+      publicarEm: a.publicarEm || '',
+      agendado: id === 'compalavra' && !noAr(a),
     }));
   }
+  // Com a Palavra: os agendados vão para uma aba própria (as ações continuam na fonte 'compalavra')
+  const cp = saida.compalavra || [];
+  saida.agendados = cp.filter(i => i.agendado).sort((a, b) => String(a.publicarEm).localeCompare(String(b.publicarEm)));
+  saida.compalavra = cp.filter(i => !i.agendado);
   return NextResponse.json(saida);
 }
 

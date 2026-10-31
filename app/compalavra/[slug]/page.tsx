@@ -6,6 +6,10 @@ import PlayerAudio from '../PlayerAudio';
 import { categoriaCP } from '@/lib/compalavra-categorias';
 import VideoYouTube from '../VideoYouTube';
 import { idYouTube } from '@/lib/youtube';
+import { noAr, dataPublicacao } from '@/lib/compalavra-no-ar';
+
+// lê o KV a cada visita: antes do horário agendado o endereço dá "página não encontrada"
+export const dynamic = 'force-dynamic';
 
 // endereço do canal no YouTube (ex.: https://www.youtube.com/@seucanal); vazio = não mostra o botão de inscrição
 const CANAL_YOUTUBE = 'https://www.youtube.com/@adilsoncostacomapalavra';
@@ -21,7 +25,7 @@ interface ArtigoComPalavra {
 async function getArtigo(slug: string): Promise<ArtigoComPalavra | null> {
   try {
     const data = await kv.get<ArtigoComPalavra[]>('artigos:compalavra');
-    return (data || []).find(a => a.slug === slug && a.publicado) || null;
+    return (data || []).find(a => a.slug === slug && noAr(a)) || null;
   } catch { return null; }
 }
 
@@ -51,7 +55,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title: artigo.titulo,
       description: artigo.resumo,
       url: `/compalavra/${artigo.slug}`,
-      publishedTime: artigo.createdAt,
+      publishedTime: dataPublicacao(artigo),
       modifiedTime: artigo.updatedAt,
       authors: ['Adilson Costa'],
       ...(artigo.imagem ? { images: [artigo.imagem] } : {}),
@@ -84,7 +88,7 @@ export default async function ArtigoComPalavraPage({ params }: { params: Promise
             headline: artigo.titulo,
             description: artigo.resumo,
             ...(artigo.imagem ? { image: artigo.imagem } : {}),
-            datePublished: artigo.createdAt,
+            datePublished: dataPublicacao(artigo),
             dateModified: artigo.updatedAt || artigo.createdAt,
             author: { '@type': 'Person', name: 'Adilson Costa', url: 'https://www.psicanalistaadilsoncosta.com', jobTitle: 'Psicanalista', sameAs: ['https://iaipsi.com'] },
             publisher: { '@type': 'Organization', name: 'Com a Lupa', url: 'https://comlupa.com.br' },
@@ -105,7 +109,7 @@ export default async function ArtigoComPalavraPage({ params }: { params: Promise
         <h1 style={{ fontSize: '2rem', fontWeight: 900, color: '#111827', margin: '0 0 14px', lineHeight: 1.2 }}>{artigo.titulo}</h1>
         {artigo.resumo && <p style={{ color: '#374151', fontSize: '1.1rem', margin: '0 0 16px', lineHeight: 1.6, fontStyle: 'italic' }}>{artigo.resumo}</p>}
         <div style={{ fontSize: '0.8rem', color: '#9ca3af' }}>
-          Publicado em {new Date(artigo.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+          Publicado em {new Date(dataPublicacao(artigo)).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
         </div>
       </div>
 

@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { kv } from '@/lib/kv';
 import { lerTodos } from '@/lib/pinados';
+import { noAr } from '@/lib/compalavra-no-ar';
 
 // Refaz o sitemap a cada 1 hora, lendo o conteúdo atual do KV
 export const revalidate = 3600;
@@ -112,7 +113,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
 
   const paginasComPalavra: MetadataRoute.Sitemap = compalavra
-    .filter((a: any) => a?.slug && a.publicado)
+    .filter((a: any) => a?.slug && noAr(a))
     .map((a: any) => ({
       url: `${BASE}/compalavra/${a.slug}`,
       lastModified: paraData(a.updatedAt || a.createdAt),

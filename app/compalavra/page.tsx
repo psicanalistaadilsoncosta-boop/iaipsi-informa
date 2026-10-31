@@ -1,6 +1,10 @@
 import { kv } from '@/lib/kv';
 import Link from 'next/link';
 import { CATEGORIAS_CP, categoriaCP } from '@/lib/compalavra-categorias';
+import { noAr, dataPublicacao } from '@/lib/compalavra-no-ar';
+
+// lê o KV a cada visita: o artigo agendado aparece assim que chega o horário
+export const dynamic = 'force-dynamic';
 
 interface ArtigoComPalavra {
   id: string; slug: string; titulo: string; conteudo: string;
@@ -12,8 +16,8 @@ interface ArtigoComPalavra {
 async function getArtigos(): Promise<ArtigoComPalavra[]> {
   try {
     const data = await kv.get<ArtigoComPalavra[]>('artigos:compalavra');
-    return (data || []).filter(a => a.publicado).sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    return (data || []).filter(a => noAr(a)).sort(
+      (a, b) => new Date(dataPublicacao(b)).getTime() - new Date(dataPublicacao(a)).getTime()
     );
   } catch { return []; }
 }
@@ -87,7 +91,7 @@ export default async function ComAPalavraPage({ searchParams }: { searchParams: 
                 <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111827', margin: '0 0 6px', lineHeight: 1.3 }}>{artigo.titulo}</h2>
                 {artigo.resumo && <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: '0 0 10px', lineHeight: 1.5 }}>{artigo.resumo}</p>}
                 <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
-                  {new Date(artigo.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                  {new Date(dataPublicacao(artigo)).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
                 </div>
               </div>
             </div>

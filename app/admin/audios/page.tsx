@@ -6,9 +6,11 @@ import { useEffect, useRef, useState } from 'react';
 import { upload } from '@vercel/blob/client';
 import AdminGate from '../../AdminGate';
 
-type Item = { id: string; titulo: string; publicado: boolean; link: string; situacao: 'ok' | 'falta' | 'desatualizado'; tipo: '' | 'ia' | 'gravacao'; caracteres: number };
-const NOMES: Record<string, string> = { compalavra: '✍️ Com a Palavra', sabores: '🍽 Sabores & Destinos', viagens: '🌍 Roteiros de viagem' };
-const ACEITA_GRAVACAO = ['compalavra'];
+type Item = { id: string; titulo: string; publicado: boolean; link: string; situacao: 'ok' | 'falta' | 'desatualizado'; tipo: '' | 'ia' | 'gravacao'; caracteres: number; publicarEm?: string };
+const NOMES: Record<string, string> = { compalavra: '✍️ Com a Palavra', agendados: '🗓 Agendados', sabores: '🍽 Sabores & Destinos', viagens: '🌍 Roteiros de viagem' };
+const ACEITA_GRAVACAO = ['compalavra', 'agendados'];
+// a aba "Agendados" mostra artigos do Com a Palavra: as ações vão para a fonte 'compalavra'
+const fonteDe = (aba: string) => (aba === 'agendados' ? 'compalavra' : aba);
 
 function selo(i: Item) {
   if (i.situacao === 'falta') return { txt: 'sem áudio', bg: '#f3f4f6', cor: '#6b7280' };
@@ -48,7 +50,7 @@ function Audios() {
   async function gerar(fonte: string, id: string, forcar = false): Promise<boolean> {
     setOcupado(fonte + ':' + id); setMsg('');
     try {
-      const r = await fetch('/api/audios', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fonte, id, forcar }) });
+      const r = await fetch('/api/audios', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fonte: fonteDe(fonte), id, forcar }) });
       const d = await r.json();
       if (d.codigo === 'gravacao') {
         setOcupado('');
@@ -89,10 +91,10 @@ function Audios() {
       const segundos = await duracaoDoArquivo(file);
       const ext = (file.name.split('.').pop() || 'mp3').toLowerCase();
       setProgresso(`⏫ Enviando ${file.name} (${(file.size / 1048576).toFixed(1)} MB)...`);
-      const blob = await upload(`audios/${a.fonte}/gravacao-${a.id}.${ext}`, file, {
+      const blob = await upload(`audios/${fonteDe(a.fonte)}/gravacao-${a.id}.${ext}`, file, {
         access: 'public', handleUploadUrl: '/api/audios/upload', contentType: file.type || 'audio/mpeg',
       });
-      const r = await fetch('/api/audios', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fonte: a.fonte, id: a.id, gravacaoUrl: blob.url, segundos }) });
+      const r = await fetch('/api/audios', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fonte: fonteDe(a.fonte), id: a.id, gravacaoUrl: blob.url, segundos }) });
       const d = await r.json();
       if (!d.ok) { setMsg('⚠️ ' + (d.error || 'Erro ao salvar a gravação.')); return; }
       marcar(a.fonte, a.id, { situacao: 'ok', tipo: 'gravacao' });
@@ -144,7 +146,7 @@ function Audios() {
         {msg && <p style={{ margin: '0 0 10px', fontSize: 14, fontWeight: 600, color: msg.startsWith('✅') ? '#166534' : '#9a3412' }}>{msg}</p>}
 
         {dados === null && <p style={{ color: '#6b7280' }}>Carregando...</p>}
-        {dados && lista.length === 0 && <p style={{ color: '#6b7280' }}>Nenhum texto publicado nesta seção.</p>}
+        {dados && lista.length === 0 && <p style={{ color: '#6b7280' }}>{aba === 'agendados' ? 'Nenhum artigo agendado.' : 'Nenhum texto publicado nesta seção.'}</p>}
         {lista.map(i => {
           const s = selo(i);
           const este = ocupado === aba + ':' + i.id;
@@ -152,7 +154,10 @@ function Audios() {
             <div key={i.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderTop: '1px solid #f3f4f6', flexWrap: 'wrap' }}>
               <div style={{ flex: 1, minWidth: 220 }}>
                 <a href={i.link} target="_blank" rel="noopener" style={{ color: '#111827', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>{i.titulo || '(sem título)'}</a>
-                <div style={{ fontSize: 12, color: '#9ca3af' }}>{(i.caracteres / 1000).toFixed(1)} mil caracteres</div>
+                <div style={{ fontSize: 12, color: '#9ca3af' }}>
+                  {(i.caracteres / 1000).toFixed(1)} mil caracteres
+                  {aba === 'agendados' && i.publicarEm && <> · 🗓 entra no ar {new Date(i.publicarEm).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</>}
+                </div>
               </div>
               <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: s.bg, color: s.cor }}>{s.txt}</span>
               {ACEITA_GRAVACAO.includes(aba) && (

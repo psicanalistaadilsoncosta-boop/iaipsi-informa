@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { CATEGORIAS_CP } from '@/lib/compalavra-categorias';
 import { idYouTube } from '@/lib/youtube';
+import { programado } from '@/lib/compalavra-no-ar';
 
 function LoginScreen({ onLogin }: { onLogin: () => void }) {
   const [password, setPassword] = useState('');
@@ -45,12 +46,20 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
   );
 }
 
+// ISO <-> campo de data e hora do navegador (no seu horário local)
+function paraCampo(iso?: string) {
+  if (!iso) return '';
+  const d = new Date(iso); if (isNaN(d.getTime())) return '';
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+}
+function doCampo(v: string) { return v ? new Date(v).toISOString() : ''; }
+
 interface ArtigoComPalavra {
   id: string; slug: string; titulo: string; conteudo: string;
   resumo: string; imagem?: string; publicado: boolean; destaque: boolean;
   createdAt: string; updatedAt: string;
   audioUrl?: string; audioHash?: string; audioSegundos?: number; categoria?: string;
-  videoLupa?: string; videoNarrado?: string;
+  videoLupa?: string; videoNarrado?: string; publicarEm?: string;
 }
 
 export default function GerenciarComPalavraPage() {
@@ -208,6 +217,12 @@ export default function GerenciarComPalavraPage() {
           <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>
             <input type="checkbox" checked={editando.destaque} onChange={e => setEditando({ ...editando, destaque: e.target.checked })} /> Destaque</label>
         </div>
+        <div><label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '4px', fontSize: '0.8rem' }}>🗓 Publicar em (opcional)</label>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <input type="datetime-local" style={{ ...inp, maxWidth: '240px' }} value={paraCampo(editando.publicarEm)} onChange={e => setEditando({ ...editando, publicarEm: doCampo(e.target.value) })} />
+            {editando.publicarEm && <button type="button" onClick={() => setEditando({ ...editando, publicarEm: '' })} style={{ backgroundColor: '#f3f4f6', color: '#374151', border: 'none', borderRadius: '8px', padding: '8px 12px', fontWeight: 600, cursor: 'pointer', fontSize: '0.8rem' }}>Limpar data</button>}
+          </div>
+          <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>Com "Publicado" marcado e data no futuro, o artigo fica agendado e entra no ar sozinho nesse horário. Sem data, entra na hora.</span></div>
         {msg && <div style={{ padding: '10px 14px', borderRadius: '8px', backgroundColor: msg.startsWith('✅') ? '#dcfce7' : '#fee2e2', color: msg.startsWith('✅') ? '#166534' : '#991b1b', fontWeight: 600, fontSize: '0.875rem' }}>{msg}</div>}
         <div style={{ display: 'flex', gap: '10px' }}>
           <button onClick={salvar} disabled={salvando} style={{ backgroundColor: '#111827', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px 28px', fontWeight: 800, cursor: salvando ? 'wait' : 'pointer' }}>
@@ -241,7 +256,9 @@ export default function GerenciarComPalavraPage() {
                   <span style={{ fontWeight: 700, color: '#111827', fontSize: '0.95rem' }}>{artigo.titulo || '(sem título)'}</span>
                   {artigo.categoria === 'literatura' && <span style={{ backgroundColor: '#ede9fe', color: '#5b21b6', fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px' }}>📚 LITERATURA</span>}
                   {artigo.destaque && <span style={{ backgroundColor: '#fef3c7', color: '#92400e', fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px' }}>DESTAQUE</span>}
-                  {artigo.publicado
+                  {programado(artigo)
+                    ? <span style={{ backgroundColor: '#e0e7ff', color: '#3730a3', fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px' }}>🗓 AGENDADO · {new Date(artigo.publicarEm!).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+                    : artigo.publicado
                     ? <span style={{ backgroundColor: '#dcfce7', color: '#166534', fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px' }}>PUBLICADO</span>
                                        : <span style={{ backgroundColor: '#f3f4f6', color: '#6b7280', fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px' }}>RASCUNHO</span>}
                   {audios[artigo.id] === 'ok' && <span style={{ backgroundColor: '#e0f2fe', color: '#075985', fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px' }}>🎧 COM ÁUDIO</span>}
