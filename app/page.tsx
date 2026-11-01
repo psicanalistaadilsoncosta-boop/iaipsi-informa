@@ -7,7 +7,7 @@ import { kv } from '@/lib/kv';
 import { lerTodos, lerDestino, lerGaveta } from '@/lib/pinados';
 import { unstable_cache } from 'next/cache';
 import { TAG_PRODUTOS } from '@/lib/revalidar';
-import { noAr } from '@/lib/compalavra-no-ar';
+import { noAr, dataPublicacao } from '@/lib/compalavra-no-ar';
 // Tempo limite garantido: se a API não responder, devolve o valor reserva em vez de travar
 function comTempoLimite<T>(p: Promise<T>, ms: number, reserva: T): Promise<T> {
   return Promise.race([p, new Promise<T>(resolve => setTimeout(() => resolve(reserva), ms))]).catch(() => reserva);
@@ -267,7 +267,8 @@ export interface SaboresItem {
 async function getComPalavraDestaque(): Promise<any | null> {
   try {
     const data = await kv.get<any[]>('artigos:compalavra');
-    return (data || []).find(a => noAr(a) && a.destaque) || null;
+    return (data || []).filter(a => noAr(a) && a.destaque)
+      .sort((a, b) => new Date(dataPublicacao(b)).getTime() - new Date(dataPublicacao(a)).getTime())[0] || null;
   } catch { return null; }
 }
 

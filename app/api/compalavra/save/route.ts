@@ -2,6 +2,7 @@ import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 import { kv } from '@/lib/kv';
 import { isAdmin } from '@/lib/adminAuth';
+import { noAr } from '@/lib/compalavra-no-ar';
 
 export interface ArtigoComPalavra {
   id: string;
@@ -56,8 +57,10 @@ export async function POST(req: NextRequest) {
     if (body.id) {
       const idx = artigos.findIndex(a => a.id === body.id);
       if (idx === -1) return NextResponse.json({ error: 'Não encontrado' }, { status: 404 });
-      let lista = artigos;
-      if (body.destaque) lista = artigos.map(a => ({ ...a, destaque: false }));
+            let lista = artigos;
+      // um destaque no ar por vez; artigo agendado com destaque não tira o de quem está no ar hoje
+      if (body.destaque && noAr({ ...artigos[idx], ...body, publicarEm: dataOuVazio(body.publicarEm ?? artigos[idx].publicarEm) }))
+        lista = artigos.map(a => (a.id !== body.id && noAr(a) ? { ...a, destaque: false } : a));
       const slugPedido = gerarSlug(String(body.slug || lista[idx].slug));
       if (!slugPedido) return NextResponse.json({ error: 'Slug vazio' }, { status: 400 });
       if (lista.some(a => a.id !== body.id && a.slug === slugPedido))
@@ -71,8 +74,9 @@ export async function POST(req: NextRequest) {
     } else {
       const slug = gerarSlug(body.titulo || 'artigo');
       const slugFinal = artigos.some(a => a.slug === slug) ? `${slug}-${Date.now()}` : slug;
-      let lista = artigos;
-      if (body.destaque) lista = artigos.map(a => ({ ...a, destaque: false }));
+           let lista = artigos;
+      if (body.destaque && noAr({ publicado: body.publicado, publicarEm: dataOuVazio(body.publicarEm) }))
+        lista = artigos.map(a => (noAr(a) ? { ...a, destaque: false } : a));
       const novo: ArtigoComPalavra = {
         id: crypto.randomUUID(),
         slug: slugFinal,

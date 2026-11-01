@@ -28,7 +28,7 @@ export default async function ComAPalavraPage({ searchParams }: { searchParams: 
   const todos = await getArtigos();
   const artigos = filtro ? todos.filter(a => categoriaCP(a.categoria).id === filtro) : todos;
   const destaque = artigos.find(a => a.destaque);
-  const demais = artigos.filter(a => !a.destaque);
+  const demais = artigos.filter(a => a !== destaque);
   const abas = [{ id: '', nome: 'Todos', emoji: '' }, ...CATEGORIAS_CP];
   return (
     <main style={{ maxWidth: '860px', margin: '0 auto', padding: '24px 16px' }}>
