@@ -127,8 +127,8 @@ export default async function ArtigoComPalavraPage({ params }: { params: Promise
         <section style={{ marginTop: '40px', padding: '20px', backgroundColor: '#f0fdfa', borderRadius: '12px', border: '1px solid #a7f3d0' }}>
           <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#065f46', margin: '0 0 16px' }}>🎬 Assista também no canal</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
-            {idLupa && <VideoYouTube id={idLupa} titulo={artigo.titulo} rotulo="🔍 Conversa com a Lupa" />}
-            {idNarrado && <VideoYouTube id={idNarrado} titulo={artigo.titulo} rotulo="🎙 Versão narrada" />}
+            {idLupa && <VideoYouTube id={idLupa} titulo={artigo.titulo} rotulo="🔍 Conversa com a Lupa  (quartas-feiras)" />}
+            {idNarrado && <VideoYouTube id={idNarrado} titulo={artigo.titulo} rotulo="🎙 Versão narrada (segundas-feiras)" />}
           </div>
           {CANAL_YOUTUBE && (
             <a href={CANAL_YOUTUBE} target="_blank" rel="noopener" style={{ display: 'inline-block', marginTop: '16px', color: '#0f766e', fontWeight: 700, textDecoration: 'none', fontSize: '0.9rem' }}>
