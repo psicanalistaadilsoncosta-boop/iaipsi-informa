@@ -27,6 +27,7 @@ const GRUPOS: { titulo: string; cor: string; itens: Atalho[] }[] = [
     titulo: '✍️ Conteúdo', cor: '#0f766e', itens: [
       { href: '/compalavra/criar', nome: 'Novo Com a Palavra', desc: 'Escrever artigo (Reflexão ou Literatura)' },
       { href: '/compalavra/gerenciar', nome: 'Gerenciar Com a Palavra', desc: 'Editar, publicar, destaque' },
+      { href: '/admin/pesquisas', nome: 'Pesquisas temas Com a Palavra', desc: 'pesquisar temas relacionados'},
       { href: '/admin/audios', nome: 'Áudios dos artigos', desc: 'Voz IA ou sua gravação' },
       { href: '/editorial', nome: 'Painel editorial', desc: 'Análises das notícias' },
       { href: '/produto/criar', nome: 'Novo artigo de produto', desc: 'Resenha de produto' },
