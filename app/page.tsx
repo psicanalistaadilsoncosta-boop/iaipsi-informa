@@ -34,7 +34,7 @@ interface FeedConfig {
   dynamicCategory?: boolean;
 }
 
-export const revalidate = 900;
+export const revalidate = 3600;
 export const dynamic = 'force-static';
 
 const parser = new Parser({
