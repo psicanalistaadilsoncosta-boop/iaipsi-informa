@@ -9,6 +9,8 @@ const FEEDS = [
   { url: 'https://news.google.com/rss/search?q=psicanalise+terapia&hl=pt-BR&gl=BR&ceid=BR:pt-419', category: 'Psicanálise' },
   { url: 'https://news.google.com/rss/search?q=economia+brasil&hl=pt-BR&gl=BR&ceid=BR:pt-419', category: 'Economia' },
   { url: 'https://news.google.com/rss/search?q=cultura+organizacional+rh&hl=pt-BR&gl=BR&ceid=BR:pt-419', category: 'Liderança & Gestão' },
+  { url: 'https://g1.globo.com/rss/g1/politica/', category: 'Política' },
+  { url: 'https://news.google.com/rss/search?q=politica+brasil&hl=pt-BR&gl=BR&ceid=BR:pt-419', category: 'Política' },
 ];
 
 async function resolveUrl(url: string): Promise<string> {
