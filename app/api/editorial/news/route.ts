@@ -57,5 +57,5 @@ export async function GET() {
   // Embaralha para variar a ordem
   items.sort(() => Math.random() - 0.5);
 
-  return NextResponse.json({ items: items.slice(0, 30) });
+  return NextResponse.json({ items: items.slice(0, 40) });
 }
