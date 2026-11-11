@@ -9,8 +9,18 @@ const FEEDS = [
   { url: 'https://news.google.com/rss/search?q=psicanalise+terapia&hl=pt-BR&gl=BR&ceid=BR:pt-419', category: 'Psicanálise' },
   { url: 'https://news.google.com/rss/search?q=economia+brasil&hl=pt-BR&gl=BR&ceid=BR:pt-419', category: 'Economia' },
   { url: 'https://news.google.com/rss/search?q=cultura+organizacional+rh&hl=pt-BR&gl=BR&ceid=BR:pt-419', category: 'Liderança & Gestão' },
+  // Política
   { url: 'https://g1.globo.com/rss/g1/politica/', category: 'Política' },
   { url: 'https://news.google.com/rss/search?q=politica+brasil&hl=pt-BR&gl=BR&ceid=BR:pt-419', category: 'Política' },
+  // Saúde & Ciência
+  { url: 'https://g1.globo.com/rss/g1/ciencia-e-saude/', category: 'Saúde & Ciência' },
+  { url: 'https://news.google.com/rss/search?q=ciencia+saude+brasil&hl=pt-BR&gl=BR&ceid=BR:pt-419', category: 'Saúde & Ciência' },
+  // Tecnologia & IA
+  { url: 'https://news.google.com/rss/search?q=inteligencia+artificial+brasil&hl=pt-BR&gl=BR&ceid=BR:pt-419', category: 'Tecnologia & IA' },
+  { url: 'https://news.google.com/rss/search?q=tecnologia+inovacao+brasil&hl=pt-BR&gl=BR&ceid=BR:pt-419', category: 'Tecnologia & IA' },
+  // Mundo
+  { url: 'https://feeds.bbci.co.uk/portuguese/rss.xml', category: 'Mundo' },
+  { url: 'https://news.google.com/rss/search?q=mundo+internacional+noticias&hl=pt-BR&gl=BR&ceid=BR:pt-419', category: 'Mundo' },
 ];
 
 async function resolveUrl(url: string): Promise<string> {
@@ -57,5 +67,5 @@ export async function GET() {
   // Embaralha para variar a ordem
   items.sort(() => Math.random() - 0.5);
 
-  return NextResponse.json({ items: items.slice(0, 40) });
+  return NextResponse.json({ items: items.slice(0, 60) });
 }
