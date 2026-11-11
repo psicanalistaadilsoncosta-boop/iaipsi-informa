@@ -447,7 +447,6 @@ export default function NewsClient({ posts, ads, editorial, sabores, artigosProd
 
       <GridPaginasProdutos />
 
-      <EditorialSection items={safeEditorial.slice(0, 6)} />
 
       {comPalavraDestaque && (
         <section style={{ marginBottom: '28px' }}>
@@ -522,6 +521,7 @@ export default function NewsClient({ posts, ads, editorial, sabores, artigosProd
           />
         </section>
       )}
+      <EditorialSection items={safeEditorial.slice(0, 6)} />
 
       {/* Notícias */}
       <section style={{ marginBottom: '8px' }}>
