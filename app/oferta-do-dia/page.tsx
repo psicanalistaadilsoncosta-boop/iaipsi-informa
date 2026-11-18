@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import BotaoWhatsApp from '../BotaoWhatsApp';
 import VitrineOfertaDia, { montarVitrine, descontoReal } from '../VitrineOfertaDia';
 
-const MAX_MAIS_OFERTAS = 12; // grade "Mais ofertas lupadas hoje": só as melhores
+const POR_VEZ = 24; // grade "Mais ofertas lupadas hoje": mostra 12 e o botão traz mais 12
 import SeloLoja from '../SeloLoja';
 import CabecalhoTema from '../temas/CabecalhoTema';
 
@@ -193,6 +193,7 @@ export default function OfertasDoDiaPage() {
   const [destaqueId, setDestaqueId] = useState<string | undefined>();
   const [frase, setFrase] = useState('');
   const [loading, setLoading] = useState(true);
+  const [mostrar, setMostrar] = useState(POR_VEZ);
 
   useEffect(() => {
     Promise.all([
@@ -209,8 +210,7 @@ export default function OfertasDoDiaPage() {
       // As demais ofertas do dia seguem em grade abaixo da vitrine
       setOfertas(lista
         .filter(p => p.destinos?.includes('oferta-do-dia') && !idsTopo.has(p.id))
-        .sort((a, b) => descontoReal(b as any) - descontoReal(a as any))
-        .slice(0, MAX_MAIS_OFERTAS));
+        .sort((a, b) => descontoReal(b as any) - descontoReal(a as any)));
     }).finally(() => setLoading(false));
   }, []);
 
@@ -235,7 +235,19 @@ export default function OfertasDoDiaPage() {
             <>
               <h2 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#111827', margin: '8px 0 16px' }}>Mais ofertas lupadas hoje</h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 100%), 1fr))', gap: '24px' }}>
-                {ofertas.map(p => <CardOferta key={p.id} p={p} />)}
+                {ofertas.slice(0, mostrar).map(p => <CardOferta key={p.id} p={p} />)}
+              </div>
+              {ofertas.length > mostrar && (
+                <div style={{ textAlign: 'center', marginTop: '24px' }}>
+                  <button onClick={() => setMostrar(m => m + POR_VEZ)}
+                    style={{ padding: '12px 28px', borderRadius: '999px', border: '2px solid #dc2626', backgroundColor: '#fff', color: '#dc2626', fontWeight: 800, fontSize: '0.95rem', cursor: 'pointer' }}>
+                    Ver mais {Math.min(POR_VEZ, ofertas.length - mostrar)} ofertas ↓
+                  </button>
+                  <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '6px' }}>
+                    Mostrando {mostrar} de {ofertas.length}
+                  </div>
+                </div>
+              )}
               </div>
             </>
           )}
