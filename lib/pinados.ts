@@ -5,7 +5,11 @@
 //   pin:cat:<categoria> set   ids de cada vitrine       (ambiente, momento, vistaSe, beleza, mercado, praVoce, aCatalogar)
 //   pin:dest:<destino>  set   ids por destino           (oferta-do-dia, ofertas-selecionadas, parcelado...)
 //
+// Toda gravação passa por salvarVarios, que também anota as mudanças de preço no Neon (lib/historicoPrecos.ts).
+//
 // Fala direto com a API REST do Upstash (sem conversões automáticas): ids e textos chegam exatamente como foram gravados.
+
+import { mudancasDePreco, anotarPrecos } from './historicoPrecos';
 
 const URL_KV = process.env.informa_KV_REST_API_URL || process.env.KV_REST_API_URL || '';
 const TOKEN = process.env.informa_KV_REST_API_TOKEN || process.env.KV_REST_API_TOKEN || '';
@@ -98,6 +102,9 @@ export async function salvarVarios(produtos: any[]): Promise<void> {
       cmds.push(['HSET', H, id, JSON.stringify(p)]);
     });
     await redis(cmds);
+
+    // histórico de preços: só produtos novos ou com preço diferente
+    await anotarPrecos(mudancasDePreco(((antigos || []) as any[]).map(ler), parte));
   }
 }
 
