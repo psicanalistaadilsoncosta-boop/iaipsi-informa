@@ -248,11 +248,13 @@ export default function OfertasDoDiaPage() {
                   </div>
                 </div>
               )}
-              </div>
             </>
           )}
         </>
       )}
+
+         
+        
 
       <footer style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #e5e7eb', textAlign: 'center' }}>
         <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: 0, lineHeight: 1.6 }}>
