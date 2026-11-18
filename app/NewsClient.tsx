@@ -443,6 +443,8 @@ export default function NewsClient({ posts, ads, editorial, sabores, artigosProd
 
       <OfertasLupadas itens={lupadas || []} />
 
+      <OfertaDestaque />
+
       <BannerLupaAjuda />
 
       <GridPaginasProdutos />
@@ -480,7 +482,6 @@ export default function NewsClient({ posts, ads, editorial, sabores, artigosProd
         </section>
       )}
 
-      <OfertaDestaque />
       <ArtigosProdutoSection artigos={artigosProduto || []} />
       {viagemDestaque && <ViagemDestaque viagem={viagemDestaque} />}
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import BotaoWhatsApp from '../BotaoWhatsApp';
-import Mascote from '../Mascote';
+import VitrineOfertaDia, { montarVitrine } from '../VitrineOfertaDia';
 import SeloLoja from '../SeloLoja';
 import CabecalhoTema from '../temas/CabecalhoTema';
 
@@ -22,7 +22,7 @@ interface ProdutoPinado {
   validade?: string;
   categoria?: string;
   ativo?: boolean;
-  destinos: string[];
+  destinos?: string[];
   moedaOriginal?: string;
   cotacaoUsada?: number;
 
@@ -61,24 +61,19 @@ function formatarPreco(valor: number) {
 return valor.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
 
-function CardOferta({ p, comMascote = false }: { p: ProdutoPinado; comMascote?: boolean }) {
+function CardOferta({ p }: { p: ProdutoPinado }) {
   const [copiado, setCopiado] = useState(false);
   const [imagemAtiva, setImagemAtiva] = useState(0);
   const todasImagens = [p.imagem, ...(p.imagens || [])].filter(Boolean);
   const desconto = p.precoOriginal > p.preco
     ? Math.round((1 - p.preco / p.precoOriginal) * 100)
-    : p.desconto || 0;
+    : 0;
 
   return (
-    <div style={{ backgroundColor: '#fff', borderRadius: '16px', overflow: 'hidden', border: comMascote ? '2px solid #dc2626' : '1px solid #e5e7eb', boxShadow: '0 4px 16px rgba(0,0,0,0.06)', ...(comMascote ? { gridColumn: '1 / -1' } : {}) }}>
+    <div style={{ backgroundColor: '#fff', borderRadius: '16px', overflow: 'hidden', border: '1px solid #e5e7eb', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}>
       {/* Imagem */}
       <div style={{ position: 'relative', backgroundColor: '#f9fafb', padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-               {comMascote && (
-                    <div style={{ position: 'absolute', left: '12px', top: '150px', zIndex: 2 }}>
-            <Mascote nome="lupa-apresenta" altura={220} />
-          </div>
-        )}
-        <div style={{ width: '100%', height: comMascote ? '360px' : '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #f3f4f6', overflow: 'hidden', padding: '12px', ...(comMascote ? { paddingLeft: '140px' } : {}) }}>
+        <div style={{ width: '100%', height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #f3f4f6', overflow: 'hidden', padding: '12px' }}>
           {todasImagens[imagemAtiva] ? (
             <img src={todasImagens[imagemAtiva]} alt={p.nome} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
           ) : (
@@ -191,21 +186,31 @@ function CardOferta({ p, comMascote = false }: { p: ProdutoPinado; comMascote?: 
 }
 
 export default function OfertasDoDiaPage() {
+  const [vitrine, setVitrine] = useState<ProdutoPinado[]>([]);
   const [ofertas, setOfertas] = useState<ProdutoPinado[]>([]);
+  const [destaqueId, setDestaqueId] = useState<string | undefined>();
+  const [frase, setFrase] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/produtos/save')
-      .then(r => r.json())
-      .then((pinados: ProdutoPinado[]) => {
-        const filtradas = pinados.filter(p => p.destinos?.includes('oferta-do-dia'));
-        setOfertas(filtradas);
-      })
-      .finally(() => setLoading(false));
+    Promise.all([
+      fetch('/api/produtos/save?tipo=destaque-home').then(r => r.json()).catch(() => ({})),
+      fetch('/api/produtos/save').then(r => r.json()).catch(() => []),
+    ]).then(([destaque, pinados]) => {
+      const lista: ProdutoPinado[] = Array.isArray(pinados) ? pinados : [];
+      const id = destaque?.id as string | undefined;
+      const topo = montarVitrine(lista, id);
+      const idsTopo = new Set(topo.map(p => p.id));
+      setDestaqueId(id);
+      setFrase(destaque?.frase || '');
+      setVitrine(topo);
+      // As demais ofertas do dia seguem em grade abaixo da vitrine
+      setOfertas(lista.filter(p => p.destinos?.includes('oferta-do-dia') && !idsTopo.has(p.id)));
+    }).finally(() => setLoading(false));
   }, []);
 
   return (
-    <main style={{ maxWidth: '900px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+    <main style={{ maxWidth: '1040px', margin: '0 auto', padding: '30px 20px', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
       <CabecalhoTema
         temaId="ofertadodia"
         aviso="Condições de parcelamento, preços e disponibilidade são de responsabilidade do anunciante. As parcelas exibidas podem não refletir as condições atuais da loja: confirme sempre no site e no carrinho antes de finalizar. Lojas com 💱 Preço convertido de USD ficam em outro país, e a compra pode ter imposto de importação, que nem sempre aparece no carrinho e pode ser cobrado na entrega. Saiba que os valores sofrem alteração de acordo com a variação cambial no Brasil."
@@ -213,15 +218,23 @@ export default function OfertasDoDiaPage() {
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>⏳ Carregando ofertas...</div>
-      ) : ofertas.length === 0 ? (
+      ) : vitrine.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>
           <p>Nenhuma oferta do dia no momento.</p>
           <a href="/ofertas" style={{ color: '#dc2626', fontWeight: 600, textDecoration: 'none' }}>Ver todas as ofertas →</a>
         </div>
       ) : (
-       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(380px, 100%), 1fr))', gap: '24px' }}>
-         {ofertas.map((p, i) => <CardOferta key={p.id} p={p} comMascote={i === 0} />)}
-        </div>
+        <>
+          <VitrineOfertaDia ofertas={vitrine} destaqueId={destaqueId} frase={frase} />
+          {ofertas.length > 0 && (
+            <>
+              <h2 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#111827', margin: '8px 0 16px' }}>Mais ofertas lupadas hoje</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 100%), 1fr))', gap: '24px' }}>
+                {ofertas.map(p => <CardOferta key={p.id} p={p} />)}
+              </div>
+            </>
+          )}
+        </>
       )}
 
       <footer style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #e5e7eb', textAlign: 'center' }}>
