@@ -15,6 +15,7 @@ const GRUPOS: { titulo: string; cor: string; itens: Atalho[] }[] = [
       { href: '/produtos/categorizar', nome: 'Categorizar produtos', desc: 'Vitrine e categoria de cada produto' },
       { href: '/produtos/ambientes', nome: 'Painel de ambientes', desc: 'Monte seu ambiente' },
       { href: '/oferta-do-dia/editar', nome: 'Oferta do dia', desc: 'Escolher a oferta em destaque' },
+      { href: '/admin/precos', nome: 'Lupômetro', desc: 'Histórico de preços e alertas de desconto' },
     ],
   },
   {
