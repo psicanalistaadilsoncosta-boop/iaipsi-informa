@@ -52,6 +52,7 @@ const GRUPOS: { titulo: string; cor: string; itens: Atalho[] }[] = [
     titulo: '🔗 Painéis externos', cor: '#374151', itens: [
       { href: 'https://vercel.com/dashboard', nome: 'Vercel', desc: 'Deploys, variáveis, Blob, analytics', externo: true },
       { href: 'https://console.upstash.com', nome: 'Upstash', desc: 'Banco (KV): uso e custo', externo: true },
+      { href: 'https://console.neon.tech', nome: 'Neon', desc: 'Histórico de preços (SQL Editor)', externo: true },
       { href: 'https://console.cloud.google.com/billing', nome: 'Google Cloud', desc: 'Voz (Text-to-Speech): uso e custo', externo: true },
       { href: 'https://ads.tiktok.com', nome: 'TikTok Ads', desc: 'Anúncios dos vídeos da Lupa', externo: true },
     ],
