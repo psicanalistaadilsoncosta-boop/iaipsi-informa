@@ -41,6 +41,7 @@ export interface ProdutoPinado {
   moedaOriginal?: string;
   moedaUSD?: boolean;
   cotacaoUsada?: number;
+  modaDestaque?: boolean; // ⭐ veio de loja marcada como Moda destaque
 }
 
 export function formatarPreco(valor: number) {
@@ -71,8 +72,9 @@ function linkIr(p: ProdutoPinado) {
 }
 
 // Escolhe as 4 ofertas da vitrine:
-// 1ª = destaque da home (se houver); as outras 3 = ofertas "oferta-do-dia",
-// primeiro uma por categoria diferente (maior desconto), depois completa com as melhores.
+// 1ª = destaque da home (se houver); as outras 3 = ofertas "oferta-do-dia":
+// primeiro as ⭐ Moda destaque (maior desconto, de lojas diferentes),
+// depois uma por categoria diferente (maior desconto) e, por fim, completa com as melhores.
 // Quando o Lupômetro existir, a ordenação passa a usar a nota dele.
 export function montarVitrine(pinados: ProdutoPinado[], destaqueId?: string): ProdutoPinado[] {
   const destaque = destaqueId ? pinados.find(p => p.id === destaqueId) : undefined;
@@ -85,10 +87,22 @@ export function montarVitrine(pinados: ProdutoPinado[], destaqueId?: string): Pr
 
   const escolhidas: ProdutoPinado[] = [principal];
   const categorias = new Set([principal.categoria || '']);
+  // ⭐ Moda destaque primeiro, sem repetir loja
+  const lojasUsadas = new Set([principal.loja || '']);
+  for (const p of candidatas) {
+    if (escolhidas.length >= 4) break;
+    if (p.modaDestaque && descontoReal(p) > 0 && !lojasUsadas.has(p.loja || '')) {
+      escolhidas.push(p); lojasUsadas.add(p.loja || ''); categorias.add(p.categoria || '');
+    }
+  }
+  for (const p of candidatas) {
+    if (escolhidas.length >= 4) break;
+    if (p.modaDestaque && descontoReal(p) > 0 && !escolhidas.includes(p)) escolhidas.push(p);
+  }
   for (const p of candidatas) {
     if (escolhidas.length >= 4) break;
     const c = p.categoria || '';
-    if (!categorias.has(c)) { escolhidas.push(p); categorias.add(c); }
+    if (!categorias.has(c) && !escolhidas.includes(p)) { escolhidas.push(p); categorias.add(c); }
   }
   for (const p of candidatas) {
     if (escolhidas.length >= 4) break;

@@ -54,6 +54,7 @@ interface LojaLomadee {
   cron?: LojaCron;
   nivel?: string; // nível da loja (A, B, C) — definido em cadastrar lojas
   semDeeplink?: boolean; // loja que não aceita link direto para produto (use cartão)
+  modaDestaque?: boolean; // ⭐ loja de moda em destaque (marcada em cadastrar lojas)
 }
 
 interface LojaAwin {
@@ -65,6 +66,7 @@ interface LojaAwin {
   cron?: LojaCron;
   nivel?: string; // nível da loja (A, B, C) — definido em cadastrar lojas
   semDeeplink?: boolean; // loja que não aceita link direto para produto (use cartão)
+  modaDestaque?: boolean; // ⭐ loja de moda em destaque (marcada em cadastrar lojas)
 }
 
 type Loja = LojaLomadee | LojaAwin;
@@ -306,7 +308,10 @@ export default function BuscarProdutosPage() {
   const [excluirShopee, setExcluirShopee] = useState(true);
   const [modalProduto, setModalProduto] = useState<Produto | null>(null);
   const [destaqueHomeId, setDestaqueHomeId] = useState<string | null>(null);
-  const [modoBusca, setModoBusca] = useState<'palavra' | 'link' | 'awin' | 'spicy' | 'centauro' | 'carrefour' |'loja' | 'loja-awin'>('palavra');
+  const [modoBusca, setModoBusca] = useState<'palavra' | 'link' | 'awin' | 'spicy' | 'centauro' | 'carrefour' |'loja' | 'loja-awin' | 'moda'>('palavra');
+  const [progressoModa, setProgressoModa] = useState('');
+  const [soComDesconto, setSoComDesconto] = useState(true);
+  const [lojasModaSel, setLojasModaSel] = useState<Set<string> | null>(null); // null = todas marcadas
   const [urlLojaAwin, setUrlLojaAwin] = useState('');
   const [awinAnunciante, setAwinAnunciante] = useState('');
   const [lojaAwin, setLojaAwin] = useState('arno');
@@ -331,6 +336,7 @@ export default function BuscarProdutosPage() {
 
   const lojasLomadee = lojasKV.filter(l => l.tipo === 'lomadee') as LojaLomadee[];
   const lojasAwin = lojasKV.filter(l => l.tipo === 'awin') as LojaAwin[];
+  const lojasModa = lojasKV.filter(l => l.modaDestaque && !l.semDeeplink);
 
   // URL da loja atualmente buscada (para substituição)
   const lojaAtualUrl = modoBusca === 'loja' ? urlLoja : modoBusca === 'loja-awin' ? urlLojaAwin : '';
@@ -453,6 +459,52 @@ export default function BuscarProdutosPage() {
     } catch {
       alert('Erro ao buscar produtos da loja.');
     } finally { setBuscandoLoja(false); }
+  }
+
+  // ⭐ Moda destaque: lê ao vivo todas as lojas marcadas e junta os produtos (maior desconto real primeiro)
+  async function handleBuscarModa() {
+    const alvo = lojasModa.filter(l => !lojasModaSel || lojasModaSel.has(l.url));
+    if (!alvo.length) return;
+    setBuscandoLoja(true);
+    setProdutos([]);
+    setTotal(0);
+    let marcas: any[] = [];
+    if (alvo.some(l => l.tipo === 'lomadee')) {
+      try { marcas = (await (await fetch('/api/lomadee?tipo=brands-categoria')).json()).data || []; } catch {}
+    }
+    const norm = (s: string) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+    const todos: any[] = [];
+    const falharam: string[] = [];
+    for (let i = 0; i < alvo.length; i++) {
+      const loja = alvo[i];
+      setProgressoModa(`Lendo ${loja.nome} (${i + 1} de ${alvo.length})...`);
+      try {
+        const params = new URLSearchParams({ url: loja.url, limit: String(limiteBusca) });
+        if (loja.tipo === 'awin') params.set('orgId', (loja as LojaAwin).anuncianteId);
+        else {
+          const dominio = new URL(loja.url).hostname.replace('www.', '');
+          const marca = marcas.find((m: any) => m.site && m.site.replace('www.', '').replace('https://', '').includes(dominio))
+            || marcas.find((m: any) => norm(m.name) === norm(loja.nome));
+          if (marca?.id) params.set('orgId', marca.id);
+        }
+        if (loja.moedaUSD) params.set('moedaUSD', 'true');
+        const json = await (await fetch(`/api/scrape?${params}`)).json();
+        const lista: any[] = json.data || [];
+        if (!lista.length) falharam.push(loja.nome);
+        lista.forEach(p => todos.push({ ...p, loja: p.loja && p.loja !== 'Loja parceira' ? p.loja : loja.nome, modaDestaque: true }));
+      } catch { falharam.push(loja.nome); }
+    }
+    const descontoReal = (p: any) => (p.precoOriginal > p.preco ? Math.round((1 - p.preco / p.precoOriginal) * 100) : 0);
+    const vistos = new Set<string>();
+    const final = todos
+      .filter(p => { const k = String(p.id); if (vistos.has(k)) return false; vistos.add(k); return true; })
+      .filter(p => !soComDesconto || descontoReal(p) > 0)
+      .map(p => ({ ...p, desconto: descontoReal(p) }))
+      .sort((a, b) => b.desconto - a.desconto);
+    setProdutos(final);
+    setTotal(final.length);
+    setProgressoModa(falharam.length ? `⚠️ Sem produtos agora: ${falharam.join(', ')}` : '');
+    setBuscandoLoja(false);
   }
 
   async function handleBuscarAwin(q = '', loja = 'arno') {
@@ -894,6 +946,9 @@ export default function BuscarProdutosPage() {
             <button onClick={() => setModoBusca('palavra')} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'palavra' ? '#2563eb' : '#fff', color: modoBusca === 'palavra' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               🔍 Por palavra-chave
             </button>
+            <button onClick={() => setModoBusca('moda')} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'moda' ? '#be123c' : '#fff', color: modoBusca === 'moda' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+              ⭐ Moda destaque ({lojasModa.length})
+            </button>
             <button onClick={() => setModoBusca('link')} style={{ padding: '7px 18px', borderRadius: '8px', border: 'none', backgroundColor: modoBusca === 'link' ? '#2563eb' : '#fff', color: modoBusca === 'link' ? '#fff' : '#374151', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               🔗 Por link da loja
             </button>
@@ -919,6 +974,65 @@ export default function BuscarProdutosPage() {
           </div>
 
           <div style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '20px', marginBottom: '20px' }}>
+
+            {/* ⭐ Moda destaque */}
+            {modoBusca === 'moda' && (
+              <div>
+                {lojasModa.length === 0 ? (
+                  <p style={{ fontSize: '0.85rem', color: '#6b7280', margin: 0 }}>
+                    Nenhuma loja marcada. Em <a href="/produtos/cadastra-lojas" style={{ color: '#be123c', fontWeight: 700 }}>Cadastra Lojas</a>, clique em ✏️ Editar na loja e marque <b>⭐ Moda destaque</b>.
+                  </p>
+                ) : (
+                  <>
+                    <div style={{ marginBottom: '10px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                        <label style={{ ...labelStyle, marginBottom: 0 }}>Lojas (clique para marcar ou desmarcar)</label>
+                        <button onClick={() => setLojasModaSel(null)} style={{ background: 'none', border: 0, color: '#be123c', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer', padding: 0 }}>Todas</button>
+                        <button onClick={() => setLojasModaSel(new Set())} style={{ background: 'none', border: 0, color: '#6b7280', fontWeight: 600, fontSize: '0.75rem', cursor: 'pointer', padding: 0 }}>Nenhuma</button>
+                      </div>
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                        {lojasModa.map(l => {
+                          const on = !lojasModaSel || lojasModaSel.has(l.url);
+                          return (
+                            <button key={l.url}
+                              onClick={() => setLojasModaSel(atual => {
+                                const n = new Set(atual ?? lojasModa.map(x => x.url));
+                                n.has(l.url) ? n.delete(l.url) : n.add(l.url);
+                                return n;
+                              })}
+                              style={{ padding: '5px 12px', borderRadius: '999px', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer',
+                                border: `1px solid ${on ? '#be123c' : '#e5e7eb'}`, backgroundColor: on ? '#ffe4e6' : '#fff', color: on ? '#be123c' : '#6b7280' }}>
+                              {on ? '✓ ' : ''}{l.nome}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6b7280' }}>Qtd. por loja:</label>
+                      <select value={limiteBusca} onChange={e => setLimiteBusca(parseInt(e.target.value))}
+                        style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.85rem' }}>
+                        <option value={20}>20</option>
+                        <option value={50}>50</option>
+                        <option value={80}>80</option>
+                        <option value={100}>100</option>
+                      </select>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={soComDesconto} onChange={e => setSoComDesconto(e.target.checked)} /> Só com desconto real
+                      </label>
+                      <button onClick={handleBuscarModa} disabled={buscandoLoja || (!!lojasModaSel && lojasModaSel.size === 0)}
+                        style={{ marginLeft: 'auto', padding: '9px 20px', borderRadius: '8px', border: 'none', backgroundColor: '#be123c', color: '#fff', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                        {buscandoLoja ? '⏳ Lendo...' : `⭐ Buscar em ${lojasModaSel ? lojasModaSel.size : lojasModa.length} loja(s)`}
+                      </button>
+                    </div>
+                    {progressoModa && <p style={{ fontSize: '0.78rem', color: '#6b7280', margin: '8px 0 0' }}>{progressoModa}</p>}
+                    <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: '6px 0 0' }}>
+                      Maior desconto primeiro. Ao pinar, o produto leva a marca ⭐ e ganha prioridade na vitrine Ofertas do Dia.
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
 
             {/* Busca por link */}
             {modoBusca === 'link' && (

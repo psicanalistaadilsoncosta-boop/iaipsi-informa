@@ -5,12 +5,20 @@
 // (baseado em frequencia + ultimaAtualizacao), faz o scrape, remove os
 // produtos pinados antigos dessa loja e pina os novos.
 //
+// Tempo: para perto do limite da Vercel; as lojas que faltarem ficam para o dia seguinte.
+// Cada loja é gravada assim que termina (o que já foi feito não se perde) e
+// as lojas há mais tempo sem atualizar vão primeiro (rodízio).
+//
 // Proteção: header Authorization: Bearer <CRON_SECRET>
 
 import { NextRequest, NextResponse } from 'next/server';
 import { avisarMudanca } from '@/lib/revalidar';
 import { kv } from '@/lib/kv';
 import { lerTodos, lerUm, salvarVarios, remover } from '@/lib/pinados';
+
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
+const LIMITE_TEMPO_MS = 45_000; // para antes do limite; o que faltar fica para amanhã
 
 interface LojaCron {
   ativo: boolean;
@@ -34,6 +42,7 @@ interface LojaLomadee {
   tipoVistaSe?: string;
   beleza?: boolean;
   tipoBeleza?: string;
+  modaDestaque?: boolean;
  }
 
 interface LojaAwin {
@@ -51,6 +60,7 @@ interface LojaAwin {
   tipoVistaSe?: string;
   beleza?: boolean;
   tipoBeleza?: string;
+  modaDestaque?: boolean;
  }
 
 type Loja = LojaLomadee | LojaAwin;
@@ -144,6 +154,23 @@ async function gerarLinkAfiliado(produto: any): Promise<string | null> {
   }
 }
 
+// Grava só o que mudou desta loja, relendo cada produto na hora
+// (assim não desfaz o que foi mudado no admin enquanto o cron rodava)
+async function gravarLoja(paraRemover: Set<string>, paraAtualizar: Map<string, Record<string, any>>, novos: ProdutoPinado[]) {
+  for (const id of paraRemover) {
+    const atual = await lerUm(id);
+    if (atual && !(atual.ambiente || atual.momento || atual.vistaSe || atual.beleza || atual.mercado || atual.praVoce)) {
+      await remover(id);
+    }
+  }
+  const atualizados: any[] = [];
+  for (const [id, campos] of paraAtualizar) {
+    const atual = await lerUm(id);
+    if (atual) atualizados.push({ ...atual, ...campos });
+  }
+  if (atualizados.length || novos.length) await salvarVarios([...atualizados, ...novos]);
+}
+
 export async function GET(req: NextRequest) {
   // Verifica autorização do cron
   const authHeader = req.headers.get('authorization');
@@ -151,10 +178,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const inicio = Date.now();
   let lojas = (await kv.get<Loja[]>(LOJAS_KEY)) || [];
   const pinados = (await lerTodos()) as ProdutoPinado[];
 
-  const lojasParaAtualizar = lojas.filter(l => l.cron?.ativo && precisaAtualizar(l.cron));
+  // as que estão há mais tempo sem atualizar vão primeiro
+  const lojasParaAtualizar = lojas
+    .filter(l => l.cron?.ativo && precisaAtualizar(l.cron))
+    .sort((a, b) => (a.cron?.ultimaAtualizacao || '').localeCompare(b.cron?.ultimaAtualizacao || ''));
 
   if (lojasParaAtualizar.length === 0) {
     return NextResponse.json({ ok: true, mensagem: 'Nenhuma loja para atualizar agora.' });
@@ -162,12 +193,17 @@ export async function GET(req: NextRequest) {
 
   const resultados: Record<string, { removidos?: number; pinados: number; erro?: string }> = {};
   let pinadosAtualizados = [...pinados];
-  // o que mudar é gravado no fim, produto por produto (não regrava a lista inteira)
-  const paraRemover = new Set<string>();
-  const paraAtualizar = new Map<string, Record<string, any>>();
-  const novosTodos: ProdutoPinado[] = [];
+  let feitas = 0;
 
   for (const loja of lojasParaAtualizar) {
+    if (Date.now() - inicio > LIMITE_TEMPO_MS) {
+      resultados[loja.nome] = { pinados: 0, erro: 'ficou para amanhã (tempo)' };
+      continue;
+    }
+    // o que mudar nesta loja é gravado quando ela termina, produto por produto
+    const paraRemover = new Set<string>();
+    const paraAtualizar = new Map<string, Record<string, any>>();
+    let interrompida = false;
     try {
       const cron = loja.cron!;
 
@@ -183,6 +219,18 @@ export async function GET(req: NextRequest) {
       if (produtos.length === 0) {
         resultados[loja.nome] = { removidos: 0, pinados: 0, erro: 'Sem produtos retornados pelo scrape' };
         continue;
+      }
+
+      // ⭐ Moda destaque indo para a Oferta do Dia: só produtos com desconto real, maior desconto primeiro
+      const modaNaOferta = !!loja.modaDestaque && cron.destino === 'oferta-do-dia';
+      if (modaNaOferta) {
+        const real = (p: any) => (Number(p.precoOriginal) > Number(p.preco) && Number(p.preco) > 0
+          ? 1 - Number(p.preco) / Number(p.precoOriginal) : 0);
+        produtos = produtos.filter(p => real(p) > 0).sort((a, b) => real(b) - real(a));
+        if (produtos.length === 0) {
+          resultados[loja.nome] = { removidos: 0, pinados: 0, erro: 'Moda destaque: nenhum produto com desconto real hoje' };
+          continue;
+        }
       }
 
         // 2. Separa: catalogados (têm categoria) vs a_catalogar desta loja
@@ -221,6 +269,7 @@ export async function GET(req: NextRequest) {
       let falhasLink = 0;
       const limite = Math.min(produtos.length, limiteConfigured);
       for (let i = 0; i < limite; i++) {
+        if (Date.now() - inicio > LIMITE_TEMPO_MS) { interrompida = true; break; }
         const produto = produtos[i];
         const linkAfiliado = await gerarLinkAfiliado(produto);
         if (!linkAfiliado) { falhasLink++; continue; }
@@ -271,15 +320,21 @@ export async function GET(req: NextRequest) {
             loja: loja.nome,
             origemUrl: loja.url,
             ...(loja.moedaUSD ? { moedaUSD: true } : {}),
+            ...(loja.modaDestaque ? { modaDestaque: true } : {}),
           } as any);
         }
       }
 
       pinadosAtualizados = [...pinadosAtualizados, ...novos];
-      novosTodos.push(...novos);
 
-      // 4. Atualiza ultimaAtualizacao da loja no KV
-        if (falhasLink < limite) lojas = lojas.map(l => {
+      // 4. Grava esta loja agora. Se o tempo acabou no meio, não remove os antigos
+      //    (a loja fica incompleta) e ela é refeita no próximo dia.
+      if (interrompida) paraRemover.clear();
+      await gravarLoja(paraRemover, paraAtualizar, novos);
+      feitas++;
+
+      // 5. Atualiza ultimaAtualizacao da loja no KV (só se terminou)
+        if (!interrompida && falhasLink < limite) lojas = lojas.map(l => {
         if (l.url === loja.url && l.tipo === loja.tipo && l.cron) {
           return { ...l, cron: { ...l.cron, ultimaAtualizacao: new Date().toISOString() } };
         }
@@ -289,33 +344,20 @@ export async function GET(req: NextRequest) {
 
         resultados[loja.nome] = {
         pinados: novos.length,
-        ...(falhasLink ? { erro: `${falhasLink} produto(s) sem link de afiliado (Lomadee fora?)` } : {}),
+        ...(interrompida ? { erro: 'parcial: o tempo acabou, termina no próximo dia' }
+          : falhasLink ? { erro: `${falhasLink} produto(s) sem link de afiliado (Lomadee fora?)` } : {}),
       };
     } catch (err: any) {
       resultados[loja.nome] = { removidos: 0, pinados: 0, erro: err?.message || 'Erro desconhecido' };
     }
   }
 
-  // Grava só o que mudou, relendo cada produto na hora
-  // (assim não desfaz o que foi mudado no admin enquanto o cron rodava)
-  for (const id of paraRemover) {
-    const atual = await lerUm(id);
-    if (atual && !(atual.ambiente || atual.momento || atual.vistaSe || atual.beleza || atual.mercado || atual.praVoce)) {
-      await remover(id);
-    }
-  }
-  const atualizados: any[] = [];
-  for (const [id, campos] of paraAtualizar) {
-    const atual = await lerUm(id);
-    if (atual) atualizados.push({ ...atual, ...campos });
-  }
-  await salvarVarios([...atualizados, ...novosTodos]);
-
-  avisarMudanca();
+  if (feitas) avisarMudanca();
   return NextResponse.json({
     ok: true,
     timestamp: new Date().toISOString(),
-    lojasProcessadas: lojasParaAtualizar.length,
+    lojasNoPrazo: lojasParaAtualizar.length,
+    lojasProcessadas: feitas,
     resultados,
   });
 }

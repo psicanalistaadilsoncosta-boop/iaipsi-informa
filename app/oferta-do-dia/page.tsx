@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import BotaoWhatsApp from '../BotaoWhatsApp';
-import VitrineOfertaDia, { montarVitrine } from '../VitrineOfertaDia';
+import VitrineOfertaDia, { montarVitrine, descontoReal } from '../VitrineOfertaDia';
+
+const MAX_MAIS_OFERTAS = 12; // grade "Mais ofertas lupadas hoje": só as melhores
 import SeloLoja from '../SeloLoja';
 import CabecalhoTema from '../temas/CabecalhoTema';
 
@@ -205,7 +207,10 @@ export default function OfertasDoDiaPage() {
       setFrase(destaque?.frase || '');
       setVitrine(topo);
       // As demais ofertas do dia seguem em grade abaixo da vitrine
-      setOfertas(lista.filter(p => p.destinos?.includes('oferta-do-dia') && !idsTopo.has(p.id)));
+      setOfertas(lista
+        .filter(p => p.destinos?.includes('oferta-do-dia') && !idsTopo.has(p.id))
+        .sort((a, b) => descontoReal(b as any) - descontoReal(a as any))
+        .slice(0, MAX_MAIS_OFERTAS));
     }).finally(() => setLoading(false));
   }, []);
 

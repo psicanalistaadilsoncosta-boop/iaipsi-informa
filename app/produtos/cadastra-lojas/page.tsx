@@ -26,6 +26,7 @@ interface LojaLomadee {
   tipoBeleza?: string;
   nivel?: string; // nível da loja (A, B, C) — só aparece aqui no cadastro, nunca no site
   semDeeplink?: boolean; // vem da API (actionpay:deeplinks): não aceita link direto para produto
+  modaDestaque?: boolean; // ⭐ loja de moda em destaque: aba própria na busca e prioridade na Oferta do Dia
 }
 
 interface LojaAwin {
@@ -45,6 +46,7 @@ interface LojaAwin {
   tipoBeleza?: string;
   nivel?: string; // nível da loja (A, B, C) — só aparece aqui no cadastro, nunca no site
   semDeeplink?: boolean; // vem da API (actionpay:deeplinks): não aceita link direto para produto
+  modaDestaque?: boolean; // ⭐ loja de moda em destaque: aba própria na busca e prioridade na Oferta do Dia
 }
 
 type Loja = LojaLomadee | LojaAwin;
@@ -276,6 +278,7 @@ function EditarLoja({ loja, salvando, onSalvar, onCancelar }: {
   const [url, setUrl] = useState(loja.url);
   const [id, setId] = useState(loja.tipo === 'awin' ? (loja as LojaAwin).anuncianteId : '');
   const [usd, setUsd] = useState(!!loja.moedaUSD);
+  const [moda, setModa] = useState(!!loja.modaDestaque);
   const [nivel, setNivel] = useState(loja.nivel || '');
   const [cats, setCats] = useState<CatState>(lojaTocat(loja));
 
@@ -287,7 +290,7 @@ function EditarLoja({ loja, salvando, onSalvar, onCancelar }: {
     if (loja.tipo === 'awin' && !id.trim()) { alert('O ID do anunciante é obrigatório.'); return; }
     let u = url.trim();
     if (!u.startsWith('http')) u = 'https://' + u;
-    const nova: any = { ...loja, nome: nome.trim(), url: u, moedaUSD: usd || undefined, nivel: nivel || undefined, ...catToFields(cats) };
+    const nova: any = { ...loja, nome: nome.trim(), url: u, moedaUSD: usd || undefined, modaDestaque: moda || undefined, nivel: nivel || undefined, ...catToFields(cats) };
     if (loja.tipo === 'awin') nova.anuncianteId = id.trim();
     onSalvar(nova);
   }
@@ -323,6 +326,9 @@ function EditarLoja({ loja, salvando, onSalvar, onCancelar }: {
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
         <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
           <input type="checkbox" checked={usd} onChange={e => setUsd(e.target.checked)} /> 💵 Preços em USD
+        </label>
+        <label title="Aba própria em Buscar produtos e prioridade na vitrine Ofertas do Dia" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: 600, color: '#be123c', cursor: 'pointer' }}>
+          <input type="checkbox" checked={moda} onChange={e => setModa(e.target.checked)} /> ⭐ Moda destaque
         </label>
         <button onClick={onCancelar} disabled={salvando}
           style={{ marginLeft: 'auto', padding: '7px 16px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#374151', fontWeight: 600, cursor: 'pointer' }}>
@@ -863,6 +869,11 @@ export default function CadastraLojasPage() {
                     {loja.semDeeplink && (
                       <span title="Não aceita link direto para produto: o clique cai na página inicial. Use 🃏 Criar cartão." style={{ fontSize: '0.7rem', fontWeight: 800, padding: '1px 7px', borderRadius: '10px', backgroundColor: '#fee2e2', color: '#991b1b' }}>
                         🚫 Sem deeplink
+                      </span>
+                    )}
+                    {loja.modaDestaque && (
+                      <span title="Moda destaque" style={{ fontSize: '0.7rem', fontWeight: 800, padding: '1px 7px', borderRadius: '10px', backgroundColor: '#ffe4e6', color: '#be123c' }}>
+                        ⭐ Moda destaque
                       </span>
                     )}
                     {loja.nivel && (
