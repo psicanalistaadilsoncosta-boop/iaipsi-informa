@@ -96,7 +96,7 @@ export function descontoReal(p: ProdutoPinado) {
 
 // "FogãoFogão de Piso5 Bocas" → "Fogão › Fogão de Piso › 5 Bocas"
 function formatarCategoria(c: string) {
-  return c.split(/(?<=[a-zà-ÿ])(?=[A-ZÀ-Ý0-9])/).map(s => s.trim()).filter(Boolean).join(' › ');
+  return c.split(/(?<=[a-zà-ÿ])(?=[A-ZÀ-Ý0-9])|(?<=[A-ZÀ-Ý])(?=[A-ZÀ-Ý][a-zà-ÿ])/).map(s => s.trim()).filter(Boolean).join(' › ');
 }
 
 // Fala da Lupa no balão: a frase da IA, se houver; senão, uma frase feita com os dados da própria oferta
