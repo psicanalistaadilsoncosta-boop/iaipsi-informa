@@ -42,6 +42,47 @@ export interface ProdutoPinado {
   moedaUSD?: boolean;
   cotacaoUsada?: number;
   modaDestaque?: boolean; // ⭐ veio de loja marcada como Moda destaque
+  conferido?: boolean;    // 🏅 você deu o selo no Lupômetro
+  caiuDe?: number;        // 📉 preço anterior, quando o "por" caiu e o "de" ficou igual
+  caiuEm?: string;
+}
+
+// ── Selos da Lupa ──────────────────────────────────────────────
+// 🏅 dourado: você conferiu o produto ou a loja no Lupômetro
+// 📉 azul: o preço caiu de verdade nos últimos 7 dias ("por" menor, "de" igual) — aparece sozinho
+const DIAS_CAIU = 7;
+let cacheConferidas: Promise<string[]> | null = null;
+function lojasConferidas() {
+  if (!cacheConferidas) cacheConferidas = fetch('/api/lojas-conferidas').then(r => r.json()).catch(() => []);
+  return cacheConferidas;
+}
+
+export function caiuRecente(p: ProdutoPinado) {
+  return !!(p.caiuEm && p.caiuDe && p.caiuDe > p.preco && Date.now() - new Date(p.caiuEm).getTime() < DIAS_CAIU * 86400000);
+}
+
+export function TagsLupa({ p, compacto = false }: { p: ProdutoPinado; compacto?: boolean }) {
+  const [lojaOk, setLojaOk] = useState(false);
+  useEffect(() => { if (p.loja) lojasConferidas().then(l => setLojaOk(l.includes(p.loja!))); }, [p.loja]);
+  const ouro = p.conferido || lojaOk;
+  const caiu = caiuRecente(p);
+  if (!ouro && !caiu) return null;
+  const base: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 800, borderRadius: 999, whiteSpace: 'nowrap',
+    fontSize: compacto ? '0.62rem' : '0.75rem', padding: compacto ? '1px 7px' : '3px 10px' };
+  return (
+    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+      {ouro && (
+        <span title="Preço acompanhado e conferido pelo Com a Lupa" style={{ ...base, color: '#3b2a00', background: 'linear-gradient(135deg, #F5D76E, #D9AF4E)', boxShadow: '0 1px 4px rgba(217,175,78,0.45)' }}>
+          🏅 {compacto ? 'Conferido' : 'A Lupa conferiu'}
+        </span>
+      )}
+      {caiu && (
+        <span title="O preço caiu e o preço de referência continuou o mesmo" style={{ ...base, color: '#fff', background: '#1d4ed8' }}>
+          📉 {compacto ? 'Caiu' : `Caiu de R$ ${formatarPreco(p.caiuDe!)}`}
+        </span>
+      )}
+    </div>
+  );
 }
 
 export function formatarPreco(valor: number) {
@@ -60,6 +101,9 @@ function formatarCategoria(c: string) {
 
 // Fala da Lupa no balão: a frase da IA, se houver; senão, uma frase feita com os dados da própria oferta
 function falaDaLupa(p: ProdutoPinado, frase?: string) {
+  if (caiuRecente(p)) {
+    return `Estava R$ ${formatarPreco(p.caiuDe!)} e agora está R$ ${formatarPreco(p.preco)}. O preço de referência não mudou: a queda é de verdade.`;
+  }
   if (frase) return frase;
   if (p.precoOriginal > p.preco) {
     return `Está R$ ${formatarPreco(p.precoOriginal - p.preco)} abaixo do preço de antes. Vale olhar de perto.`;
@@ -213,6 +257,8 @@ function CardGrande({ p, frase }: { p: ProdutoPinado; frase?: string }) {
           )}
         </div>
 
+        <TagsLupa p={p} />
+
         <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827', margin: 0, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
           {p.nome}
         </h3>
@@ -292,6 +338,7 @@ function CardPequeno({ p, onClick }: { p: ProdutoPinado; onClick: () => void }) 
         {p.categoria && <div style={{ fontSize: '0.65rem', color: '#9ca3af', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{formatarCategoria(p.categoria)}</div>}
         <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#111827', lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.nome}</div>
         <div style={{ color: '#dc2626', fontWeight: 800, fontSize: '1rem' }}>R$ {formatarPreco(p.preco)}</div>
+        <TagsLupa p={p} compacto />
       </div>
     </button>
   );

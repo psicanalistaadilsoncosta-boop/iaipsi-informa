@@ -32,6 +32,22 @@ const precoDe = (p: any) => {
   return por && de && de > por ? de : null;
 };
 
+// Marca no próprio produto (KV) quando o preço caiu de verdade: "por" menor e "de" igual.
+// O site mostra o selo "📉 Caiu o preço" sem consultar o Neon. Se o preço subir, a marca sai.
+export function marcarQueda(antigo: any, p: any): any {
+  const antes = centavos(antigo?.preco);
+  const agora = centavos(p?.preco);
+  if (!antigo || !antes || !agora || !p) return p;
+  if (agora < antes && precoDe(antigo) === precoDe(p)) {
+    return { ...p, caiuDe: antes, caiuEm: new Date().toISOString() };
+  }
+  if (agora > antes && (p.caiuDe || p.caiuEm)) {
+    const { caiuDe, caiuEm, ...resto } = p;
+    return resto;
+  }
+  return p;
+}
+
 // Compara antes x depois e devolve as linhas a anotar
 export function mudancasDePreco(antigos: any[], novos: any[]): Linha[] {
   const linhas: Linha[] = [];

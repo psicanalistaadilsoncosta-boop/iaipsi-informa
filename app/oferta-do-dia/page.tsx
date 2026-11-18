@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import BotaoWhatsApp from '../BotaoWhatsApp';
-import VitrineOfertaDia, { montarVitrine, descontoReal } from '../VitrineOfertaDia';
+import VitrineOfertaDia, { montarVitrine, descontoReal, TagsLupa } from '../VitrineOfertaDia';
 
-const POR_VEZ = 24; // grade "Mais ofertas lupadas hoje": mostra 12 e o botão traz mais 12
+const POR_VEZ = 12; // grade "Mais ofertas lupadas hoje": mostra 12 e o botão traz mais 12
 import SeloLoja from '../SeloLoja';
 import CabecalhoTema from '../temas/CabecalhoTema';
 
@@ -116,6 +116,8 @@ function CardOferta({ p }: { p: ProdutoPinado }) {
           {p.categoria && <span style={{ fontSize: '0.65rem', color: '#9ca3af', backgroundColor: '#f3f4f6', padding: '2px 8px', borderRadius: '20px' }}>{p.categoria}</span>}
 
         </div>
+
+        <TagsLupa p={p as any} />
 
         {/* Título */}
         <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
@@ -252,9 +254,6 @@ export default function OfertasDoDiaPage() {
           )}
         </>
       )}
-
-         
-        
 
       <footer style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #e5e7eb', textAlign: 'center' }}>
         <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: 0, lineHeight: 1.6 }}>

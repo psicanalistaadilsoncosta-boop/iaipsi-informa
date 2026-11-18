@@ -9,7 +9,7 @@
 //
 // Fala direto com a API REST do Upstash (sem conversões automáticas): ids e textos chegam exatamente como foram gravados.
 
-import { mudancasDePreco, anotarPrecos } from './historicoPrecos';
+import { mudancasDePreco, anotarPrecos, marcarQueda } from './historicoPrecos';
 
 const URL_KV = process.env.informa_KV_REST_API_URL || process.env.KV_REST_API_URL || '';
 const TOKEN = process.env.informa_KV_REST_API_TOKEN || process.env.KV_REST_API_TOKEN || '';
@@ -95,11 +95,13 @@ export async function salvarVarios(produtos: any[]): Promise<void> {
     const cmds: Cmd[] = [];
     parte.forEach((p, k) => {
       const id = ids[k];
-      const antes = new Set(gavetasDo(ler((antigos || [])[k])));
-      const depois = new Set(gavetasDo(p));
+      const antigo = ler((antigos || [])[k]);
+      const final = marcarQueda(antigo, p); // "📉 Caiu o preço" quando o "por" caiu e o "de" ficou igual
+      const antes = new Set(gavetasDo(antigo));
+      const depois = new Set(gavetasDo(final));
       for (const g of antes) if (!depois.has(g)) cmds.push(['SREM', g, id]);
       for (const g of depois) cmds.push(['SADD', g, id]);
-      cmds.push(['HSET', H, id, JSON.stringify(p)]);
+      cmds.push(['HSET', H, id, JSON.stringify(final)]);
     });
     await redis(cmds);
 
