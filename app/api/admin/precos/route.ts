@@ -37,7 +37,11 @@ const CLASSIFICADAS = `
       else 'outro'
     end as classe
   from (
-    select *, lag(preco) over w as por_ant, lag(preco_de) over w as de_ant
+    -- anterior = a anotação anterior; se o produto já existia antes do histórico,
+    -- usa o preço anterior guardado na própria linha (preco_antes / preco_de_antes)
+    select *,
+      coalesce(lag(preco) over w, preco_antes) as por_ant,
+      case when lag(preco) over w is not null then lag(preco_de) over w else preco_de_antes end as de_ant
     from precos window w as (partition by produto_id order by visto_em)
   ) x
   where por_ant is not null`;

@@ -17,6 +17,7 @@ type Linha = {
   preco: number;
   preco_de: number | null;
   preco_antes: number | null;
+  preco_de_antes: number | null;
   tipo: 'novo' | 'mudou';
 };
 
@@ -69,6 +70,7 @@ export function mudancasDePreco(antigos: any[], novos: any[]): Linha[] {
       preco,
       preco_de: precoDe(p),
       preco_antes: tipo === 'mudou' ? antes : null,
+      preco_de_antes: tipo === 'mudou' ? precoDe(antigo) : null,
       tipo,
     });
   });
@@ -81,11 +83,11 @@ export async function anotarPrecos(linhas: Linha[]): Promise<void> {
     const sql = neon(URL_DB);
     const col = <K extends keyof Linha>(c: K) => linhas.map(l => l[c]);
     const gravar = sql.query(
-      `insert into precos (produto_id, ean, nome, loja, link, preco, preco_de, preco_antes, tipo)
+      `insert into precos (produto_id, ean, nome, loja, link, preco, preco_de, preco_antes, preco_de_antes, tipo)
        select * from unnest($1::text[], $2::text[], $3::text[], $4::text[], $5::text[],
-                            $6::numeric[], $7::numeric[], $8::numeric[], $9::text[])`,
+                            $6::numeric[], $7::numeric[], $8::numeric[], $9::numeric[], $10::text[])`,
       [col('produto_id'), col('ean'), col('nome'), col('loja'), col('link'),
-       col('preco'), col('preco_de'), col('preco_antes'), col('tipo')],
+       col('preco'), col('preco_de'), col('preco_antes'), col('preco_de_antes'), col('tipo')],
     );
     const limite = new Promise((_, rej) => setTimeout(() => rej(new Error('tempo esgotado')), TEMPO_MAXIMO));
     await Promise.race([gravar, limite]);
