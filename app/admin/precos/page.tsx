@@ -16,14 +16,14 @@ const pct = (de: any, por: any) => (Number(de) > Number(por) && Number(por) > 0 
 
 // O que cada mudança significa (comparando com a anotação anterior)
 const CLASSES: Record<string, { rotulo: string; cor: string; fundo: string; explica: string }> = {
-  caiu:          { rotulo: '🟢 Caiu o preço',            cor: '#047857', fundo: '#ecfdf5', explica: '"por" menor e "de" igual: desconto real' },
-  de_subiu:      { rotulo: '🟡 Subiu só o "de"',         cor: '#a16207', fundo: '#fefce8', explica: 'você paga o mesmo, o desconto anunciado aumentou' },
-  reajuste:      { rotulo: '🟡 Reajuste',                cor: '#a16207', fundo: '#fefce8', explica: '"de" e "por" subiram juntos (dólar, matéria-prima...)' },
-  subiu:         { rotulo: '🔴 Subiu o preço',           cor: '#b91c1c', fundo: '#fef2f2', explica: 'ficou mais caro' },
-  fim_desconto:  { rotulo: '⚪ Fim do desconto',         cor: '#4b5563', fundo: '#f3f4f6', explica: 'voltou ao preço cheio' },
-  caiu_mudou_de: { rotulo: '🔵 Caiu, mas o "de" mudou',  cor: '#1d4ed8', fundo: '#eff6ff', explica: 'pagou menos, porém a referência também mudou' },
-  de_desceu:     { rotulo: '⚪ "De" baixou',             cor: '#4b5563', fundo: '#f3f4f6', explica: 'preço pago igual, referência menor' },
-  outro:         { rotulo: '⚪ Outro',                   cor: '#4b5563', fundo: '#f3f4f6', explica: '' },
+  caiu:          { rotulo: '🟢 Caiu o preço',                   cor: '#047857', fundo: '#ecfdf5', explica: 'preço pago menor e preço base igual: queda real' },
+  de_subiu:      { rotulo: '🟡 Subiu só o preço base',          cor: '#a16207', fundo: '#fefce8', explica: 'você paga o mesmo, mas o desconto anunciado aumentou' },
+  reajuste:      { rotulo: '🟡 Reajuste',                       cor: '#a16207', fundo: '#fefce8', explica: 'preço base e preço pago subiram juntos (dólar, matéria-prima...)' },
+  subiu:         { rotulo: '🔴 Subiu o preço',                  cor: '#b91c1c', fundo: '#fef2f2', explica: 'o preço pago ficou mais caro' },
+  fim_desconto:  { rotulo: '⚪ Fim do desconto',                cor: '#4b5563', fundo: '#f3f4f6', explica: 'voltou ao preço cheio, sem preço base riscado' },
+  caiu_mudou_de: { rotulo: '🔵 Caiu, mas o preço base mudou',   cor: '#1d4ed8', fundo: '#eff6ff', explica: 'pagou menos, porém o preço base também mudou' },
+  de_desceu:     { rotulo: '⚪ Preço base baixou',              cor: '#4b5563', fundo: '#f3f4f6', explica: 'preço pago igual, preço base menor' },
+  outro:         { rotulo: '⚪ Outro',                          cor: '#4b5563', fundo: '#f3f4f6', explica: '' },
 };
 const ORDEM_CLASSES = ['caiu', 'de_subiu', 'reajuste', 'subiu', 'fim_desconto', 'caiu_mudou_de', 'de_desceu'];
 
@@ -66,7 +66,7 @@ function LinhaDoTempo({ id }: { id: string }) {
         {linhas[0]?.link && <> · <a href={linhas[0].link} target="_blank" rel="noopener noreferrer" style={{ color: '#5B3E96' }}>ver na loja ↗</a></>}
       </div>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-        <thead><tr style={{ textAlign: 'left', color: '#6b7280' }}><th>Data</th><th>De</th><th>Por</th><th>Desconto</th></tr></thead>
+        <thead><tr style={{ textAlign: 'left', color: '#6b7280' }}><th>Data</th><th>Preço base</th><th>Preço pago</th><th>Desconto</th></tr></thead>
         <tbody>
           {linhas.map((l, i) => {
             const ant = i > 0 ? linhas[i - 1] : null;
@@ -184,7 +184,7 @@ function Lupometro() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
         <div style={{ flex: 1 }}>
           <h1 style={{ fontSize: 24, margin: 0, color: '#111827' }}>🔍 Lupômetro</h1>
-          <p style={{ color: '#6b7280', fontSize: 14, margin: '4px 0 0' }}>Histórico de preços em reais: cada mudança comparada com a anterior. Só você vê; quem decide é você.</p>
+          <p style={{ color: '#6b7280', fontSize: 14, margin: '4px 0 0' }}>Histórico de preços em reais: cada mudança comparada com a anterior. <b>Preço base</b> = o "de" (riscado); <b>preço pago</b> = o "por". Só você vê; quem decide é você.</p>
         </div>
         <a href="/admin" style={{ fontSize: 14, fontWeight: 700, color: '#5B3E96', textDecoration: 'none' }}>← Admin</a>
       </div>
@@ -219,21 +219,21 @@ function Lupometro() {
         </div>
         <p style={{ ...sub, margin: '10px 0 0' }}>
           🏅 <b>Selo dourado</b>: você dá no produto ou na loja quando o desconto é de verdade. Ele aparece na Oferta do Dia como "A Lupa conferiu".
-          📉 <b>Caiu o preço</b> aparece sozinho na Oferta do Dia por 7 dias quando o "por" cai e o "de" fica igual.
+          📉 <b>Caiu o preço</b> aparece sozinho na Oferta do Dia por 7 dias quando o preço pago cai e o preço base fica igual.
         </p>
       </section>
 
       {/* Lojas */}
       <section style={cartao}>
         <h2 style={titulo}>Lojas</h2>
-        <p style={sub}>Padrão de cada loja ao longo do tempo. Muitas vezes "subiu só o de" é tática; um reajuste isolado é pontual.</p>
+        <p style={sub}>Padrão de cada loja ao longo do tempo. Muitas vezes "subiu só o preço base" é tática; um reajuste isolado é pontual.</p>
         {!lojas ? vazio('Carregando...') : !lojas.length ? vazio('Nada ainda.') : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr style={{ textAlign: 'left', color: '#6b7280' }}>
                   <th style={{ padding: '6px 6px 6px 0' }}>Loja</th><th>Produtos</th><th>Desconto (mín–máx)</th>
-                  <th title="Caiu o preço">🟢</th><th title='Subiu só o "de"'>🟡 de</th><th title="Reajuste">🟡 reaj.</th>
+                  <th title="Caiu o preço">🟢</th><th title="Subiu só o preço base">🟡 base</th><th title="Reajuste">🟡 reaj.</th>
                   <th title="Subiu o preço">🔴</th><th title="Fim do desconto">⚪ fim</th><th>Reclame AQUI</th><th></th>
                 </tr>
               </thead>
@@ -244,7 +244,7 @@ function Lupometro() {
                       {l.loja}{l.modaDestaque ? ' ⭐' : ''}{l.conferida ? ' 🏅' : ''}
                     </td>
                     <td>{l.produtos}</td>
-                    <td>{l.com_desconto ? `${l.desconto_min}%–${l.desconto_max}% (méd. ${l.desconto_medio}%)` : 'sem "de"'}</td>
+                    <td>{l.com_desconto ? `${l.desconto_min}%–${l.desconto_max}% (méd. ${l.desconto_medio}%)` : 'sem preço base'}</td>
                     <td>{l.classes.caiu || ''}</td>
                     <td>{l.classes.de_subiu || ''}</td>
                     <td>{l.classes.reajuste || ''}</td>
@@ -285,7 +285,7 @@ function Lupometro() {
             <span style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
               <Etiqueta classe={l.classe} />
               <span style={{ fontSize: 13 }}>
-                de {brl(l.de_ant)} → <b>{brl(l.preco_de)}</b> · por {brl(l.por_ant)} → <b>{brl(l.preco)}</b>
+                base {brl(l.de_ant)} → <b>{brl(l.preco_de)}</b> · pago {brl(l.por_ant)} → <b>{brl(l.preco)}</b>
               </span>
             </span>
           } />
@@ -326,7 +326,7 @@ function Lupometro() {
             <h3 style={{ fontSize: 14, margin: '6px 0', color: '#a16207' }}>🟡 Loja com o mesmo desconto em tudo</h3>
             {alertas.descontoFixo.length ? alertas.descontoFixo.map(a => (
               <div key={a.loja} style={{ fontSize: 14, padding: '4px 0' }}>
-                <b>{a.loja}</b>: {a.produtos} produtos, todos com -{a.desconto}%. Pode ser campanha (Black Friday) ou "de" calculado: veja se continua assim nas próximas semanas.
+                <b>{a.loja}</b>: {a.produtos} produtos, todos com -{a.desconto}%. Pode ser campanha (Black Friday) ou preço base calculado: veja se continua assim nas próximas semanas.
               </div>
             )) : vazio('Nenhuma loja assim por enquanto.')}
 

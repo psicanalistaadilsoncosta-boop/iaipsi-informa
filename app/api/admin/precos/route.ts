@@ -28,6 +28,8 @@ const CLASSIFICADAS = `
   select produto_id, nome, loja, link, visto_em, preco, preco_de, por_ant, de_ant,
     case
       when preco < por_ant and coalesce(preco_de, -1) = coalesce(de_ant, -1) then 'caiu'
+      -- antes sem desconto e o novo preço base é o que se pagava: queda real
+      when preco < por_ant and de_ant is null and preco_de = por_ant          then 'caiu'
       when preco = por_ant and coalesce(preco_de, 0) > coalesce(de_ant, 0)   then 'de_subiu'
       when preco = por_ant and coalesce(preco_de, 0) < coalesce(de_ant, 0)   then 'de_desceu'
       when preco > por_ant and preco_de is not null and de_ant is not null and preco_de > de_ant then 'reajuste'
